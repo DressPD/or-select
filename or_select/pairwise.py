@@ -30,6 +30,14 @@ def build_pairwise_matrix(
     weights: dict[tuple[str, str], float] = {}
     for i, a in enumerate(candidates):
         for b in candidates[i + 1 :]:
+            if a.text.strip() == b.text.strip():
+                # Identical text: no content difference to judge, so the
+                # answer is exactly symmetric by construction -- skip the
+                # LLM call rather than risk provider seed non-determinism
+                # corrupting a comparison that isn't actually in question.
+                weights[(a.id, b.id)] = 0.5
+                weights[(b.id, a.id)] = 0.5
+                continue
             forward = judge_fn(query, a.text, b.text)
             backward = 1.0 - judge_fn(query, b.text, a.text)
             w_ab = (forward + backward) / 2.0

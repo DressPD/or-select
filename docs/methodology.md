@@ -25,16 +25,25 @@ auditable.
    the reverse entry `W[j, i]` is derived as `1 - W[i, j]` rather than
    re-judged, since the two are exact complements by construction — this
    halves the judge call count for a given N compared to judging every
-   ordered pair independently.
+   ordered pair independently. Pairs with byte-identical (normalized) text
+   skip the judge call entirely and are assigned the exact `0.5/0.5` their
+   symmetry demands, rather than risking a live LLM call returning a
+   non-symmetric result for a comparison that isn't actually in question
+   (see "A concrete finding" below).
+3b. **Self-consistency** — compute a purely deterministic agreement score,
+   `consistency_i = (# candidates matching i's text) / N`
+   (`or_select/consistency.py`), with zero LLM calls.
 4. **Select** — solve a multi-objective integer program that picks exactly
-   one winner (`or_select/selection.py`).
+   one winner from quality, confidence, consistency, and cost
+   (`or_select/selection.py`).
 
 ## Formal model
 
 Decision variable: `x_i in {0, 1}` for each candidate `i`, `1` if selected.
 
 ```text
-maximize   sum_i x_i * (w1 * quality_i + w2 * confidence_i - w3 * cost_i)
+maximize   sum_i x_i * (w1*quality_i + w2*confidence_i
+                         + w4*consistency_i - w3*cost_i)
 subject to sum_i x_i = 1
            quality_i >= min_quality        (optional gate)
            x_i in {0, 1}
@@ -42,10 +51,17 @@ subject to sum_i x_i = 1
 
 `quality_i` is the Copeland-style aggregate of the pairwise matrix: the mean
 weight by which candidate `i` beats every other candidate,
-`mean_j W[i, j]`. Solved exactly with CP-SAT (`or_select/selection.py`),
-which is deterministic given fixed inputs: the same candidate set and the
-same pairwise matrix always yield the same winner, regardless of solve
-order or machine.
+`mean_j W[i, j]`. `consistency_i` is the deterministic self-consistency
+signal (`or_select/consistency.py`) — the fraction of candidates whose text
+matches `i`'s exactly, i.e. classic self-consistency voting expressed as an
+IP objective term rather than a standalone decision rule. It is optional
+(defaults to 0 contribution) and additive alongside the LLM-judged quality,
+not a replacement for it: consistency alone only captures agreement
+frequency, and degenerates to a flat `1/N` once candidates stop repeating
+(e.g. open-ended queries where every sample differs). Solved exactly with
+CP-SAT (`or_select/selection.py`), which is deterministic given fixed
+inputs: the same candidate set, pairwise matrix, and consistency scores
+always yield the same winner, regardless of solve order or machine.
 
 ## Determinism guarantee
 
@@ -77,6 +93,22 @@ reproducible given a fixed pairwise matrix and fixed scores. Whether the
 matrix and scores themselves are stable across runs depends on the
 provider.
 
+### A concrete finding
+
+A live run against OpenRouter (`nvidia/nemotron-3-ultra-550b-a55b:free`)
+produced 3 candidates with byte-identical text, which by construction
+should force every pairwise weight among them to exactly 0.5 (forward and
+backward calls are the literal same prompt, so `(v + (1-v))/2 = 0.5`
+regardless of what the model returns). The observed quality scores were
+0.375, 0.50, and 0.625 instead — direct empirical proof that `seed` is not
+reliably enforced by this provider/model in practice, not just a
+theoretical caveat. The exact-match short-circuit above closes this
+specific case entirely (identical text never reaches the judge, so it
+can't be corrupted by this failure mode) but does not address the general
+case: two candidates with *different* text can still get non-reproducible
+judge scores across runs, since a real semantic comparison still requires
+an LLM call.
+
 ## Extensions (not yet implemented in the scaffold)
 
 - **Full ranking (Kemeny-Young)**: instead of selecting one winner, produce
@@ -94,7 +126,14 @@ provider.
 
 ## Baselines to compare against
 
-- Majority/self-consistency voting (no OR, just mode of N samples).
+- **Majority/self-consistency voting alone** (no OR, no LLM judge — just
+  pick the mode of N samples). Distinct from the `consistency_i` term in
+  the formal model above: the baseline uses agreement frequency as the
+  *entire* decision rule, while OR-Select uses it as one additive term in
+  an IP alongside LLM-judged quality. The baseline should win exactly when
+  candidates cluster tightly (e.g. closed factual queries); OR-Select
+  should win once candidates diverge and quality judgment starts to matter
+  more than raw agreement (e.g. open-ended queries).
 - Single-sample greedy decoding (no ensemble at all).
 - Reranking with a single learned reward model (no pairwise judge).
 - Full Kemeny-Young ranking without permutation self-consistency (tests

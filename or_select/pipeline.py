@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import re
 
+from .consistency import compute_consistency
 from .core import Candidate, SelectionResult, run_dir, write_json
 from .generate import generate_candidates, generate_candidates_heterogeneous
 from .pairwise import build_pairwise_matrix
@@ -76,7 +77,8 @@ def run_pipeline(
     candidates = score_candidates(query, candidates, score_fn)
     pairwise = build_pairwise_matrix(query, candidates, judge_fn)
     quality = aggregate_quality(candidates, pairwise)
-    winner_id, scores = select_best(candidates, quality)
+    consistency = compute_consistency(candidates)
+    winner_id, scores = select_best(candidates, quality, consistency)
     winner = next(c for c in candidates if c.id == winner_id)
     return SelectionResult(
         query=query, winner_id=winner_id, winner_text=winner.text, scores=scores, candidates=candidates

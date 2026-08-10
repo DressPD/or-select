@@ -1,14 +1,19 @@
 """Deterministic winner selection via integer programming.
 
-    maximize   sum_i x_i * (w1*quality_i + w2*confidence_i - w3*cost_i)
+    maximize   sum_i x_i * (w1*quality_i + w2*confidence_i
+                             + w4*consistency_i - w3*cost_i)
     subject to sum_i x_i = 1
                x_i in {0, 1}
                quality_i >= min_quality   (optional gate)
 
 quality_i is the Copeland-style aggregate of the pairwise win matrix: the
-average weight by which candidate i beats every other candidate. Solved
-with CP-SAT, which is exact and deterministic given fixed inputs — same
-candidates + same pairwise matrix always yields the same winner.
+average weight by which candidate i beats every other candidate.
+consistency_i is the deterministic self-consistency signal from
+or_select/consistency.py (fraction of candidates matching i's text) --
+optional, defaults to 0 contribution if not supplied. Solved with CP-SAT,
+which is exact and deterministic given fixed inputs — same candidates +
+same pairwise matrix + same consistency scores always yields the same
+winner.
 
 See docs/methodology.md for the ranking (Kemeny-Young) extension.
 """
@@ -38,8 +43,10 @@ def aggregate_quality(candidates: list[Candidate], pairwise: dict[tuple[str, str
 def select_best(
     candidates: list[Candidate],
     quality: dict[str, float],
+    consistency: dict[str, float] | None = None,
     w_quality: float = 1.0,
     w_confidence: float = 0.2,
+    w_consistency: float = 0.3,
     w_cost: float = 0.01,
     min_quality: float | None = None,
 ) -> tuple[str, dict[str, float]]:
@@ -54,7 +61,13 @@ def select_best(
     final_scores: dict[str, float] = {}
     objective_terms = []
     for c in candidates:
-        score = w_quality * quality[c.id] + w_confidence * c.confidence - w_cost * c.cost
+        consistency_i = consistency[c.id] if consistency is not None else 0.0
+        score = (
+            w_quality * quality[c.id]
+            + w_confidence * c.confidence
+            + w_consistency * consistency_i
+            - w_cost * c.cost
+        )
         final_scores[c.id] = score
         if min_quality is not None and quality[c.id] < min_quality:
             model.add(x[c.id] == 0)
