@@ -21,8 +21,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 PROMPTS_DIR = Path(__file__).resolve().parents[1] / "prompts"
-OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-5.6-terra")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
 
 _NUMBER_RE = re.compile(r"[-+]?\d*\.?\d+")
 
