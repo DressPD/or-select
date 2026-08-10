@@ -15,6 +15,7 @@ from __future__ import annotations
 import os
 import re
 import time
+import zlib
 from functools import lru_cache
 from pathlib import Path
 
@@ -72,12 +73,29 @@ def _with_rate_limit_retry(fn, *, max_attempts: int = 5, base_delay: float = 15.
 
 
 def _parse_score(text: str) -> float:
-    match = _NUMBER_RE.search(text)
-    return max(0.0, min(1.0, float(match.group()))) if match else 0.5
+    # Take the LAST number in the response, not the first: prompts ask for
+    # "only the number," but reasoning-tuned models often explain themselves
+    # anyway (e.g. restating a year from the query before giving the actual
+    # confidence), and the first number in that case is the wrong one.
+    matches = _NUMBER_RE.findall(text)
+    return max(0.0, min(1.0, float(matches[-1]))) if matches else 0.5
 
 
 def _load_prompt(name: str) -> str:
     return (PROMPTS_DIR / name).read_text()
+
+
+def _stable_seed(prompt: str) -> int:
+    """Deterministic seed derived from prompt content.
+
+    generate_* calls pass an explicit seed (0..n-1) for candidate diversity.
+    score_*/judge_* calls don't have a natural seed of their own, but still
+    need to be as reproducible as the provider allows: the same prompt
+    should always get the same seed, so re-running a pipeline over an
+    unchanged candidate set doesn't silently reshuffle confidence/judge
+    values on providers that honor `seed` (OpenAI, OpenRouter).
+    """
+    return zlib.crc32(prompt.encode("utf-8"))
 
 
 @lru_cache(maxsize=1)
@@ -102,13 +120,13 @@ def _openrouter_client():
 
 
 def _openai_complete(prompt: str, *, seed: int | None = None) -> str:
-    kwargs = {"seed": seed} if seed is not None else {}
+    resolved_seed = seed if seed is not None else _stable_seed(prompt)
 
     def call() -> str:
         resp = _openai_client().chat.completions.create(
             model=OPENAI_MODEL,
             messages=[{"role": "user", "content": prompt}],
-            **kwargs,
+            seed=resolved_seed,
         )
         return (resp.choices[0].message.content or "").strip()
 
@@ -124,13 +142,13 @@ def _gemini_complete(prompt: str) -> str:
 
 
 def _openrouter_complete(prompt: str, *, seed: int | None = None) -> str:
-    kwargs = {"seed": seed} if seed is not None else {}
+    resolved_seed = seed if seed is not None else _stable_seed(prompt)
 
     def call() -> str:
         resp = _openrouter_client().chat.completions.create(
             model=OPENROUTER_MODEL,
             messages=[{"role": "user", "content": prompt}],
-            **kwargs,
+            seed=resolved_seed,
         )
         # OpenRouter returns HTTP 200 with no `choices` and an `error` field
         # when the upstream (free-tier) provider is saturated, instead of a
