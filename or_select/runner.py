@@ -11,7 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from .core import run_dir, write_json
-from .pipeline import _query_id, run_pipeline
+from .pipeline import PROVIDERS, _query_id, run_pipeline
 
 
 def _load_queries(path: Path) -> list[str]:
@@ -24,8 +24,8 @@ def _load_queries(path: Path) -> list[str]:
     return queries
 
 
-def _run_one(query: str, n: int) -> None:
-    result = run_pipeline(query, n=n)
+def _run_one(query: str, n: int, provider: str) -> None:
+    result = run_pipeline(query, n=n, provider=provider)
     out_dir = run_dir(_query_id(query))
     write_json(out_dir / "selection.json", result.to_json())
 
@@ -35,11 +35,12 @@ def main() -> None:
     parser.add_argument("--input", required=True, type=Path)
     parser.add_argument("--n", type=int, default=10)
     parser.add_argument("--workers", type=int, default=1)
+    parser.add_argument("--provider", choices=PROVIDERS, default="placeholder")
     args = parser.parse_args()
 
     queries = _load_queries(args.input)
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
-        list(pool.map(lambda q: _run_one(q, args.n), queries))
+        list(pool.map(lambda q: _run_one(q, args.n, args.provider), queries))
     print(f"ran {len(queries)} queries -> outputs/runs/")
 
 

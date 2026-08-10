@@ -13,6 +13,10 @@ auditable.
 
 1. **Generate** — sample N candidate answers (`or_select/generate.py`), same
    model with different seeds or heterogeneous models for diversity.
+   `or_select/providers.py` wires this to real OpenAI and Gemini calls;
+   `--provider both` splits the N candidates across both, which is the
+   configuration used to validate that determinism holds independent of
+   which vendor produced a given candidate.
 2. **Score** — calibrated per-candidate confidence (`or_select/scoring.py`).
 3. **Compare** — build a pairwise win matrix `W[i, j]` via an LLM judge,
    using permutation self-consistency: judge each pair in both orders and

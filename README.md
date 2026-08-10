@@ -41,25 +41,43 @@ outputs/           generated run artifacts; safe to delete before a new run
 
 ## Run Pipeline
 
-1. Put LLM API credentials in `.env`.
+1. Put LLM API credentials in `.env` (copy `.env.example`; `.env` is gitignored).
 
 ```bash
-ANTHROPIC_API_KEY=...
+OPENAI_API_KEY=...
+GOOGLE_API_KEY=...
 ```
 
-2. Run the toy example end-to-end.
+2. Install provider SDKs (not needed for the placeholder backend).
+
+```bash
+pip install -r requirements.txt
+```
+
+3. Run the toy example end-to-end with the deterministic placeholder backend
+   (no API keys required — validates the OR core in isolation).
 
 ```bash
 python3 -m or_select.pipeline --query "What is the capital of France?" --n 10
 ```
 
-3. Run a batch of queries.
+4. Run against a real provider, or heterogeneously across both to validate
+   the research claim (deterministic selection holds regardless of which
+   models generated the candidates).
 
 ```bash
-python3 -m or_select.runner --input data/example_queries.jsonl --workers 3
+python3 -m or_select.pipeline --query "..." --n 10 --provider openai
+python3 -m or_select.pipeline --query "..." --n 10 --provider gemini
+python3 -m or_select.pipeline --query "..." --n 10 --provider both
 ```
 
-4. Compile paper.
+5. Run a batch of queries.
+
+```bash
+python3 -m or_select.runner --input data/example_queries.jsonl --workers 3 --provider both
+```
+
+6. Compile paper.
 
 ```bash
 latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex

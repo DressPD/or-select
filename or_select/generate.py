@@ -30,3 +30,21 @@ def generate_candidates(
             Candidate(id=f"c{i}", text=text, source_model=source_model, metadata={"seed": seed})
         )
     return candidates
+
+
+def generate_candidates_heterogeneous(
+    query: str, backends: list[tuple[str, GenerateFn]], n: int = DEFAULT_N_CANDIDATES
+) -> list[Candidate]:
+    """Round-robin n candidates across multiple (model_name, generate_fn) backends.
+
+    Used to validate OR-Select across providers (e.g. OpenAI + Gemini) instead
+    of just different seeds of one model.
+    """
+    if not backends:
+        raise ValueError("no backends given")
+    candidates = []
+    for i in range(n):
+        name, fn = backends[i % len(backends)]
+        text = fn(query, i)
+        candidates.append(Candidate(id=f"c{i}", text=text, source_model=name, metadata={"seed": i}))
+    return candidates
