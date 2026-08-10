@@ -2,7 +2,7 @@
 
     python3 -m or_select.pipeline --query "What is the capital of France?" --n 10
     python3 -m or_select.pipeline --query "..." --n 10 --provider openai
-    python3 -m or_select.pipeline --query "..." --n 10 --provider both
+    python3 -m or_select.pipeline --query "..." --n 10 --provider both   # openai + gemini
 """
 
 from __future__ import annotations
