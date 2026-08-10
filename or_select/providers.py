@@ -29,24 +29,36 @@ OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "nvidia/nemotron-3-ultra-5
 
 _NUMBER_RE = re.compile(r"[-+]?\d*\.?\d+")
 # Lowercase, no-underscore markers: matches "RESOURCE_EXHAUSTED" (Gemini),
-# "ResourceExhausted" (OpenRouter's upstream-wrapped Nvidia error), and
-# generic "rate limit" / "429" phrasing from any provider.
-_RATE_LIMIT_MARKERS = ("429", "resourceexhausted", "rate limit", "ratelimit")
+# "ResourceExhausted" (OpenRouter's upstream-wrapped Nvidia error), generic
+# "rate limit" / "429" phrasing from any provider, and transient network/
+# proxy failures (this environment's corporate proxy occasionally 407s mid
+# -batch, same class of blip as a rate limit from the caller's perspective).
+_RETRYABLE_MARKERS = (
+    "429",
+    "resourceexhausted",
+    "rate limit",
+    "ratelimit",
+    "407",
+    "proxy",
+    "connection error",
+    "apiconnectionerror",
+)
 
 
-def _is_rate_limit_error(exc: Exception) -> bool:
+def _is_retryable_error(exc: Exception) -> bool:
     text = str(exc).lower().replace("_", "")
-    return any(marker in text for marker in _RATE_LIMIT_MARKERS)
+    return any(marker in text for marker in _RETRYABLE_MARKERS)
 
 
 def _with_rate_limit_retry(fn, *, max_attempts: int = 5, base_delay: float = 15.0):
-    """Retry fn() on rate-limit errors with linear backoff. Re-raises anything else."""
+    """Retry fn() on rate-limit / transient-network errors with linear backoff.
+    Re-raises anything else."""
     last_exc: Exception | None = None
     for attempt in range(max_attempts):
         try:
             return fn()
-        except Exception as exc:  # noqa: BLE001 - re-raised below if not a rate limit
-            if not _is_rate_limit_error(exc):
+        except Exception as exc:  # noqa: BLE001 - re-raised below if not retryable
+            if not _is_retryable_error(exc):
                 raise
             last_exc = exc
             time.sleep(base_delay * (attempt + 1))
