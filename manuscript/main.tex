@@ -1,0 +1,72 @@
+\documentclass[preprint,12pt]{elsarticle}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+
+\journal{TBD}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{OR-Select: Deterministic Best-Answer Selection over Stochastic LLM Ensembles via Integer Programming}
+
+\author{}
+\address{}
+
+\begin{abstract}
+Large language models are inherently probabilistic: even at temperature
+zero, sampling and hardware effects (GPU batch-invariance, floating-point
+non-associativity) prevent fully reproducible generation. We do not
+attempt to make generation deterministic. Instead, given a distribution of
+$N$ candidate answers to the same query, we formulate the selection of a
+single best answer as a multi-objective integer program over a
+judge-derived pairwise comparison matrix, with position bias removed via
+permutation self-consistency. The resulting pipeline is exactly
+reproducible: the same candidate set and the same judge outputs always
+yield the same winner, independent of solver internals or execution
+order. We describe the formal model, a reference implementation using
+CP-SAT, and an experimental protocol against self-consistency voting and
+single-model reranking baselines.
+\end{abstract}
+
+\begin{keyword}
+operations research \sep large language models \sep integer programming \sep
+answer selection \sep determinism \sep self-consistency
+\end{keyword}
+
+\end{frontmatter}
+
+\section{Introduction}
+
+\section{Related Work}
+
+\section{Method}
+
+\subsection{Pipeline}
+
+\subsection{Formal Model}
+
+\begin{equation}
+\max \sum_i x_i \left( w_1 \cdot \text{quality}_i + w_2 \cdot \text{confidence}_i - w_3 \cdot \text{cost}_i \right)
+\end{equation}
+\begin{align}
+\text{s.t.} \quad & \sum_i x_i = 1 \\
+& \text{quality}_i \geq \text{min\_quality} \quad \text{(optional)} \\
+& x_i \in \{0, 1\}
+\end{align}
+
+\section{Experiments}
+
+\section{Results}
+
+\section{Discussion}
+
+\section{Conclusion}
+
+\bibliographystyle{elsarticle-num}
+\bibliography{refs}
+
+\end{document}

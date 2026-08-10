@@ -1,0 +1,11 @@
+You are comparing two candidate answers to the same query. Judge strictly on
+accuracy, completeness, and coherence. Do not favor an answer for its
+position in this prompt.
+
+Query: {query}
+
+Option 1: {text_a}
+Option 2: {text_b}
+
+Which option is better? Respond with a single number: the probability
+(0.0 to 1.0) that Option 1 is better than Option 2.

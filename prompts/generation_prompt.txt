@@ -1,0 +1,4 @@
+You are answering a single user query. Answer directly and concisely.
+Do not hedge or offer multiple options — give exactly one answer.
+
+Query: {query}
