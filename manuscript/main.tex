@@ -42,6 +42,57 @@ answer selection \sep determinism \sep self-consistency
 
 \section{Introduction}
 
+Large language models are inherently probabilistic: sampling from a token
+distribution, combined with GPU batch-invariance and floating-point
+non-associativity, means even greedy (temperature-zero) decoding does not
+guarantee reproducible output across runs or hardware. A common response
+is to sample $N$ candidate answers to the same query and pick one --
+self-consistency \citep{wang2023selfconsistency} does this by majority
+vote over final answers. Majority vote is well-defined only when
+candidates cluster: on open-ended queries, where independently sampled
+answers rarely repeat verbatim, it degenerates to an arbitrary tie-break
+with no principled basis. We show this empirically in
+Section~\ref{sec:results}, not just as a theoretical edge case: on every
+open-ended query in our experiments, zero of $N=5$ candidates matched
+exactly.
+
+We do not attempt to make generation itself deterministic. Instead we
+treat \emph{selection} among an already-sampled set of $N$ candidates as
+an optimization problem: an LLM judge produces a pairwise preference
+matrix over the candidates, and an integer program combines it with a
+deterministic self-consistency signal, a confidence estimate, and a cost
+penalty to pick exactly one winner. Given a fixed candidate set, fixed
+judge outputs, and fixed scores, this selection is provably reproducible
+-- the solve is exact and does not depend on machine, solver internals,
+or execution order. What is \emph{not} automatically reproducible is
+whether the judge and scoring calls themselves return the same values on
+repeated runs, since they are themselves LLM calls; we measure this
+directly rather than assume it (Section~\ref{sec:results}).
+
+Our contributions:
+\begin{enumerate}
+\item An integer-programming formulation for best-of-$N$ LLM answer
+  selection that combines an LLM-judged pairwise quality term with a
+  \emph{deterministic}, zero-API-cost self-consistency term, rather than
+  treating self-consistency and LLM-as-judge as competing methods.
+\item Two empirical findings about provider-side non-determinism that
+  directly affect any system relying on LLM judges: (a) a provider
+  ($\mathrm{seed}$-supporting, live-tested) returned non-symmetric
+  pairwise scores for byte-identical candidate text, which is
+  mathematically impossible if seeding were honored, and (b) an
+  exact-match short-circuit that closes this specific failure mode
+  entirely by skipping the judge call when it cannot change the
+  mathematically-determined answer.
+\item A two-track evaluation -- open-ended queries with no ground truth,
+  and GSM8K \citep{wang2023selfconsistency} with a checkable numeric
+  answer -- because neither alone answers whether the method is correct,
+  only whether it is different (Section~\ref{sec:experiments}).
+\item An ablation showing the self-consistency term has had zero effect
+  on any real winner selected so far, and a structural (not
+  coincidental) explanation why, reported as a finding rather than
+  omitted.
+\end{enumerate}
+
 \section{Related Work}
 
 Permutation self-consistency \citep{tang2024permutation} establishes that
@@ -77,8 +128,45 @@ rather than relying on judge-quality proxies alone.
 \section{Method}
 
 \subsection{Pipeline}
+\label{sec:pipeline}
+
+Given a query, the pipeline runs five stages.
+
+\textbf{Generate.} Sample $N$ candidate answers, either from one model
+with $N$ distinct seeds or round-robined across multiple providers for
+heterogeneity. This is the only stage that is not, and is not intended to
+be, deterministic.
+
+\textbf{Score.} Obtain a per-candidate confidence estimate
+$\text{confidence}_i \in [0,1]$ and a cost proxy $\text{cost}_i$ (token
+count).
+
+\textbf{Compare.} Build a pairwise preference matrix $W[i,j]$: for each
+unordered pair, an LLM judge is asked twice, once in each text order, and
+the two votes averaged, following permutation self-consistency
+\citep{tang2024permutation} -- this cancels the positional bias
+documented in \citet{zheng2023judging}. The reverse entry is derived as
+$W[j,i] = 1 - W[i,j]$ rather than re-judged, since the two are exact
+complements by construction, halving the judge-call count for a given
+$N$. Pairs with byte-identical candidate text skip the judge call
+entirely and receive the mathematically forced $W[i,j]=0.5$ directly
+(Section~\ref{sec:seed-finding} motivates why this matters beyond
+efficiency).
+
+\textbf{Self-consistency.} Compute
+$\text{consistency}_i = |\{j : \text{text}_j = \text{text}_i\}| / N$
+purely by string comparison -- zero additional API calls, and the
+formal expression of self-consistency voting
+\citep{wang2023selfconsistency} as one signal rather than the entire
+decision rule.
+
+\textbf{Select.} Solve the integer program below with an exact MIP
+solver (CP-SAT).
 
 \subsection{Formal Model}
+\label{sec:formal-model}
+
+Let $x_i \in \{0,1\}$ indicate whether candidate $i$ is selected.
 
 \begin{equation}
 \max \sum_i x_i \left( w_1 \cdot \text{quality}_i + w_2 \cdot \text{confidence}_i + w_4 \cdot \text{consistency}_i - w_3 \cdot \text{cost}_i \right)
@@ -89,14 +177,191 @@ rather than relying on judge-quality proxies alone.
 & x_i \in \{0, 1\}
 \end{align}
 
+$\text{quality}_i = \text{mean}_j\, W[i,j]$ is the Copeland-style
+aggregate of the pairwise matrix: the mean weight by which candidate $i$
+beats every other candidate. \citet{llmjudgethemselves2025} compare
+Borda, Copeland, and Kemeny-Young aggregation of multiple LLM judges and
+find Kemeny-Young best aligned with human preference; Copeland is a
+tractable approximation to it, and the full Kemeny-Young formulation
+(adding transitivity constraints $x_{ij}+x_{jk}+x_{ki} \le 2$ to produce
+a complete ranking rather than a single winner) is a direct extension we
+have not yet implemented. Default weights
+$(w_1,w_2,w_4,w_3) = (1.0, 0.2, 0.3, 0.01)$ were chosen by inspection, not
+tuned; Section~\ref{sec:ablations} reports an ablation on $w_4$.
+
+Given fixed $\text{quality}_i$, $\text{confidence}_i$,
+$\text{consistency}_i$, and $\text{cost}_i$, the solve is exact: CP-SAT
+with a single search worker returns the same optimum regardless of
+machine or call order, since the objective is a deterministic linear
+function of fixed inputs and the feasible region is fixed. This is
+proved by construction, not measured -- what we measure empirically is
+whether the \emph{inputs} to the solve are themselves stable across runs,
+since $\text{quality}_i$ and $\text{confidence}_i$ come from LLM calls
+(Section~\ref{sec:seed-finding}).
+
 \section{Experiments}
 \label{sec:experiments}
 
+\subsection{Setup}
+
+Unless noted otherwise, all live results use OpenRouter
+(\texttt{nvidia/nemotron-3-ultra-550b-a55b:free}) as generator, scorer,
+and judge -- a single free-tier model, chosen for availability during
+this work, not because it is expected to be the strongest choice; we
+discuss this as a limitation in Section~\ref{sec:limitations}. Two other
+providers (OpenAI, Google Gemini) were wired identically but were
+unavailable during the experimental window (OpenAI: account had no
+API credits; Gemini: exceeded its 20-request/day free-tier quota), which
+prevented a live heterogeneous-judge (multi-provider) run -- itself a
+data point on how fragile free-tier experimentation is for this class of
+system.
+
+\subsection{Baselines}
+
+\textbf{Self-consistency alone}: majority vote over candidates, with no
+LLM judge and no optimization. When compared on GSM8K, the vote is taken
+over each candidate's \emph{extracted final numeric answer}, matching
+\citeauthor{wang2023selfconsistency}'s original definition, since two
+candidates can reach the same correct number through different
+reasoning text.
+
+\textbf{Greedy single-sample}: the first of the $N$ candidates, i.e. no
+ensembling at all.
+
+\subsection{Two tracks}
+
+\textbf{Track A (open-ended, no ground truth)}: three queries with no
+single correct answer (a plot summary, a policy-strategy question, and a
+personal-finance question), $N=5$ candidates each. Measures whether
+OR-Select's selection \emph{differs} from the baselines and by how much,
+via score margin.
+
+\textbf{Track B (GSM8K, ground truth)}: grade-school arithmetic word
+problems from the public GSM8K test set \citep{wang2023selfconsistency},
+each with a single correct numeric answer, $N=3$ candidates each.
+Measures whether OR-Select's selection is \emph{correct} more often than
+the baselines -- addressing \citeauthor{landesberg2026bestofn}'s finding
+that judge-quality proxies do not predict actual selection accuracy. The
+final numeric answer is extracted from free text by taking the last
+number in the response (Appendix -- reasoning models frequently restate
+numbers from the problem statement before giving their final answer, so
+the first number is often wrong).
+
+\subsection{Ablations}
+\label{sec:ablations}
+
+Two components admit direct ablation. The self-consistency weight $w_4$
+is ablated fully offline: since the scoring formula is known exactly,
+$\text{quality}_i$ is recoverable by inversion from each saved run's
+final score, and re-solving with $w_4=0$ isolates the term's effect
+without any new API calls. Permutation self-consistency is ablated with
+new judge calls: forward-only judging (no backward-direction averaging)
+against the same already-generated candidate texts, isolating what
+bidirectional judging buys over naive single-direction judging.
+
 \section{Results}
+\label{sec:results}
+
+\subsection{Track A: open-ended queries}
+
+OR-Select disagreed with both baselines on all 3 of 3 queries. Across the
+15 candidates generated, zero had byte-identical text to any other
+candidate for the same query -- self-consistency had no true majority to
+fall back on for \emph{any} query tested, resorting to an arbitrary
+tie-break every time (which happened to coincide with the greedy pick in
+all three, since both default to "first candidate" absent other
+information). Score margins were not uniform: two queries showed a clear
+quality gap between OR-Select's winner and the runner-up (0.088 and 0.446
+respectively, in the pipeline's internal score units), while the third
+was a near-tie (margin 0.003) between paraphrases of the same balanced
+answer -- reported honestly rather than averaged away, since a
+paper-level claim of "OR-Select wins" would be misleading applied
+uniformly to all three.
+
+\subsection{Track B: GSM8K}
+
+On an initial sample of 4 problems ($N=3$), all three methods -- OR-Select,
+self-consistency, greedy -- scored 4/4 (100\%). This is not a null result
+so much as the predicted complement to Track A: on every one of the 4
+problems, all 3 of 3 candidates independently reached the identical
+correct numeric answer. A judge cannot differentiate candidates that do
+not differ. \emph{[A larger run, 40 problems including harder items
+expected to force candidate disagreement, was in progress at the time of
+writing; see the project repository for updated numbers.]}
+
+\subsection{Ablations}
+
+\textbf{Self-consistency term}: 0 of 5 winners (the 3 Track A queries plus
+2 additional single-query smoke tests) changed when $w_4$ was set to
+zero. This was not close in any case: the spread between the maximum and
+minimum $\text{consistency}_i$ within a run was exactly 0.000 in all 5,
+because every candidate set observed so far fell into one of two
+extremes -- fully converged (identical text, flat $\text{consistency}=1$)
+or fully diverged (unique text, flat $\text{consistency}=1/N$) -- and a
+constant added to every candidate's score cannot change which one is the
+arg max. The term is designed for the intermediate case, uneven
+clustering, which no live run has yet produced.
+\emph{[Permutation self-consistency ablation results were pending at the
+time of writing.]}
 
 \section{Discussion}
 
+\subsection{A concrete non-determinism finding}
+\label{sec:seed-finding}
+
+A live run produced 3 candidates with byte-identical text. By
+construction, every pairwise weight among identical text must be exactly
+$0.5$: the forward and backward judge calls are the literal same prompt,
+so $(v + (1-v))/2 = 0.5$ regardless of what the model returns. The
+observed quality scores were $0.375$, $0.50$, and $0.625$ -- direct
+empirical evidence that the provider's $\mathrm{seed}$ parameter is not
+reliably enforced in practice, not merely a theoretical caveat about
+vendor documentation. The exact-match short-circuit in
+Section~\ref{sec:pipeline} closes this specific failure mode completely,
+since identical text never reaches the judge at all; it does not address
+the general case of two \emph{different} texts receiving unstable judge
+scores across runs, which remains open.
+
+\subsection{Limitations}
+\label{sec:limitations}
+
+\textbf{Scale.} $N=3$--$5$ candidates and single-digit query/problem
+counts per track are smoke-test scale, dictated by free-tier rate limits
+encountered during this work (queue depths up to 3517 against a
+32-request provider-side limit were observed), not by design. This is a
+preliminary report, not a powered evaluation.
+
+\textbf{Single judge model.} Every result uses one model as generator,
+scorer, and judge simultaneously. \citet{correlatederrors2026} show that
+LLM judge panels carry far less independent signal than judge count
+suggests because models make correlated errors, and that improved
+aggregation algorithms close at most 11\% of the resulting gap. Whether
+heterogeneous-provider judging would help here, or merely add cost, is
+untested, not merely under-tested -- no heterogeneous run completed
+during this work (Section~\ref{sec:experiments}).
+
+\textbf{No test of correcting a wrong majority.} The scenario that most
+directly tests the hypothesis -- candidates disagree, the majority is
+wrong, and OR-Select's judge selects a correct minority answer -- did not
+occur in Track B at this problem difficulty and $N$. This is the single
+most important open question for future work.
+
 \section{Conclusion}
+
+We formulate best-of-$N$ LLM answer selection as an integer program
+combining LLM-judged pairwise quality, deterministic self-consistency,
+confidence, and cost. The selection step is exactly reproducible given
+fixed inputs; whether those inputs are themselves stable is an empirical
+question we measure rather than assume, finding a concrete provider-side
+non-determinism failure and closing one instance of it. A two-track
+evaluation shows the method diverges from simpler baselines exactly when
+candidates diverge, and ties with them when candidates converge -- both
+predicted by the same underlying mechanism and confirmed independently.
+The self-consistency term has not yet influenced a real decision, for a
+structural reason identified by ablation rather than assumed. This is
+preliminary, small-scale work; the concrete next step is a larger,
+harder ground-truth benchmark run specifically to force the candidate
+disagreement this report's evaluation never encountered.
 
 \bibliographystyle{elsarticle-num}
 \bibliography{refs}
