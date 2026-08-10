@@ -61,7 +61,13 @@ def _with_rate_limit_retry(fn, *, max_attempts: int = 5, base_delay: float = 15.
             if not _is_retryable_error(exc):
                 raise
             last_exc = exc
-            time.sleep(base_delay * (attempt + 1))
+            delay = base_delay * (attempt + 1)
+            print(
+                f"  retry {attempt + 1}/{max_attempts} after {type(exc).__name__}: "
+                f"{str(exc)[:200]!r} (sleeping {delay:.0f}s)",
+                flush=True,
+            )
+            time.sleep(delay)
     raise last_exc  # type: ignore[misc]
 
 

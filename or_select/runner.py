@@ -24,10 +24,12 @@ def _load_queries(path: Path) -> list[str]:
     return queries
 
 
-def _run_one(query: str, n: int, provider: str) -> None:
+def _run_one(query: str, n: int, provider: str, index: int, total: int) -> None:
+    print(f"[{index}/{total}] running: {query!r}", flush=True)
     result = run_pipeline(query, n=n, provider=provider)
     out_dir = run_dir(_query_id(query))
     write_json(out_dir / "selection.json", result.to_json())
+    print(f"[{index}/{total}] done: winner={result.winner_text!r}", flush=True)
 
 
 def main() -> None:
@@ -40,7 +42,12 @@ def main() -> None:
 
     queries = _load_queries(args.input)
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
-        list(pool.map(lambda q: _run_one(q, args.n, args.provider), queries))
+        list(
+            pool.map(
+                lambda iq: _run_one(iq[1], args.n, args.provider, iq[0] + 1, len(queries)),
+                enumerate(queries),
+            )
+        )
     print(f"ran {len(queries)} queries -> outputs/runs/")
 
 
