@@ -2,6 +2,7 @@
 
     python3 -m or_select.pipeline --query "What is the capital of France?" --n 10
     python3 -m or_select.pipeline --query "..." --n 10 --provider openai
+    python3 -m or_select.pipeline --query "..." --n 10 --provider openrouter
     python3 -m or_select.pipeline --query "..." --n 10 --provider both   # openai + gemini
 """
 
@@ -16,7 +17,7 @@ from .pairwise import build_pairwise_matrix
 from .scoring import score_candidates
 from .selection import aggregate_quality, select_best
 
-PROVIDERS = ("placeholder", "openai", "gemini", "both")
+PROVIDERS = ("placeholder", "openai", "gemini", "openrouter", "both")
 
 
 def _echo_generate_fn(query: str, seed: int) -> str:
@@ -45,6 +46,8 @@ def _resolve_backends(provider: str):
         return providers.openai_generate, providers.openai_score, providers.openai_judge
     if provider == "gemini":
         return providers.gemini_generate, providers.gemini_score, providers.gemini_judge
+    if provider == "openrouter":
+        return providers.openrouter_generate, providers.openrouter_score, providers.openrouter_judge
     raise ValueError(f"unknown provider: {provider!r} (choose from {PROVIDERS})")
 
 

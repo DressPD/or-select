@@ -46,6 +46,7 @@ outputs/           generated run artifacts; safe to delete before a new run
 ```bash
 OPENAI_API_KEY=...
 GOOGLE_API_KEY=...
+OPENROUTER_API_KEY=...
 ```
 
 2. Install provider SDKs (not needed for the placeholder backend).
@@ -68,6 +69,7 @@ python3 -m or_select.pipeline --query "What is the capital of France?" --n 10
 ```bash
 python3 -m or_select.pipeline --query "..." --n 10 --provider openai
 python3 -m or_select.pipeline --query "..." --n 10 --provider gemini
+python3 -m or_select.pipeline --query "..." --n 10 --provider openrouter
 python3 -m or_select.pipeline --query "..." --n 10 --provider both
 ```
 

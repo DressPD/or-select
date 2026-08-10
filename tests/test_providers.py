@@ -3,10 +3,15 @@ from __future__ import annotations
 import os
 import unittest
 
+from dotenv import load_dotenv
+
 from or_select.pipeline import run_pipeline
+
+load_dotenv()  # providers.py only loads .env lazily; load here so skip checks below see it
 
 _HAS_OPENAI = bool(os.environ.get("OPENAI_API_KEY"))
 _HAS_GEMINI = bool(os.environ.get("GOOGLE_API_KEY"))
+_HAS_OPENROUTER = bool(os.environ.get("OPENROUTER_API_KEY"))
 
 
 class ProviderIntegrationTest(unittest.TestCase):
@@ -20,6 +25,11 @@ class ProviderIntegrationTest(unittest.TestCase):
     @unittest.skipUnless(_HAS_GEMINI, "GOOGLE_API_KEY not set")
     def test_gemini_provider_end_to_end(self) -> None:
         result = run_pipeline("What is the capital of France?", n=3, provider="gemini")
+        self.assertTrue(result.winner_text)
+
+    @unittest.skipUnless(_HAS_OPENROUTER, "OPENROUTER_API_KEY not set")
+    def test_openrouter_provider_end_to_end(self) -> None:
+        result = run_pipeline("What is the capital of France?", n=3, provider="openrouter")
         self.assertTrue(result.winner_text)
 
     @unittest.skipUnless(_HAS_OPENAI and _HAS_GEMINI, "both API keys required")

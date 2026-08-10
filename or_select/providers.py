@@ -1,9 +1,10 @@
-"""Real LLM backends: OpenAI and Gemini generation, scoring, and judging.
+"""Real LLM backends: OpenAI, Gemini, and OpenRouter generation, scoring,
+and judging.
 
-Requires OPENAI_API_KEY / GOOGLE_API_KEY in the environment (see .env,
-created from .env.example). Used to validate the OR-Select pipeline against
-real, heterogeneous model output instead of the deterministic placeholders
-in pipeline.py.
+Requires OPENAI_API_KEY / GOOGLE_API_KEY / OPENROUTER_API_KEY in the
+environment (see .env, created from .env.example). Used to validate the
+OR-Select pipeline against real, heterogeneous model output instead of the
+deterministic placeholders in pipeline.py.
 
 Clients are created lazily (only when a function is first called) so
 importing this module never requires both providers' keys to be set.
@@ -24,13 +25,17 @@ load_dotenv()
 PROMPTS_DIR = Path(__file__).resolve().parents[1] / "prompts"
 OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-5.6-terra")
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
+OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "nvidia/nemotron-3-ultra-550b-a55b:free")
 
 _NUMBER_RE = re.compile(r"[-+]?\d*\.?\d+")
-_RATE_LIMIT_MARKERS = ("429", "RESOURCE_EXHAUSTED", "rate_limit", "rate limit")
+# Lowercase, no-underscore markers: matches "RESOURCE_EXHAUSTED" (Gemini),
+# "ResourceExhausted" (OpenRouter's upstream-wrapped Nvidia error), and
+# generic "rate limit" / "429" phrasing from any provider.
+_RATE_LIMIT_MARKERS = ("429", "resourceexhausted", "rate limit", "ratelimit")
 
 
 def _is_rate_limit_error(exc: Exception) -> bool:
-    text = str(exc)
+    text = str(exc).lower().replace("_", "")
     return any(marker in text for marker in _RATE_LIMIT_MARKERS)
 
 
@@ -71,6 +76,13 @@ def _gemini_client():
     return genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
 
 
+@lru_cache(maxsize=1)
+def _openrouter_client():
+    from openai import OpenAI
+
+    return OpenAI(api_key=os.environ["OPENROUTER_API_KEY"], base_url="https://openrouter.ai/api/v1")
+
+
 def _openai_complete(prompt: str, *, seed: int | None = None) -> str:
     kwargs = {"seed": seed} if seed is not None else {}
 
@@ -93,6 +105,25 @@ def _gemini_complete(prompt: str) -> str:
     return _with_rate_limit_retry(call)
 
 
+def _openrouter_complete(prompt: str, *, seed: int | None = None) -> str:
+    kwargs = {"seed": seed} if seed is not None else {}
+
+    def call() -> str:
+        resp = _openrouter_client().chat.completions.create(
+            model=OPENROUTER_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            **kwargs,
+        )
+        # OpenRouter returns HTTP 200 with no `choices` and an `error` field
+        # when the upstream (free-tier) provider is saturated, instead of a
+        # 429 the SDK would raise on its own.
+        if not resp.choices:
+            raise RuntimeError(f"OpenRouter error (treated as rate limit): {resp.error}")
+        return (resp.choices[0].message.content or "").strip()
+
+    return _with_rate_limit_retry(call)
+
+
 # --- generation -------------------------------------------------------
 
 
@@ -104,6 +135,10 @@ def gemini_generate(query: str, seed: int) -> str:
     # Gemini has no seed parameter; sampling variance across calls stands in
     # for the seed sweep used with OpenAI.
     return _gemini_complete(query)
+
+
+def openrouter_generate(query: str, seed: int) -> str:
+    return _openrouter_complete(query, seed=seed)
 
 
 # --- confidence scoring -------------------------------------------------
@@ -125,6 +160,11 @@ def gemini_score(query: str, text: str) -> float:
     return _parse_score(_gemini_complete(prompt))
 
 
+def openrouter_score(query: str, text: str) -> float:
+    prompt = _CONFIDENCE_PROMPT.format(query=query, text=text)
+    return _parse_score(_openrouter_complete(prompt))
+
+
 # --- pairwise judging -----------------------------------------------------
 
 
@@ -139,3 +179,7 @@ def openai_judge(query: str, text_a: str, text_b: str) -> float:
 
 def gemini_judge(query: str, text_a: str, text_b: str) -> float:
     return _parse_score(_gemini_complete(_judge_prompt(query, text_a, text_b)))
+
+
+def openrouter_judge(query: str, text_a: str, text_b: str) -> float:
+    return _parse_score(_openrouter_complete(_judge_prompt(query, text_a, text_b)))
