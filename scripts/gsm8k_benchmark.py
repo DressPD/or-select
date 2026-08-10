@@ -92,9 +92,12 @@ def main() -> None:
     parser.add_argument("--n", type=int, default=5)
     parser.add_argument("--provider", choices=PROVIDERS, default="placeholder")
     parser.add_argument("--output", type=Path, default=ROOT / "outputs" / "gsm8k_benchmark.json")
+    parser.add_argument("--limit", type=int, default=None, help="Only run the first LIMIT problems.")
     args = parser.parse_args()
 
     problems = _load_problems(args.input)
+    if args.limit is not None:
+        problems = problems[: args.limit]
     results = run_benchmark(problems, args.n, args.provider)
 
     n_total = len(results)
