@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import os
 import re
+import time
 from functools import lru_cache
 from pathlib import Path
 
@@ -25,6 +26,26 @@ OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-5.6-terra")
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
 
 _NUMBER_RE = re.compile(r"[-+]?\d*\.?\d+")
+_RATE_LIMIT_MARKERS = ("429", "RESOURCE_EXHAUSTED", "rate_limit", "rate limit")
+
+
+def _is_rate_limit_error(exc: Exception) -> bool:
+    text = str(exc)
+    return any(marker in text for marker in _RATE_LIMIT_MARKERS)
+
+
+def _with_rate_limit_retry(fn, *, max_attempts: int = 5, base_delay: float = 15.0):
+    """Retry fn() on rate-limit errors with linear backoff. Re-raises anything else."""
+    last_exc: Exception | None = None
+    for attempt in range(max_attempts):
+        try:
+            return fn()
+        except Exception as exc:  # noqa: BLE001 - re-raised below if not a rate limit
+            if not _is_rate_limit_error(exc):
+                raise
+            last_exc = exc
+            time.sleep(base_delay * (attempt + 1))
+    raise last_exc  # type: ignore[misc]
 
 
 def _parse_score(text: str) -> float:
@@ -52,17 +73,24 @@ def _gemini_client():
 
 def _openai_complete(prompt: str, *, seed: int | None = None) -> str:
     kwargs = {"seed": seed} if seed is not None else {}
-    resp = _openai_client().chat.completions.create(
-        model=OPENAI_MODEL,
-        messages=[{"role": "user", "content": prompt}],
-        **kwargs,
-    )
-    return (resp.choices[0].message.content or "").strip()
+
+    def call() -> str:
+        resp = _openai_client().chat.completions.create(
+            model=OPENAI_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            **kwargs,
+        )
+        return (resp.choices[0].message.content or "").strip()
+
+    return _with_rate_limit_retry(call)
 
 
 def _gemini_complete(prompt: str) -> str:
-    resp = _gemini_client().models.generate_content(model=GEMINI_MODEL, contents=prompt)
-    return (resp.text or "").strip()
+    def call() -> str:
+        resp = _gemini_client().models.generate_content(model=GEMINI_MODEL, contents=prompt)
+        return (resp.text or "").strip()
+
+    return _with_rate_limit_retry(call)
 
 
 # --- generation -------------------------------------------------------
