@@ -309,13 +309,15 @@ excluded here; we note the correction rather than the more convenient
 whether it changed the conclusion.
 
 \textbf{Permutation self-consistency}: forward-only (single-direction)
-judging changed the winner in 2 of 2 completed comparisons (a third was
-in progress at time of writing) against the same 3 Track A candidate
-sets. This is the opposite result from the self-consistency-term
-ablation: bidirectional judging is not inert, it materially changes the
-selected winner, consistent with position bias being a first-order
-LLM-judge failure mode \citep{zheng2023judging, tang2024permutation}
-rather than a marginal correction.
+judging changed the winner in 2 of 3 comparisons against the same Track A
+candidate sets (rent-vs-buy and Hamlet changed; traffic congestion did
+not). This is the opposite pattern from the self-consistency-term
+ablation (0 of 3, never): bidirectional judging is doing real,
+load-bearing work most of the time, consistent with position bias being
+a first-order LLM-judge failure mode
+\citep{zheng2023judging, tang2024permutation} rather than a marginal
+correction -- but 2 of 3 is not "always," and this sample is too small
+to characterize when the two directions agree versus disagree.
 
 \section{Discussion}
 

@@ -44,9 +44,9 @@ ground truth, and GSM8K with a checkable answer -- the method diverges
 from simpler baselines exactly when candidates diverge and ties with them
 when candidates converge, as predicted by the same mechanism from both
 directions. Two ablations give opposite results: bidirectional
-(permutation-self-consistent) judging changes the selected winner in
-every case tested; the deterministic self-consistency term has changed
-none, for a structural reason we identify. We report this as a
+(permutation-self-consistent) judging changes the selected winner in 2 of
+3 cases tested; the deterministic self-consistency term has changed none
+of 3, for a structural reason we identify. We report this as a
 preliminary, small-scale, honestly-limited study, including a
 methodological error we found and fixed during the work.
 \end{abstract}
@@ -151,10 +151,12 @@ version and reported "0 of 5"; we caught that this silently mixed
 pre/post-fix scoring semantics and excluded them, since the result needed
 correcting regardless of whether the number changed.} Permutation
 self-consistency: forward-only (no backward averaging) judging changed
-the winner in every completed comparison against the same Track A
-candidates -- the opposite finding from the term ablation. Bidirectional
-judging is load-bearing; the self-consistency term, as weighted, has not
-yet mattered on any valid data collected.
+the winner in 2 of 3 comparisons against the same Track A candidates
+(rent-vs-buy, Hamlet changed; traffic congestion did not) -- the
+opposite pattern from the term ablation, though not a universal one.
+Bidirectional judging is load-bearing most of the time; the
+self-consistency term, as weighted, has not yet mattered on any valid
+data collected.
 
 \section{A Concrete Non-Determinism Finding}
 \label{sec:finding}

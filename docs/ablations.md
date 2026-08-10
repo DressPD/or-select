@@ -80,18 +80,21 @@ against the existing bidirectional result already saved in each
 `selection.json`. Same data-hygiene scope as above: only the 3 post-fix
 Track A files are valid inputs.
 
-**Result so far: 2/2 completed winners changed** (traffic congestion
-still running at time of writing).
+**Final result: 2/3 winners changed.**
 
 | Query | Bidirectional winner | Forward-only winner | Changed? |
 |---|---|---|---|
 | Rent vs. buy | c3 | c4 | **yes** |
 | Hamlet summary | c2 | c0 | **yes** |
-| Traffic congestion | — | — | pending |
+| Traffic congestion | c1 | c1 | no |
 
-Unlike the self-consistency term, permutation self-consistency has
-changed the winner in every valid case observed so far. This is the
-opposite finding from the self-consistency ablation: bidirectional
-judging is not inert, it is actively load-bearing. Consistent with
-Zheng et al. (2023) and Tang et al. (2024)'s claims that positional bias
-is a first-order LLM-judge failure mode, not a marginal correction.
+Unlike the self-consistency term (0/3, never), permutation
+self-consistency changed the winner in 2 of 3 valid cases — not
+universal, but far from inert. This is the opposite finding from the
+self-consistency ablation: bidirectional judging is doing real, load-
+bearing work most of the time, consistent with Zheng et al. (2023) and
+Tang et al. (2024)'s claims that positional bias is a first-order
+LLM-judge failure mode, not a marginal correction — but it is not a
+guarantee that bidirectional judging always changes the outcome, and
+this small sample can't say how often the "same" case (traffic
+congestion) generalizes versus the "changed" case.
