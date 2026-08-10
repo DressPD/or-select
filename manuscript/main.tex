@@ -4,6 +4,7 @@
 \usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage{natbib}
 
 \journal{TBD}
 
@@ -43,6 +44,36 @@ answer selection \sep determinism \sep self-consistency
 
 \section{Related Work}
 
+Permutation self-consistency \citep{tang2024permutation} establishes that
+LLM judges exhibit positional bias in listwise ranking and shows that
+averaging over shuffled orderings toward a Kemeny-style central ranking
+corrects it; we adopt the pairwise (rather than listwise) form of this
+technique. PAIRS \citep{liu2024pairs} similarly finds that pairwise
+comparison plus rank aggregation outperforms asking an LLM evaluator to
+score or select directly. LLM-PeerReview \citep{llmpeerreview2025} is the
+closest prior system: multiple LLM judges score $N$ candidates, aggregated
+via a Dawid-Skene-style graphical truth-inference model; we aggregate
+instead via an integer program over a pairwise matrix plus a deterministic
+self-consistency term. \citet{llmjudgethemselves2025} compare Borda,
+Copeland, and Kemeny-Young aggregation of multiple LLM judges and find
+Kemeny-Young best aligned with human preference; our Copeland-style
+$\text{quality}_i$ is a Kemeny-Young approximation, consistent with this
+result. Position bias as a first-class LLM-judge failure mode is
+documented by \citet{zheng2023judging} in the foundational MT-Bench and
+Chatbot Arena evaluation.
+
+Two recent findings bear directly on this design rather than serving as
+background. \citet{correlatederrors2026} show that LLM judge panels carry
+far less independent signal than judge count suggests, since models make
+correlated errors, and that improved aggregation algorithms close at most
+11\% of the resulting gap -- this bears on whether heterogeneous-provider
+judging (Section~\ref{sec:experiments}) meaningfully reduces correlated
+error or merely adds cost. \citet{landesberg2026bestofn} show that judge
+calibration and agreement metrics do not predict actual best-of-$N$
+selection accuracy, motivating our use of GSM8K
+\citep{wang2023selfconsistency} as a benchmark with checkable ground truth
+rather than relying on judge-quality proxies alone.
+
 \section{Method}
 
 \subsection{Pipeline}
@@ -59,6 +90,7 @@ answer selection \sep determinism \sep self-consistency
 \end{align}
 
 \section{Experiments}
+\label{sec:experiments}
 
 \section{Results}
 

@@ -8,27 +8,39 @@ so comparing OR-Select's winner against these is free.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from .core import Candidate
 
 
-def self_consistency_winner(candidates: list[Candidate]) -> tuple[Candidate, bool]:
-    """Pick the majority-text candidate (classic self-consistency voting).
+def self_consistency_winner(
+    candidates: list[Candidate], key: Callable[[Candidate], str] | None = None
+) -> tuple[Candidate, bool]:
+    """Pick the majority candidate (classic self-consistency voting).
 
-    Returns (winner, had_majority). had_majority is False when no text
-    repeats (every candidate is unique) -- in that case "winner" is just
-    the first candidate by seed order, an arbitrary tie-break, not a
-    principled choice. This degenerate case is itself a finding: self-
+    key extracts the value candidates are compared on -- defaults to
+    normalized text (exact-answer match). For tasks with a checkable final
+    answer distinct from the reasoning text (e.g. GSM8K), pass
+    key=lambda c: str(extract_answer(c.text)): two candidates can reach the
+    same correct number via different reasoning, which is exactly the case
+    Wang et al.'s original self-consistency definition is built around.
+
+    Returns (winner, had_majority). had_majority is False when no key value
+    repeats (every candidate is unique under key) -- in that case "winner"
+    is just the first candidate by seed order, an arbitrary tie-break, not
+    a principled choice. This degenerate case is itself a finding: self-
     consistency alone is undefined once candidates stop clustering.
     """
     if not candidates:
         raise ValueError("no candidates to select from")
-    normalized = [c.text.strip() for c in candidates]
+    key = key or (lambda c: c.text.strip())
+    keys = [key(c) for c in candidates]
     counts: dict[str, int] = {}
-    for text in normalized:
-        counts[text] = counts.get(text, 0) + 1
-    best_text = max(counts, key=lambda t: counts[t])
-    had_majority = counts[best_text] > 1
-    winner = next(c for c, t in zip(candidates, normalized) if t == best_text)
+    for k in keys:
+        counts[k] = counts.get(k, 0) + 1
+    best_key = max(counts, key=lambda k: counts[k])
+    had_majority = counts[best_key] > 1
+    winner = next(c for c, k in zip(candidates, keys) if k == best_key)
     return winner, had_majority
 
 

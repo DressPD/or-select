@@ -27,6 +27,22 @@ class SelfConsistencyBaselineTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             self_consistency_winner([])
 
+    def test_custom_key_groups_by_extracted_value_not_raw_text(self) -> None:
+        # Different reasoning text, same final answer -- classic
+        # self-consistency (Wang et al.) should treat these as agreeing.
+        candidates = [
+            Candidate(id="a", text="9 eggs times 2 dollars = 18", source_model="m", metadata={"seed": 0}),
+            Candidate(id="b", text="16 - 3 - 4 = 9, so 9 * 2 = 18", source_model="m", metadata={"seed": 1}),
+            Candidate(id="c", text="the answer is 20", source_model="m", metadata={"seed": 2}),
+        ]
+
+        def key(c: Candidate) -> str:
+            return c.text.split()[-1]  # crude "last token" extraction for the test
+
+        winner, had_majority = self_consistency_winner(candidates, key=key)
+        self.assertTrue(had_majority)
+        self.assertEqual(winner.text.split()[-1], "18")
+
 
 class GreedyBaselineTest(unittest.TestCase):
     def test_picks_lowest_seed(self) -> None:

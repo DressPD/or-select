@@ -9,6 +9,55 @@ not attempt to make generation deterministic. It accepts N probabilistic
 candidate answers and makes the *choice* among them deterministic and
 auditable.
 
+## Related work
+
+**Aggregating multiple LLM judgments via OR/social-choice methods, not a
+single LLM call:**
+
+- Tang et al., *Found in the Middle: Permutation Self-Consistency Improves
+  Listwise Ranking in LLMs* (NAACL 2024) — the permutation self-consistency
+  technique used in `pairwise.py` is directly from this paper. Its own
+  "central ranking" aggregation step is itself a Kemeny-style consensus
+  operation, i.e. this citation already rests on OR/social-choice ground,
+  not just position-bias correction.
+- Liu et al., *Aligning with Human Judgement: The Role of Pairwise
+  Preference in LLM Evaluators (PAIRS)* (COLM 2024) — pairwise comparison
+  + rank aggregation outperforms asking an LLM to pick directly, on
+  long-form generation.
+- *LLM-PeerReview: Scoring, Reasoning, and Selecting the Best!* (2025) —
+  the closest prior art: multiple LLM judges score N candidates, aggregated
+  via a Dawid-Skene-style graphical truth-inference model. OR-Select
+  differs by aggregating via an integer program over a pairwise matrix plus
+  a deterministic self-consistency term, rather than an EM-based score
+  model.
+- *LLMs Judge Themselves: A Game-Theoretic Framework for Human-Aligned
+  Evaluation* (2025) — compares Borda, Copeland, and Kemeny-Young
+  aggregation of multiple LLM judges; Kemeny-Young best aligns with human
+  preference. `selection.py`'s Copeland-style `quality_i` is a Kemeny-Young
+  approximation, consistent with this finding.
+- Zheng et al., *Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena*
+  (NeurIPS 2023) — foundational LLM-as-judge paper; documents position bias
+  as a first-class judge failure mode, motivating the permutation
+  self-consistency step.
+
+**Cautions that materially bear on this design, not just background:**
+
+- *Nine Judges, Two Effective Votes: Correlated Errors Undermine LLM
+  Evaluation Panels* (2026) — a 9-judge panel carries roughly the
+  independent signal of 2 votes because models make correlated errors, and
+  better aggregation math closes at most 11% of that gap. This bears
+  directly on `--provider both`/`all`: whether OpenAI/Gemini/OpenRouter
+  judges are architecturally/training-data diverse enough to actually
+  reduce correlated error, versus just adding compute cost, is untested
+  here and should be treated as an open question, not an assumption.
+- Landesberg, *When LLM Judge Scores Look Good but Best-of-N Decisions
+  Fail* (2026) — judge calibration/agreement metrics do not predict actual
+  best-of-N selection accuracy. This is why the Hamlet/traffic/rent-vs-buy
+  runs earlier in this project, while illustrative of the pipeline
+  mechanics, do not constitute evidence of selection quality: there is no
+  ground truth to check the selection against. See the GSM8K benchmark
+  below for a design that does have ground truth.
+
 ## Pipeline
 
 1. **Generate** — sample N candidate answers (`or_select/generate.py`), same
@@ -124,17 +173,31 @@ an LLM call.
 - **Adaptive refinement**: use Bayesian optimization to propose a targeted
   refinement of the current winner instead of stopping at top-1.
 
-## Baselines to compare against
+## Baselines and benchmarks
 
 - **Majority/self-consistency voting alone** (no OR, no LLM judge — just
-  pick the mode of N samples). Distinct from the `consistency_i` term in
-  the formal model above: the baseline uses agreement frequency as the
-  *entire* decision rule, while OR-Select uses it as one additive term in
-  an IP alongside LLM-judged quality. The baseline should win exactly when
-  candidates cluster tightly (e.g. closed factual queries); OR-Select
-  should win once candidates diverge and quality judgment starts to matter
-  more than raw agreement (e.g. open-ended queries).
+  pick the mode of N samples), per Wang et al., *Self-Consistency Improves
+  Chain of Thought Reasoning in Language Models* (ICLR 2023). Distinct from
+  the `consistency_i` term in the formal model above: the baseline uses
+  agreement frequency as the *entire* decision rule, while OR-Select uses
+  it as one additive term in an IP alongside LLM-judged quality.
 - Single-sample greedy decoding (no ensemble at all).
-- Reranking with a single learned reward model (no pairwise judge).
+- Reranking with a single learned reward model (no pairwise judge) — see
+  PairRM / LLM-Blender (Jiang et al., ACL 2023) as a candidate `judge_fn`
+  replacement: a small, local, fixed-weight pairwise reward model that
+  sidesteps the provider-seed non-determinism documented above entirely.
 - Full Kemeny-Young ranking without permutation self-consistency (tests
   whether position-bias correction matters).
+
+**Benchmarks with ground truth (`scripts/gsm8k_benchmark.py`):**
+
+- **GSM8K** (Wang et al., ICLR 2023's evaluation protocol) — grade-school
+  math word problems with a single correct numeric answer. This is the one
+  benchmark here where "OR-Select's winner is correct" is a checkable fact,
+  not a subjective judgment call, directly addressing the Landesberg
+  caution above. Small-N runs (5-10 problems, N=5) are cheap enough to run
+  against a free-tier provider.
+- **RewardBench** (Allen Institute for AI, NAACL 2025 Findings) — proposed
+  but not yet run: human-labeled pairwise preferences, usable to validate
+  `judge_fn` in isolation against ground truth, independent of the full
+  selection pipeline.

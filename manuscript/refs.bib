@@ -1,5 +1,87 @@
-@misc{tang2024permutation,
+@inproceedings{tang2024permutation,
   title = {Found in the Middle: Permutation Self-Consistency Improves Listwise Ranking in Large Language Models},
-  author = {Tang, Raphael and others},
-  year = {2024}
+  author = {Tang, Raphael and Zhang, Xinyu and Ma, Xueguang and Lin, Jimmy and Ture, Ferhan},
+  booktitle = {Findings of the Association for Computational Linguistics: NAACL 2024},
+  year = {2024},
+  eprint = {2310.07712},
+  archivePrefix = {arXiv}
+}
+
+@inproceedings{liu2024pairs,
+  title = {Aligning with Human Judgement: The Role of Pairwise Preference in Large Language Model Evaluators},
+  author = {Liu, Yinhong and Zhou, Han and Guo, Zhijiang and Shareghi, Ehsan and Vuli{\'c}, Ivan and Korhonen, Anna and Collier, Nigel},
+  booktitle = {Conference on Language Modeling (COLM)},
+  year = {2024},
+  eprint = {2403.16950},
+  archivePrefix = {arXiv}
+}
+
+@misc{llmpeerreview2025,
+  title = {Scoring, Reasoning, and Selecting the Best! Ensembling LLMs via a Peer-Review Process},
+  year = {2025},
+  eprint = {2512.23213},
+  archivePrefix = {arXiv},
+  note = {Nearest prior art to OR-Select: aggregates multiple LLM judge scores via a Dawid-Skene-style graphical truth-inference model rather than an integer program over a pairwise matrix.}
+}
+
+@misc{llmjudgethemselves2025,
+  title = {LLMs Judge Themselves: A Game-Theoretic Framework for Human-Aligned Evaluation},
+  year = {2025},
+  eprint = {2510.15746},
+  archivePrefix = {arXiv},
+  note = {Compares Borda, Copeland, and Kemeny-Young aggregation of multiple LLM judges; Kemeny-Young (which Copeland, used in this work, approximates) best aligns with human preference.}
+}
+
+@inproceedings{zheng2023judging,
+  title = {Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena},
+  author = {Zheng, Lianmin and Chiang, Wei-Lin and Sheng, Ying and Zhuang, Siyuan and Wu, Zhanghao and Zhuang, Yonghao and Lin, Zi and Li, Zhuohan and Li, Dacheng and Xing, Eric P. and Zhang, Hao and Gonzalez, Joseph E. and Stoica, Ion},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year = {2023},
+  eprint = {2306.05685},
+  archivePrefix = {arXiv}
+}
+
+@misc{correlatederrors2026,
+  title = {Nine Judges, Two Effective Votes: Correlated Errors Undermine LLM Evaluation Panels},
+  year = {2026},
+  eprint = {2605.29800},
+  archivePrefix = {arXiv},
+  note = {A 9-judge panel carries roughly the independent signal of 2 votes because models make correlated errors; better aggregation math closes at most 11 percent of the gap. Directly relevant to the multi-provider judge configuration (--provider both/all).}
+}
+
+@misc{landesberg2026bestofn,
+  title = {When LLM Judge Scores Look Good but Best-of-N Decisions Fail},
+  author = {Landesberg},
+  year = {2026},
+  eprint = {2603.12520},
+  archivePrefix = {arXiv},
+  note = {Judge calibration and agreement metrics do not predict actual best-of-N selection accuracy; recommends evaluating on selection/decision accuracy directly, which motivates the GSM8K ground-truth benchmark in this work.}
+}
+
+@inproceedings{wang2023selfconsistency,
+  title = {Self-Consistency Improves Chain of Thought Reasoning in Language Models},
+  author = {Wang, Xuezhi and Wei, Jason and Schuurmans, Dale and Le, Quoc and Chi, Ed and Narang, Sharan and Chowdhery, Aakanksha and Zhou, Denny},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year = {2023},
+  eprint = {2203.11171},
+  archivePrefix = {arXiv},
+  note = {Introduces the majority-vote self-consistency baseline this work compares against, and the GSM8K evaluation protocol used here.}
+}
+
+@misc{rewardbench2025,
+  title = {RewardBench: Evaluating Reward Models for Language Modeling},
+  organization = {Allen Institute for AI},
+  booktitle = {Findings of the Association for Computational Linguistics: NAACL 2025},
+  year = {2025},
+  note = {Human-labeled pairwise preference dataset; proposed as a benchmark for validating the judge\_fn component in isolation, independent of the full selection pipeline.}
+}
+
+@inproceedings{jiang2023llmblender,
+  title = {LLM-Blender: Ensembling Large Language Models with Pairwise Ranking and Generative Fusion},
+  author = {Jiang, Dongfu and Ren, Xiang and Lin, Bill Yuchen},
+  booktitle = {Proceedings of the Association for Computational Linguistics (ACL)},
+  year = {2023},
+  eprint = {2306.02561},
+  archivePrefix = {arXiv},
+  note = {PairRM: a small local pairwise reward model, proposed as an alternative judge\_fn backend that avoids the provider-seed non-determinism observed empirically with OpenRouter/Nemotron.}
 }
