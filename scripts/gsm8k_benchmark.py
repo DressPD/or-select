@@ -69,9 +69,32 @@ def _grade_one(problem: dict, n: int, provider: str) -> dict:
     }
 
 
-def run_benchmark(problems: list[dict], n: int, provider: str) -> list[dict]:
-    results = []
+def _write_output(output: Path, results: list[dict], n: int, provider: str) -> None:
+    n_total = len(results)
+    accuracy = {m: sum(1 for r in results if r[m]["correct"]) / n_total for m in METHODS} if n_total else {}
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(
+        json.dumps(
+            {"n_problems": n_total, "n_samples": n, "provider": provider, "accuracy": accuracy, "results": results},
+            indent=2,
+        )
+    )
+
+
+def run_benchmark(
+    problems: list[dict], n: int, provider: str, output: Path, resume: bool
+) -> list[dict]:
+    results: list[dict] = []
+    done_queries: set[str] = set()
+    if resume and output.exists():
+        existing = json.loads(output.read_text())
+        results = existing.get("results", [])
+        done_queries = {r["query"] for r in results}
+
     for i, problem in enumerate(problems, start=1):
+        if problem["query"] in done_queries:
+            print(f"[{i}/{len(problems)}] skipped (already graded): {problem['query'][:60]!r}", flush=True)
+            continue
         print(f"[{i}/{len(problems)}] {problem['query'][:70]!r}...", flush=True)
         row = _grade_one(problem, n, provider)
         marks = {m: ("OK" if row[m]["correct"] else "X") for m in METHODS}
@@ -83,6 +106,7 @@ def run_benchmark(problems: list[dict], n: int, provider: str) -> list[dict]:
             flush=True,
         )
         results.append(row)
+        _write_output(output, results, n, provider)  # incremental: survives a kill mid-run
     return results
 
 
@@ -93,23 +117,17 @@ def main() -> None:
     parser.add_argument("--provider", choices=PROVIDERS, default="placeholder")
     parser.add_argument("--output", type=Path, default=ROOT / "outputs" / "gsm8k_benchmark.json")
     parser.add_argument("--limit", type=int, default=None, help="Only run the first LIMIT problems.")
+    parser.add_argument("--resume", action="store_true", help="Skip problems already graded in --output.")
     args = parser.parse_args()
 
     problems = _load_problems(args.input)
     if args.limit is not None:
         problems = problems[: args.limit]
-    results = run_benchmark(problems, args.n, args.provider)
+    results = run_benchmark(problems, args.n, args.provider, args.output, args.resume)
+    _write_output(args.output, results, args.n, args.provider)
 
     n_total = len(results)
-    accuracy = {m: sum(1 for r in results if r[m]["correct"]) / n_total for m in METHODS}
-
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(
-        json.dumps(
-            {"n_problems": n_total, "n_samples": args.n, "provider": args.provider, "accuracy": accuracy, "results": results},
-            indent=2,
-        )
-    )
+    accuracy = {m: sum(1 for r in results if r[m]["correct"]) / n_total for m in METHODS} if n_total else {}
 
     print()
     print(f"N problems = {n_total}, samples per problem = {args.n}, provider = {args.provider}")
