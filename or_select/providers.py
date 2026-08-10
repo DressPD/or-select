@@ -44,10 +44,21 @@ _RETRYABLE_MARKERS = (
     "connection error",
     "apiconnectionerror",
 )
+# Checked BEFORE _RETRYABLE_MARKERS and wins on conflict: these are 429s
+# that will never resolve by waiting (no credits, not "too many requests
+# per minute"), so retrying them just burns ~4 minutes of backoff before
+# failing anyway. Fail fast instead.
+_PERMANENT_ERROR_MARKERS = (
+    "insufficientquota",
+    "creditbalanceexhausted",
+    "billing",
+)
 
 
 def _is_retryable_error(exc: Exception) -> bool:
     text = str(exc).lower().replace("_", "")
+    if any(marker in text for marker in _PERMANENT_ERROR_MARKERS):
+        return False
     return any(marker in text for marker in _RETRYABLE_MARKERS)
 
 
