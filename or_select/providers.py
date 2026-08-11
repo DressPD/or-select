@@ -43,6 +43,11 @@ _RETRYABLE_MARKERS = (
     "proxy",
     "connection error",
     "apiconnectionerror",
+    # OpenRouter's generic wrapper for an upstream provider hiccup (seen live
+    # as a bare 404 with no message body from Nvidia) -- deliberately not a
+    # bare "404" marker, since a real "model not found" 404 should fail fast,
+    # not retry forever.
+    "provider returned error",
 )
 # Checked BEFORE _RETRYABLE_MARKERS and wins on conflict: these are 429s
 # that will never resolve by waiting (no credits, not "too many requests

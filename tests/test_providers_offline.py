@@ -41,6 +41,16 @@ class RetryableErrorTest(unittest.TestCase):
         )
         self.assertFalse(_is_retryable_error(exc))
 
+    def test_openrouter_provider_returned_error_404_is_retryable(self) -> None:
+        exc = Exception(
+            "Error code: 404 - {'error': {'message': 'Provider returned error', 'code': 404, "
+            "'metadata': {'raw': '', 'provider_name': 'Nvidia', 'is_byok': False}}}"
+        )
+        self.assertTrue(_is_retryable_error(exc))
+
+    def test_bare_model_not_found_404_is_not_retryable(self) -> None:
+        self.assertFalse(_is_retryable_error(Exception("Error code: 404 - model not found")))
+
     def test_unrelated_error_is_not_retryable(self) -> None:
         self.assertFalse(_is_retryable_error(Exception("model not found")))
 
