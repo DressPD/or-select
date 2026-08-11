@@ -112,13 +112,17 @@ def _write_output(output: Path, results: list[dict], n: int, provider: str) -> N
 
 
 def run_benchmark(
-    problems: list[dict], n: int, provider: str, output: Path, resume: bool
+    problems: list[dict], n: int, provider: str, output: Path, resume: bool, retry_failures: bool = False
 ) -> list[dict]:
     results: list[dict] = []
     done_queries: set[str] = set()
     if resume and output.exists():
         existing = json.loads(output.read_text())
         results = existing.get("results", [])
+        if retry_failures:
+            # Drop failed rows entirely so they're re-attempted below, rather
+            # than being treated as "done" forever just because a row exists.
+            results = [r for r in results if "error" not in r]
         done_queries = {r["query"] for r in results}
 
     for i, problem in enumerate(problems, start=1):
@@ -153,12 +157,17 @@ def main() -> None:
     parser.add_argument("--output", type=Path, default=ROOT / "outputs" / "gsm8k_benchmark.json")
     parser.add_argument("--limit", type=int, default=None, help="Only run the first LIMIT problems.")
     parser.add_argument("--resume", action="store_true", help="Skip problems already graded in --output.")
+    parser.add_argument(
+        "--retry-failures",
+        action="store_true",
+        help="With --resume, re-attempt problems that previously failed to grade instead of skipping them.",
+    )
     args = parser.parse_args()
 
     problems = _load_problems(args.input)
     if args.limit is not None:
         problems = problems[: args.limit]
-    results = run_benchmark(problems, args.n, args.provider, args.output, args.resume)
+    results = run_benchmark(problems, args.n, args.provider, args.output, args.resume, args.retry_failures)
     _write_output(args.output, results, args.n, args.provider)
 
     summary = _accuracy_summary(results)
