@@ -12,6 +12,12 @@ checkable answer to know that).
 - **Track B — GSM8K, ground truth.** Tests whether OR-Select's selection
   is actually *correct* more often than the baselines. Quantitative:
   accuracy.
+- **Track C — MATH Level 5, ground truth, harder/unsaturated.** Same
+  question as Track B, but on a benchmark chosen specifically because the
+  literature predicts it should *not* be saturated for the model used
+  here — the direct attempt at hypothesis sub-claim 5 (can OR-Select
+  correct a wrong self-consistency majority). Underpowered by an
+  infrastructure constraint; see below.
 
 All three methods compared throughout:
 - **OR-Select**: the full pipeline (`or_select/pipeline.py`) — LLM judge +
@@ -31,6 +37,7 @@ method is expected to work best with — see "Open questions" at the end).
 |---|---|---|---|
 | A | Open-ended (3 queries, N=5) | Never (0/15) | OR-Select disagreed with both baselines on 3/3; self-consistency undefined every time |
 | B | GSM8K, easy (40/40 problems graded, N=3) | Always (40/40) | All 3 methods tied at 100% accuracy on every problem |
+| C | MATH Level 5, hard (2/20 problems graded, N=3) | Always (2/2) | All 3 methods tied at 100% accuracy; run stopped early by rate-limit saturation, not by design |
 
 Both results are consistent with a single underlying prediction, stated in
 `methodology.md` before either track was run: baselines and OR-Select
@@ -140,6 +147,64 @@ deterministically (no cherry-picking, no random seed to justify). All 40
 graded (see the outage-and-recovery note above for why this took two
 sessions).
 
+## Track C: MATH Level 5, ground truth (N=3, 2/20 problems graded)
+
+**Motivation.** Track B (GSM8K) showed 0/40 disagreement — every
+candidate converged on the same correct answer every time, which the
+literature (Kim et al. 2025, Ding 2026, both cited in Track B above)
+predicts is structural for a strong model on a saturated benchmark, not a
+property of those specific 40 problems. MATH-500 (Lightman et al., *Let's
+Verify Step by Step*, 2023, arXiv:2305.20050) is a 500-problem curated
+sample of the Hendrycks MATH test set, deliberately chosen here because
+it is *not* saturated the way GSM8K is. `data/math_level5_sample.jsonl`
+holds its full Level-5 (hardest tier) subset — 134 problems, fetched live
+from the Hugging Face datasets-server API for
+`HuggingFaceH4/MATH-500`, filtered to `level == 5`. This is the direct
+attempt at hypothesis sub-claim 5: can OR-Select correct a wrong
+self-consistency majority, a scenario that requires candidates to
+actually disagree in the first place.
+
+**What happened.** `scripts/math_benchmark.py` was run against OpenRouter
+with a planned `--limit 20`. Two of the first four problems attempted
+stalled completely — no result, no error, no further output for over 30
+minutes each, under what the retry logs show was severe upstream
+saturation (`Worker local total request limit reached`, observed as high
+as 196/32 and 78/32, i.e. 2–6x the provider's stated capacity). These
+were recorded as explicit `error: "StallTimeout: ..."` rows directly in
+`outputs/math_benchmark.json`, following this repo's design boundary that
+failed candidates stay explicit, never silently dropped — the same
+boundary that motivated `_failed_row()` in both benchmark scripts. After
+roughly 3.5 hours of wall-clock time split across multiple resumed
+attempts, a fixed time budget was reached and the run was stopped by
+decision, not because it finished: **4 of the planned 20 problems have
+any result at all (2 valid, 2 stalled); the remaining 16 were never
+attempted.**
+
+**Results on the 2 valid problems:**
+
+| Problem | Ground truth | OR-Select | Self-consistency | Greedy |
+|---|---|---|---|---|
+| Sum-of-reciprocal-cubes identity (Intermediate Algebra) | `p - q` | correct | correct (had majority) | correct |
+| Sum of proper divisors of 284 (Number Theory) | `284` | correct | correct (had majority) | correct |
+
+All three methods tied, both correct, both with a genuine self-consistency
+majority (all 3 of 3 candidates agreed) — **0/2 disagreement**,
+`n_or_select_corrects_self_consistency = 0`,
+`n_self_consistency_corrects_or_select = 0`. `accuracy_of_valid`: 100% for
+all three methods, on `n_valid = 2`.
+
+**Honest interpretation.** This is not evidence that MATH Level 5 is also
+saturated for this model — N=2 is far too small to support that claim
+either way. It is evidence that *this specific attempt* to test sub-claim
+5 was underpowered by an operational constraint (free-tier rate-limit
+saturation, observed at multiples of the provider's stated capacity),
+not by anything about the hypothesis or the benchmark choice. The
+literature-backed reasoning that motivated choosing MATH Level 5 over
+GSM8K is unaffected by this outcome; what changed is that closing this
+gap now visibly requires either a paid API tier or a redesigned
+lower-call-count protocol, not just a harder dataset — see `docs/
+hypothesis_validation.md` sub-claim 5 for the full account.
+
 ## Open questions this benchmark does not resolve
 
 - **Free-tier availability as a research constraint, not just an
@@ -169,11 +234,12 @@ sessions).
 - **No test of judge-corrects-a-wrong-majority**: all 40 graded Track B
   problems were easy enough for Nemotron that every candidate converged on
   the same correct answer (0/40 disagreement), so accuracy alone can't
-  distinguish the methods. This is not specific to these 40 problems --
-  Kim et al. (ICML 2025) and Ding (2026), both cited above, independently
-  show that strong models produce highly correlated (low-diversity)
-  outputs, and that GSM8K-class benchmarks are saturated for capable
-  models in a way GPQA/AIME/MATH-Level-5 are not. The scenario that would
-  actually stress-test the hypothesis needs one of those harder
-  benchmarks, or a deliberately weaker generator model, to induce real
-  disagreement — not yet attempted.
+  distinguish the methods. Track C attempted this on MATH Level 5
+  specifically because the literature (Kim et al. 2025, Ding 2026, both
+  cited above) predicts less saturation there — but the run was cut short
+  by rate-limit saturation at 2 valid problems (0/2 disagreement), too few
+  to conclude anything. This remains the single most important open gap:
+  closing it now needs a paid API tier or a lower-call-count protocol to
+  actually reach the sample size the hypothesis requires, not just a
+  harder dataset (which is already in place: `data/math_level5_sample.jsonl`,
+  134 real MATH Level 5 problems, only 4 attempted so far).

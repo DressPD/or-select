@@ -262,6 +262,14 @@ number in the response (Appendix -- reasoning models frequently restate
 numbers from the problem statement before giving their final answer, so
 the first number is often wrong).
 
+\textbf{Track C (MATH Level 5, ground truth, unsaturated)}: harder
+competition-style problems from the Level-5 (hardest) subset of MATH-500
+\citep{lightman2023letsverify}, 134 problems fetched via the Hugging Face
+datasets-server API, $N=3$ candidates each. Chosen specifically because
+\citet{kim2025correlated,ding2026agree} predict it is not saturated for
+the model used here, unlike GSM8K -- the direct attempt at testing
+whether OR-Select can correct a wrong self-consistency majority.
+
 \subsection{Ablations}
 \label{sec:ablations}
 
@@ -308,7 +316,25 @@ the entire run. A judge cannot differentiate candidates that do not
 differ, and \citet{kim2025correlated,ding2026agree} (Section 2) show this
 is expected behavior for a strong model on a saturated benchmark, not
 specific to these 40 problems. A harder benchmark (MATH Level 5, AIME, or
-GPQA Diamond) is the literature-motivated next step, not yet attempted.
+GPQA Diamond) is the literature-motivated next step.
+
+\subsection{Track C: MATH Level 5}
+
+We attempted this next step: 20 MATH Level-5 problems were planned, but
+severe OpenRouter free-tier saturation (worker request-limit errors
+observed at up to $196/32$, i.e. multiples of the provider's stated
+capacity) stalled 2 of the first 4 attempts completely (no response after
+over 30 minutes each; recorded as explicit failures, not silently
+dropped) and a fixed time budget (roughly 3.5 hours of wall-clock across
+several resumed attempts) was reached before the remaining 16 could be
+attempted. Of the 2 problems that graded, both again showed full
+agreement -- all 3 of 3 candidates converged on the same correct answer,
+all three methods tied at 100\% accuracy, $0/2$ disagreement. This is not
+evidence that MATH Level 5 is also saturated for this model: $N=2$ cannot
+support that conclusion either way. It is evidence that this specific
+attempt to test whether OR-Select can correct a wrong majority was
+underpowered by an operational constraint, not by the hypothesis or the
+benchmark choice -- see Section~\ref{sec:limitations}.
 
 \subsection{Ablations}
 
@@ -379,13 +405,19 @@ during this work (Section~\ref{sec:experiments}).
 \textbf{No test of correcting a wrong majority.} The scenario that most
 directly tests the hypothesis -- candidates disagree, the majority is
 wrong, and OR-Select's judge selects a correct minority answer -- did not
-occur in Track B across all 40 problems attempted. Per
-\citet{kim2025correlated,ding2026agree}, this is expected: strong
-generator models produce correlated, low-diversity samples on saturated
-benchmarks, and GSM8K is saturated for the model used here. This is the
-single most important open question for future work; the literature
-points to MATH Level 5, AIME, or GPQA Diamond as benchmarks where it
-could actually be tested.
+occur in Track B (0/40 disagreement) or in the 2 valid Track C problems
+(0/2 disagreement). Track B's result is explained by saturation
+\citep{kim2025correlated,ding2026agree}: GSM8K is easy enough that
+candidates from a strong generator do not diverge. Track C was
+deliberately chosen to avoid that explanation, but the attempt was cut
+short by free-tier rate-limit saturation before reaching a sample size
+large enough to be informative (Section~\ref{sec:results}). This remains
+the single most important open question for future work, and the reason
+it is still open changed over the course of this work: it is now an
+infrastructure problem (a paid API tier, or a redesigned protocol using
+fewer API calls per problem, is needed to reach adequate $N$ on a
+genuinely unsaturated benchmark) rather than an unidentified benchmark
+choice.
 
 \section{Conclusion}
 

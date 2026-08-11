@@ -95,6 +95,15 @@
   note = {265,000 samples on GPQA Diamond and AIME (deliberately chosen as unsaturated benchmarks): agreement is a weak correctness signal (Spearman rho 0.20-0.59), weakest for the strongest models. Motivates MATH Level 5 / AIME / GPQA Diamond as the next benchmark for this work, since GSM8K is saturated for the model used here.}
 }
 
+@misc{lightman2023letsverify,
+  title = {Let's Verify Step by Step},
+  author = {Lightman, Hunter and Kosaraju, Vineet and Burda, Yura and Edwards, Harri and Baker, Bowen and Lee, Teddy and Leike, Jan and Schulman, John and Sutskever, Ilya and Cobbe, Karl},
+  year = {2023},
+  eprint = {2305.20050},
+  archivePrefix = {arXiv},
+  note = {Introduces the process-supervision-trained PRM and, as a byproduct, MATH-500 -- a 500-problem curated subset of the Hendrycks MATH test set, later packaged as HuggingFaceH4/MATH-500. This work uses only its Level-5 (hardest) subset, 134 problems, as Track C -- MATH-500 is unsaturated for the model used here, unlike GSM8K, so it is the direct test of hypothesis sub-claim 5.}
+}
+
 @inproceedings{jiang2023llmblender,
   title = {LLM-Blender: Ensembling Large Language Models with Pairwise Ranking and Generative Fusion},
   author = {Jiang, Dongfu and Ren, Xiang and Lin, Bill Yuchen},
