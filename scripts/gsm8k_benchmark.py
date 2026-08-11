@@ -83,13 +83,29 @@ def _failed_row(problem: dict, exc: Exception) -> dict:
     }
 
 
+def _accuracy_summary(results: list[dict]) -> dict:
+    """Accuracy over VALID (successfully graded) problems only -- a problem
+    that failed to grade at all (API failure) is neither "correct" nor
+    "incorrect," and folding it into the denominator as if it were a wrong
+    answer would silently understate accuracy and misrepresent an
+    infrastructure failure as a modeling result."""
+    valid = [r for r in results if "error" not in r]
+    failed = [r for r in results if "error" in r]
+    accuracy = {m: (sum(1 for r in valid if r[m]["correct"]) / len(valid)) for m in METHODS} if valid else {}
+    return {
+        "n_total": len(results),
+        "n_valid": len(valid),
+        "n_failed": len(failed),
+        "accuracy_of_valid": accuracy,
+    }
+
+
 def _write_output(output: Path, results: list[dict], n: int, provider: str) -> None:
-    n_total = len(results)
-    accuracy = {m: sum(1 for r in results if r[m]["correct"]) / n_total for m in METHODS} if n_total else {}
+    summary = _accuracy_summary(results)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(
         json.dumps(
-            {"n_problems": n_total, "n_samples": n, "provider": provider, "accuracy": accuracy, "results": results},
+            {"n_samples": n, "provider": provider, **summary, "results": results},
             indent=2,
         )
     )
@@ -145,14 +161,21 @@ def main() -> None:
     results = run_benchmark(problems, args.n, args.provider, args.output, args.resume)
     _write_output(args.output, results, args.n, args.provider)
 
-    n_total = len(results)
-    accuracy = {m: sum(1 for r in results if r[m]["correct"]) / n_total for m in METHODS} if n_total else {}
+    summary = _accuracy_summary(results)
 
     print()
-    print(f"N problems = {n_total}, samples per problem = {args.n}, provider = {args.provider}")
+    print(
+        f"N problems = {summary['n_total']} "
+        f"({summary['n_valid']} graded, {summary['n_failed']} failed to grade -- "
+        f"API/infra failures, not incorrect answers), "
+        f"samples per problem = {args.n}, provider = {args.provider}"
+    )
     for m in METHODS:
-        correct = sum(1 for r in results if r[m]["correct"])
-        print(f"  {m}: {correct}/{n_total} = {accuracy[m]:.1%}")
+        if summary["n_valid"]:
+            correct = sum(1 for r in results if "error" not in r and r[m]["correct"])
+            print(f"  {m}: {correct}/{summary['n_valid']} = {summary['accuracy_of_valid'][m]:.1%} (of graded problems)")
+        else:
+            print(f"  {m}: no problems successfully graded")
     print(f"written: {args.output}")
 
 
