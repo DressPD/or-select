@@ -131,17 +131,20 @@ queries showed a clear quality gap (0.09, 0.45 in internal score units);
 the third was a near-tie (0.003) between paraphrases of one answer --
 reported as such rather than averaged into a uniform "wins" claim.
 
-\textbf{Track B.} Of 40 attempted problems, 23 graded successfully (17
-failed with a persistent provider error from problem 24 onward -- a
-session-cap-shaped failure, excluded from accuracy rather than counted as
-wrong). On all 23 graded problems all three methods tie at 100\%
-accuracy, because every candidate independently converged on the
-identical correct answer -- a judge cannot differentiate candidates that
-do not differ. This is the predicted complement to Track A, not a null
-result: baselines and OR-Select should tie when candidates cluster and
-diverge when they do not, and both halves are now independently
-observed. None of the 23 problems were hard enough to force disagreement;
-see the accompanying repository for the full accounting.
+\textbf{Track B.} All 40 attempted problems graded (after recovering from
+a temporary provider outage affecting problems 24-40, a session-cap-
+shaped failure excluded from accuracy during the outage rather than
+counted as wrong -- see the accompanying repository). All three methods
+tie at 100\% accuracy on all 40, because every candidate independently
+converged on the identical correct answer every time -- zero
+disagreement across the entire run. This is the predicted complement to
+Track A, not a null result: baselines and OR-Select should tie when
+candidates cluster and diverge when they do not, both halves now
+independently observed. Per \citet{kim2025correlated,ding2026agree},
+this is expected: stronger models produce more correlated, lower-
+diversity samples, and GSM8K is saturated for the model used here --
+MATH Level 5, AIME, or GPQA Diamond are the literature-motivated next
+benchmark.
 
 \textbf{Ablations.} Self-consistency term: 0 of 3 winners changed when
 $w_4{=}0$ (fully offline, exact inversion of the known scoring formula --
@@ -175,15 +178,17 @@ remains open.
 
 \section{Limitations}
 
-Scale: $N{=}3$--$5$ and single-digit-to-low-double-digit query counts,
-dictated by free-tier rate limits (observed queue depths up to 3517
-against a 32-request provider limit), not by design -- this is a
-preliminary report. Single judge model throughout, with the
-correlated-error risk \citep{correlatederrors2026} untested, not merely
-under-tested. No test yet of the scenario that most directly probes the
-hypothesis: candidates disagree, the majority is wrong, and OR-Select's
-judge selects a correct minority answer -- Track B's problems have not
-been hard enough to produce this.
+Scale: $N{=}3$--$5$ and single-digit-to-40-item query counts, dictated by
+free-tier rate limits (observed queue depths up to 3517 against a
+32-request provider limit), not by design -- this is a preliminary
+report. Single judge model throughout, with the correlated-error risk
+\citep{correlatederrors2026} untested, not merely under-tested. No test
+yet of the scenario that most directly probes the hypothesis: candidates
+disagree, the majority is wrong, and OR-Select's judge selects a correct
+minority answer -- zero of 40 Track B problems produced disagreement,
+which \citet{kim2025correlated,ding2026agree} predict is structural for
+a strong model on a saturated benchmark like GSM8K, not a property of
+this specific sample.
 
 \section{Conclusion}
 

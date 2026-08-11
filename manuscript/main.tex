@@ -125,6 +125,21 @@ selection accuracy, motivating our use of GSM8K
 \citep{wang2023selfconsistency} as a benchmark with checkable ground truth
 rather than relying on judge-quality proxies alone.
 
+A third finding explains a result we observed empirically rather than
+merely predicting it. \citet{kim2025correlated} study 350+ LLMs and find
+that \emph{stronger} models produce \emph{more} correlated outputs and
+errors, not less -- our GSM8K run (Section~\ref{sec:results}) found zero
+candidate disagreement across all 40 problems attempted with a strong
+generator model, and this is the structural reason why, not an artifact
+of our specific problem sample. \citet{ding2026agree} run 265,000 samples
+on GPQA Diamond and AIME -- chosen specifically because they are
+unsaturated for frontier models, unlike GSM8K -- and find agreement is a
+weak correctness signal (Spearman $\rho=0.20$-$0.59$) that weakens
+further for the strongest models. Together these motivate MATH Level 5,
+AIME, or GPQA Diamond as the benchmark needed to actually test whether
+this method can correct a wrong majority (Section~\ref{sec:limitations}),
+which GSM8K structurally cannot do with a capable generator.
+
 \section{Method}
 
 \subsection{Pipeline}
@@ -280,19 +295,20 @@ uniformly to all three.
 
 \subsection{Track B: GSM8K}
 
-Of 40 attempted problems ($N=3$), 23 graded successfully and 17 failed
-with a persistent provider error starting at problem 24 (every remaining
-problem failed identically despite full retry exhaustion on each -- a
-session/daily-cap-shaped failure, not transient congestion; excluded from
-the accuracy denominator rather than counted as wrong, see the project
-repository for the full accounting). On all 23 graded problems, all three
-methods -- OR-Select, self-consistency, greedy -- scored 23/23 (100\%).
+All 40 attempted problems ($N=3$) graded successfully, after recovering
+from a temporary provider outage affecting problems 24-40 (a session/
+daily-cap-shaped failure pattern, not transient congestion; see the
+project repository for the full accounting -- excluded from the accuracy
+denominator during the outage rather than counted as wrong). All three
+methods -- OR-Select, self-consistency, greedy -- scored 40/40 (100\%).
 This is not a null result so much as the predicted complement to Track A:
-on every graded problem, all 3 of 3 candidates independently reached the
-identical correct numeric answer. A judge cannot differentiate candidates
-that do not differ. None of the 23 graded problems were hard enough to
-force candidate disagreement; a harder problem sample is the natural next
-step, not yet attempted.
+on every one of the 40 problems, all 3 of 3 candidates independently
+reached the identical correct numeric answer -- zero disagreement across
+the entire run. A judge cannot differentiate candidates that do not
+differ, and \citet{kim2025correlated,ding2026agree} (Section 2) show this
+is expected behavior for a strong model on a saturated benchmark, not
+specific to these 40 problems. A harder benchmark (MATH Level 5, AIME, or
+GPQA Diamond) is the literature-motivated next step, not yet attempted.
 
 \subsection{Ablations}
 
@@ -363,8 +379,13 @@ during this work (Section~\ref{sec:experiments}).
 \textbf{No test of correcting a wrong majority.} The scenario that most
 directly tests the hypothesis -- candidates disagree, the majority is
 wrong, and OR-Select's judge selects a correct minority answer -- did not
-occur in Track B at this problem difficulty and $N$. This is the single
-most important open question for future work.
+occur in Track B across all 40 problems attempted. Per
+\citet{kim2025correlated,ding2026agree}, this is expected: strong
+generator models produce correlated, low-diversity samples on saturated
+benchmarks, and GSM8K is saturated for the model used here. This is the
+single most important open question for future work; the literature
+points to MATH Level 5, AIME, or GPQA Diamond as benchmarks where it
+could actually be tested.
 
 \section{Conclusion}
 

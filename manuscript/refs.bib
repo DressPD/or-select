@@ -76,6 +76,25 @@
   note = {Human-labeled pairwise preference dataset; proposed as a benchmark for validating the judge\_fn component in isolation, independent of the full selection pipeline.}
 }
 
+@inproceedings{kim2025correlated,
+  title = {Correlated Errors in Large Language Models},
+  author = {Kim, Elliot and Garg, Avi and Peng, Nicholas and Garg, Rajiv},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  year = {2025},
+  eprint = {2506.07962},
+  archivePrefix = {arXiv},
+  note = {350+ LLMs across two leaderboards and a hiring task: stronger models produce MORE correlated outputs/errors, not less. Structural explanation for zero candidate disagreement observed on GSM8K with a strong generator model in this work.}
+}
+
+@misc{ding2026agree,
+  title = {When LLMs Agree, Are They Right? Auditing Self-Consistency and Cross-Model Agreement as Confidence Signals},
+  author = {Ding},
+  year = {2026},
+  eprint = {2607.08065},
+  archivePrefix = {arXiv},
+  note = {265,000 samples on GPQA Diamond and AIME (deliberately chosen as unsaturated benchmarks): agreement is a weak correctness signal (Spearman rho 0.20-0.59), weakest for the strongest models. Motivates MATH Level 5 / AIME / GPQA Diamond as the next benchmark for this work, since GSM8K is saturated for the model used here.}
+}
+
 @inproceedings{jiang2023llmblender,
   title = {LLM-Blender: Ensembling Large Language Models with Pairwise Ranking and Generative Fusion},
   author = {Jiang, Dongfu and Ren, Xiang and Lin, Bill Yuchen},

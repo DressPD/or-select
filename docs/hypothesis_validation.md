@@ -48,26 +48,36 @@ any case, falling back to an arbitrary tie-break every time.
 
 ## Sub-claim 4: OR-Select ties with naive baselines when candidates converge
 
-**CONFIRMED, strongly.** Track B (GSM8K, ground truth): on every one of
-23 problems that graded successfully (17 of 40 attempted failed with a
-persistent provider error, not a modeling result — see
-`benchmark_results.md`), all three methods — OR-Select, self-consistency,
+**CONFIRMED, strongly.** Track B (GSM8K, ground truth, full run): on all
+40 of 40 graded problems, all three methods — OR-Select, self-consistency,
 greedy — tied at 100% accuracy, because every candidate independently
-converged on the identical correct answer every time. This is the
-predicted complement to sub-claim 3, confirmed independently: a judge
-cannot differentiate candidates that do not differ.
+converged on the identical correct answer every time (0/40 disagreement).
+This is the predicted complement to sub-claim 3, confirmed independently:
+a judge cannot differentiate candidates that do not differ.
 
 ## Sub-claim 5: OR-Select can correct a wrong self-consistency majority
 
-**UNTESTED — the single most important open gap.** This is the strongest
-and most practically relevant form of the hypothesis: candidates
-disagree, the majority converges on a *wrong* answer, and OR-Select's
-judge selects a *correct* minority answer instead. It has not occurred in
-any live run in this repository. GSM8K's easy end (sub-claim 4) never
-produces disagreement at all; the open-ended queries (sub-claim 3) have
-no ground truth to define "wrong." Closing this gap needs either harder
-GSM8K problems or a weaker generator model, specifically chosen to induce
-real, checkable disagreement — not yet attempted.
+**UNTESTED — the single most important open gap, and now literature-
+grounded rather than just observed.** This is the strongest and most
+practically relevant form of the hypothesis: candidates disagree, the
+majority converges on a *wrong* answer, and OR-Select's judge selects a
+*correct* minority answer instead. It has not occurred in any live run in
+this repository, including the full 40-problem Track B run (0/40
+disagreement). This is not bad luck with these specific 40 problems: Kim,
+Garg, Peng, and Garg, *Correlated Errors in Large Language Models* (ICML
+2025, arXiv:2506.07962), find that stronger models produce *more*
+correlated outputs across 350+ models, not less — convergence is a
+structural property of capable models on saturated benchmarks. Ding,
+*When LLMs Agree, Are They Right?* (2026, arXiv:2607.08065), deliberately
+used GPQA Diamond and AIME (not GSM8K) to study agreement precisely
+because those benchmarks are not saturated for frontier models, and found
+agreement is a weak correctness signal that gets *weaker* for stronger
+models. Even Wang et al.'s original self-consistency paper (already cited
+in this repo) reports weaker vote-share/correctness correlation on MATH
+(0.68) than GSM8K (0.80). Closing this gap needs a genuinely harder
+benchmark in this same family — MATH Level 5 (comparable to AMC12/AIME)
+or AIME/GPQA Diamond directly — or a deliberately weaker generator model;
+not yet attempted.
 
 ## Sub-claim 6: Each design component pulls its weight
 
@@ -93,7 +103,7 @@ real, checkable disagreement — not yet attempted.
 The **narrow** claim — selection is exactly deterministic given fixed
 inputs — is proven, not just supported. The **broad** claim — OR-based
 aggregation adds real value over naive baselines — is supported by every
-test run so far (3/3 divergence on open-ended queries, 23/23 convergence
+test run so far (3/3 divergence on open-ended queries, 40/40 convergence
 ties on GSM8K, both exactly as the same underlying mechanism predicts
 from opposite directions) but has not yet been tested against its
 hardest and most important case (sub-claim 5), and one of its two

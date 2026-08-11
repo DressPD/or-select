@@ -30,7 +30,7 @@ method is expected to work best with — see "Open questions" at the end).
 | Track | Task type | Candidates agreed? | Result |
 |---|---|---|---|
 | A | Open-ended (3 queries, N=5) | Never (0/15) | OR-Select disagreed with both baselines on 3/3; self-consistency undefined every time |
-| B | GSM8K, easy (23 of 40 attempted problems graded, N=3) | Always (23/23) | All 3 methods tied at 100% accuracy on every graded problem |
+| B | GSM8K, easy (40/40 problems graded, N=3) | Always (40/40) | All 3 methods tied at 100% accuracy on every problem |
 
 Both results are consistent with a single underlying prediction, stated in
 `methodology.md` before either track was run: baselines and OR-Select
@@ -66,45 +66,61 @@ is close to noise, not a confident judgment. Take from this: OR-Select
 adds real value once candidates meaningfully diverge in quality, and its
 edge shrinks toward nothing when they don't.
 
-## Track B: GSM8K, ground truth (N=3, 40 problems attempted, 23 graded)
+## Track B: GSM8K, ground truth (N=3, 40/40 problems graded)
 
-**Accuracy on graded problems: OR-Select 23/23 (100%), self-consistency
-23/23 (100%), greedy 23/23 (100%).** All three methods tied — and the
-reason is visible in every individual result: on every one of the 23
-graded problems, all 3 of 3 candidates independently reached the exact
-same numeric answer (`had_majority: True` every time), the mirror image
-of Track A, where it was `False` in all 3 queries.
+**Final accuracy: OR-Select 40/40 (100%), self-consistency 40/40 (100%),
+greedy 40/40 (100%).** All three methods tied on every problem — and the
+reason is visible in every individual result: on all 40 problems, all 3
+of 3 candidates independently reached the exact same numeric answer
+(`had_majority: True`, zero exceptions), the mirror image of Track A,
+where it was `False` in all 3 queries.
 
-**Coverage, reported honestly rather than smoothed into the accuracy
-number:** 17 of the 40 attempted problems never graded at all. Starting
-at problem 24, every remaining problem failed identically with an
-OpenRouter "provider returned error" 404, despite full retry exhaustion
-(5 attempts, up to 75s backoff) on each one — this pattern (100% failure
-rate sustained across 17 consecutive, unrelated problems) looks like a
-hard session or daily cap on this free-tier model, not transient
-congestion; congestion produces intermittent failures, not a clean
-cutoff that never recovers for the rest of the run. `_accuracy_summary()`
-in `scripts/gsm8k_benchmark.py` computes accuracy only over problems that
-graded successfully — folding the 17 failures into the denominator as if
-they were wrong answers would have understated accuracy and misrepresented
-an infrastructure failure as a modeling result.
+**This run did not complete on the first attempt.** Starting at problem
+24, 17 consecutive problems failed identically with an OpenRouter
+"provider returned error" 404, despite full retry exhaustion (5 attempts,
+up to 75s backoff) on each one -- a pattern (sustained 100% failure across
+17 unrelated problems, then a clean recovery to 100% success on retry)
+consistent with a hard session or daily cap on this free-tier model
+rather than transient congestion. `scripts/gsm8k_benchmark.py` gained
+`--retry-failures` and per-problem failure isolation specifically to
+recover from this without losing the 23 problems already graded; see
+git history for the incident. `_accuracy_summary()` computes accuracy
+only over problems that graded successfully -- folding a temporary
+infrastructure failure into the denominator as if it were a wrong answer
+would have misrepresented it as a modeling result.
 
-**This is not a failed benchmark — it's the predicted result on easy
+**This is not a failed benchmark -- it's the predicted result on easy
 problems, and it's the useful half of a two-track story.**
-`methodology.md`'s Baselines section already predicted this shape before
-any data existed: *"The baseline should win exactly when candidates
-cluster tightly... OR-Select should win once candidates diverge."*
-Grade-school arithmetic is well within Nemotron's capability, so
-candidates cluster tightly (Track B) — there is no headroom for a judge to
-add value when every sample already agrees and is already correct. Open-
-ended queries never cluster at all (Track A) — that's exactly where the
-judge's differentiation showed up. Together, the two tracks confirm both
-halves of the same prediction rather than reporting on two unrelated
-tasks. **What this run does not show**, and what would need harder
-problems to test: whether OR-Select's judge can *correct* a wrong
-majority when candidates disagree and most of them are wrong — GSM8K's
-easy end just doesn't produce that scenario at N=3 with a capable model,
-across all 23 problems that got the chance to show it.
+`methodology.md`'s Baselines section predicted this shape before any data
+existed: *"The baseline should win exactly when candidates cluster
+tightly... OR-Select should win once candidates diverge."* Grade-school
+arithmetic is well within Nemotron's capability, so candidates cluster
+tightly (Track B) -- there is no headroom for a judge to add value when
+every sample already agrees and is already correct. Open-ended queries
+never cluster at all (Track A) -- that's exactly where the judge's
+differentiation showed up. Together, the two tracks confirm both halves
+of the same prediction rather than reporting on two unrelated tasks.
+
+**What this run does not show, and why -- now literature-grounded, not
+just an observation:** whether OR-Select's judge can *correct* a wrong
+majority when candidates disagree and most of them are wrong. Zero of 40
+problems ever produced disagreement. This is not bad luck: Kim, Garg,
+Peng, and Garg, *Correlated Errors in Large Language Models* (ICML 2025,
+[arXiv:2506.07962](https://arxiv.org/abs/2506.07962)), studied 350+ LLMs
+and found stronger models have *more* correlated outputs/errors, not
+less -- convergence is a structural property of capable models on a
+given benchmark, not an artifact of these specific 40 problems. Ding,
+*When LLMs Agree, Are They Right?* (2026,
+[arXiv:2607.08065](https://arxiv.org/abs/2607.08065)), ran 265,000
+samples on GPQA Diamond and AIME specifically because those benchmarks
+are *not* saturated for frontier models, and found agreement is a weak
+correctness signal (Spearman rho 0.20-0.59) that gets *weaker*, not
+stronger, for the most capable models -- GSM8K was not even in that
+benchmark set. Even Wang et al.'s original self-consistency paper
+(already cited here) reports weaker vote-share/correctness correlation on
+MATH (0.68) than GSM8K (0.80). The literature-backed next step is MATH
+Level 5 (difficulty comparable to AMC12/AIME, same problem family as
+GSM8K) or AIME/GPQA Diamond directly -- not yet attempted.
 
 Methodology: `scripts/gsm8k_benchmark.py` appends a fixed instruction
 ("Solve step by step, then end your response with exactly: The final
@@ -120,9 +136,9 @@ reasoning, and should be counted as agreeing.
 
 Sample: `data/gsm8k_sample.jsonl`, the first 40 problems of the real
 GSM8K test set (github.com/openai/grade-school-math), used
-deterministically (no cherry-picking, no random seed to justify).
-Problems 1-23 graded; problems 24-40 failed to grade (see coverage note
-above).
+deterministically (no cherry-picking, no random seed to justify). All 40
+graded (see the outage-and-recovery note above for why this took two
+sessions).
 
 ## Open questions this benchmark does not resolve
 
@@ -131,12 +147,11 @@ above).
   OpenRouter/provider reliability failure modes -- transient rate-limit
   saturation (queue depths observed up to 3517/32, recoverable with
   retry/backoff), a corporate-proxy 407 (transient, unrelated to the LLM
-  provider), and this run's persistent post-problem-23 "provider returned
-  error" 404 (not recoverable by retrying, resolved by nothing we could
-  do). Free-tier access to a single model is not a reliable substrate for
-  runs with O(N^2) judge calls; a paid tier or a smaller/cheaper
-  evaluation design is a real prerequisite for scaling this further, not
-  just a nice-to-have.
+  provider), and a temporary, longer-lasting "provider returned error" 404
+  affecting problems 24-40 that did not clear until later, then resolved
+  cleanly. Free-tier access to a single model is not a reliable substrate
+  for runs with O(N^2) judge calls; a paid tier or a smaller/cheaper
+  evaluation design would remove this as a bottleneck for scaling further.
 - **Correlated judge error** (Nine Judges, Two Effective Votes, 2026):
   every result above uses a single model (Nemotron) as generator, scorer,
   *and* judge. Whether `--provider both`/`all` (heterogeneous judges)
@@ -148,17 +163,17 @@ above).
   `methodology.md`'s "A concrete finding" — identical text got non-
   symmetric scores from this exact model before the exact-match
   short-circuit fixed that specific case).
-- **Sample size**: N=3–5 candidates and 3 queries / 23 graded problems per
-  track are smoke-test scale, bounded by OpenRouter's free-tier congestion
-  and the hard cap hit at problem 24, not a statistically powered
-  evaluation. Track B's remaining 17 problems (24-40 in
-  `data/gsm8k_sample.jsonl`) and a larger N are the natural next step once
-  the free-tier limit resets or a paid tier is available.
-- **No test of judge-corrects-a-wrong-majority**: all 23 graded Track B
+- **Sample size**: N=3–5 candidates and 3 queries / 40 graded problems per
+  track are smoke-test scale, bounded by OpenRouter's free-tier
+  reliability, not a statistically powered evaluation.
+- **No test of judge-corrects-a-wrong-majority**: all 40 graded Track B
   problems were easy enough for Nemotron that every candidate converged on
-  the same correct answer, so accuracy alone can't distinguish the
-  methods. The scenario that would actually stress-test the hypothesis —
-  candidates disagree, and the majority is wrong but a minority is right —
-  needs either harder problems (later GSM8K test-set entries, or a harder
-  benchmark like MATH/GSM-Hard) or a weaker generator model to induce real
-  disagreement at this same problem difficulty.
+  the same correct answer (0/40 disagreement), so accuracy alone can't
+  distinguish the methods. This is not specific to these 40 problems --
+  Kim et al. (ICML 2025) and Ding (2026), both cited above, independently
+  show that strong models produce highly correlated (low-diversity)
+  outputs, and that GSM8K-class benchmarks are saturated for capable
+  models in a way GPQA/AIME/MATH-Level-5 are not. The scenario that would
+  actually stress-test the hypothesis needs one of those harder
+  benchmarks, or a deliberately weaker generator model, to induce real
+  disagreement — not yet attempted.
