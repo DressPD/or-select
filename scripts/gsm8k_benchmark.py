@@ -69,6 +69,20 @@ def _grade_one(problem: dict, n: int, provider: str) -> dict:
     }
 
 
+def _failed_row(problem: dict, exc: Exception) -> dict:
+    """Explicit failure record: one problem's persistent API failure must not
+    silently drop it or kill the rest of the batch (README's design boundary:
+    failed candidates remain explicit failures, never silently dropped)."""
+    return {
+        "query": problem["query"],
+        "ground_truth": problem["ground_truth"],
+        "error": f"{type(exc).__name__}: {exc}"[:300],
+        "or_select": {"answer": None, "correct": False},
+        "self_consistency": {"answer": None, "correct": False, "had_majority": False},
+        "greedy": {"answer": None, "correct": False},
+    }
+
+
 def _write_output(output: Path, results: list[dict], n: int, provider: str) -> None:
     n_total = len(results)
     accuracy = {m: sum(1 for r in results if r[m]["correct"]) / n_total for m in METHODS} if n_total else {}
@@ -96,15 +110,20 @@ def run_benchmark(
             print(f"[{i}/{len(problems)}] skipped (already graded): {problem['query'][:60]!r}", flush=True)
             continue
         print(f"[{i}/{len(problems)}] {problem['query'][:70]!r}...", flush=True)
-        row = _grade_one(problem, n, provider)
-        marks = {m: ("OK" if row[m]["correct"] else "X") for m in METHODS}
-        print(
-            f"    ground_truth={row['ground_truth']}  "
-            f"OR-Select={marks['or_select']}({row['or_select']['answer']})  "
-            f"self-consistency={marks['self_consistency']}({row['self_consistency']['answer']})  "
-            f"greedy={marks['greedy']}({row['greedy']['answer']})",
-            flush=True,
-        )
+        try:
+            row = _grade_one(problem, n, provider)
+        except Exception as exc:  # noqa: BLE001 -- one problem's failure must not kill the batch
+            row = _failed_row(problem, exc)
+            print(f"    FAILED: {row['error']}", flush=True)
+        else:
+            marks = {m: ("OK" if row[m]["correct"] else "X") for m in METHODS}
+            print(
+                f"    ground_truth={row['ground_truth']}  "
+                f"OR-Select={marks['or_select']}({row['or_select']['answer']})  "
+                f"self-consistency={marks['self_consistency']}({row['self_consistency']['answer']})  "
+                f"greedy={marks['greedy']}({row['greedy']['answer']})",
+                flush=True,
+            )
         results.append(row)
         _write_output(output, results, n, provider)  # incremental: survives a kill mid-run
     return results
