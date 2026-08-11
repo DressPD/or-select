@@ -48,13 +48,14 @@ any case, falling back to an arbitrary tie-break every time.
 
 ## Sub-claim 4: OR-Select ties with naive baselines when candidates converge
 
-**CONFIRMED, strongly.** Track B (GSM8K, ground truth): on every problem
-graded so far (7 of a target 40, live run ongoing), all three methods —
-OR-Select, self-consistency, greedy — tied at 100% accuracy, because
-every candidate independently converged on the identical correct answer
-every time. This is the predicted complement to sub-claim 3, confirmed
-independently: a judge cannot differentiate candidates that do not
-differ.
+**CONFIRMED, strongly.** Track B (GSM8K, ground truth): on every one of
+23 problems that graded successfully (17 of 40 attempted failed with a
+persistent provider error, not a modeling result — see
+`benchmark_results.md`), all three methods — OR-Select, self-consistency,
+greedy — tied at 100% accuracy, because every candidate independently
+converged on the identical correct answer every time. This is the
+predicted complement to sub-claim 3, confirmed independently: a judge
+cannot differentiate candidates that do not differ.
 
 ## Sub-claim 5: OR-Select can correct a wrong self-consistency majority
 
@@ -92,7 +93,7 @@ real, checkable disagreement — not yet attempted.
 The **narrow** claim — selection is exactly deterministic given fixed
 inputs — is proven, not just supported. The **broad** claim — OR-based
 aggregation adds real value over naive baselines — is supported by every
-test run so far (3/3 divergence on open-ended queries, 7/7 convergence
+test run so far (3/3 divergence on open-ended queries, 23/23 convergence
 ties on GSM8K, both exactly as the same underlying mechanism predicts
 from opposite directions) but has not yet been tested against its
 hardest and most important case (sub-claim 5), and one of its two

@@ -280,14 +280,19 @@ uniformly to all three.
 
 \subsection{Track B: GSM8K}
 
-On an initial sample of 4 problems ($N=3$), all three methods -- OR-Select,
-self-consistency, greedy -- scored 4/4 (100\%). This is not a null result
-so much as the predicted complement to Track A: on every one of the 4
-problems, all 3 of 3 candidates independently reached the identical
-correct numeric answer. A judge cannot differentiate candidates that do
-not differ. \emph{[A larger run, 40 problems including harder items
-expected to force candidate disagreement, was in progress at the time of
-writing; see the project repository for updated numbers.]}
+Of 40 attempted problems ($N=3$), 23 graded successfully and 17 failed
+with a persistent provider error starting at problem 24 (every remaining
+problem failed identically despite full retry exhaustion on each -- a
+session/daily-cap-shaped failure, not transient congestion; excluded from
+the accuracy denominator rather than counted as wrong, see the project
+repository for the full accounting). On all 23 graded problems, all three
+methods -- OR-Select, self-consistency, greedy -- scored 23/23 (100\%).
+This is not a null result so much as the predicted complement to Track A:
+on every graded problem, all 3 of 3 candidates independently reached the
+identical correct numeric answer. A judge cannot differentiate candidates
+that do not differ. None of the 23 graded problems were hard enough to
+force candidate disagreement; a harder problem sample is the natural next
+step, not yet attempted.
 
 \subsection{Ablations}
 
