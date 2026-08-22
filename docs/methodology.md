@@ -158,12 +158,46 @@ case: two candidates with *different* text can still get non-reproducible
 judge scores across runs, since a real semantic comparison still requires
 an LLM call.
 
+## Full ranking: exact Kemeny-Young (`or_select/kemeny.py`)
+
+Implemented as a separate module from the top-1 selector, not a replacement
+for it: `select_best` picks 1-of-N by a linear multi-objective score
+(quality + confidence + consistency - cost), while `solve_kemeny_ranking`
+answers a different question -- given only the pairwise judge matrix, what
+is the full consensus ranking that best agrees with every pairwise vote?
+`aggregate_quality`'s Copeland-style `quality_i` is a cheap approximation to
+this; `scripts/math_benchmark.py` grades a `kemeny_young` method alongside
+`or_select` on the same candidate pool and pairwise matrix (zero extra API
+cost) specifically to test whether the approximation costs anything.
+
+Formulation: binary variables `x_ij = 1` if candidate `i` is ranked above
+`j` (defined only for `i < j` in a fixed candidate order; `x_ji` is implied
+as `1 - x_ij`, making antisymmetry automatic), maximizing agreement with the
+pairwise weights subject to 3-cycle elimination
+(`x_ij + x_jk + x_ki <= 2` for every ordered triple) to rule out
+intransitive "rankings." This is the linear ordering problem -- NP-hard in
+general.
+
+**A measured limitation, and how it was resolved.** The LOP is easy when
+candidates have a real quality gradient (measured: N=20 solves in ~41ms)
+but can be very hard when the judge is close to indifferent -- pairwise
+weights clustered near 0.5, which is exactly what a genuinely uncertain LLM
+judge produces. Measured: N=20 with near-uniform noisy weights did not
+finish in 60+ seconds of unbounded search. Capping the solve with CP-SAT's
+`max_time_in_seconds` was rejected: a wall-clock budget would make "same
+inputs, same output" depend on which machine ran the query, silently
+breaking this repo's central determinism claim. Instead the solve is capped
+by `max_number_of_conflicts` -- CP-SAT's deterministic, machine-independent
+work counter -- and the function returns `(ranking, is_optimal)` so a
+budget-exhausted, merely-best-found ranking is never reported as the
+verified Kemeny consensus. Measured: even when the conflict budget is
+exhausted, repeated solves of the same input return the identical ranking
+every time (exact reproducibility preserved under truncation, not just
+under full convergence). See `or_select/kemeny.py`'s module docstring for
+the numbers.
+
 ## Extensions (not yet implemented in the scaffold)
 
-- **Full ranking (Kemeny-Young)**: instead of selecting one winner, produce
-  a full deterministic ranking over all N candidates by adding transitivity
-  constraints (`x_ij + x_jk + x_ki <= 2`) to the IP. Useful when downstream
-  consumers need a ranked list, not just a top-1 pick.
 - **Space reduction**: pre-solve pairs with near-unanimous votes
   (`W[i,j] > 0.95`) before running the IP, to scale beyond N=10-20
   candidates.

@@ -58,6 +58,34 @@ class SelectionTest(unittest.TestCase):
         winner_with_none, _ = select_best(candidates, quality, consistency=None)
         self.assertEqual(winner_without, winner_with_none)
 
+    def test_valid_gate_excludes_a_higher_scoring_invalid_candidate(self) -> None:
+        candidates = [
+            Candidate(id="unboxed", text="I don't know", source_model="m", confidence=0.99, cost=1),
+            Candidate(id="boxed", text="Paris", source_model="m", confidence=0.1, cost=1),
+        ]
+
+        def judge_fn(query: str, text_a: str, text_b: str) -> float:
+            return 1.0 if text_a == "I don't know" else 0.0
+
+        pairwise = build_pairwise_matrix("q", candidates, judge_fn)
+        quality = aggregate_quality(candidates, pairwise)
+        winner_id, _ = select_best(candidates, quality, valid={"unboxed": False, "boxed": True})
+        self.assertEqual(winner_id, "boxed")
+
+    def test_valid_gate_falls_back_when_every_candidate_is_invalid(self) -> None:
+        candidates = [
+            Candidate(id="a", text="Paris", source_model="m", confidence=0.9, cost=1),
+            Candidate(id="b", text="Berlin", source_model="m", confidence=0.5, cost=1),
+        ]
+
+        def judge_fn(query: str, text_a: str, text_b: str) -> float:
+            return 1.0 if text_a == "Paris" else 0.0
+
+        pairwise = build_pairwise_matrix("q", candidates, judge_fn)
+        quality = aggregate_quality(candidates, pairwise)
+        winner_id, _ = select_best(candidates, quality, valid={"a": False, "b": False})
+        self.assertEqual(winner_id, "a")
+
     def test_consistency_can_flip_a_close_tie_toward_the_majority_answer(self) -> None:
         # Two candidates say "Paris" (agree with each other), one says
         # "Lutetia" -- an obscure but not-wrong historical name. Quality/

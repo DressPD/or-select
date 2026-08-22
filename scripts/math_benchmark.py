@@ -34,10 +34,11 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from or_select.baselines import greedy_single_sample, self_consistency_winner  # noqa: E402
+from or_select.kemeny import solve_kemeny_ranking  # noqa: E402
 from or_select.math_eval import MATH_SUFFIX, extract_boxed, is_correct  # noqa: E402
 from or_select.pipeline import PROVIDERS, run_pipeline  # noqa: E402
 
-METHODS = ("or_select", "self_consistency", "greedy")
+METHODS = ("or_select", "self_consistency", "greedy", "kemeny_young")
 
 
 def _load_problems(path: Path) -> list[dict]:
@@ -48,7 +49,9 @@ def _grade_one(problem: dict, n: int, provider: str) -> dict:
     query = problem["query"] + MATH_SUFFIX
     ground_truth = problem["ground_truth"]
 
-    result = run_pipeline(query, n=n, provider=provider)
+    result = run_pipeline(
+        query, n=n, provider=provider, validity_fn=lambda text: extract_boxed(text) is not None
+    )
 
     or_select_answer = extract_boxed(result.winner_text)
 
@@ -59,6 +62,10 @@ def _grade_one(problem: dict, n: int, provider: str) -> dict:
 
     greedy_winner = greedy_single_sample(result.candidates)
     greedy_answer = extract_boxed(greedy_winner.text)
+
+    kemeny_ranking, kemeny_is_optimal = solve_kemeny_ranking(result.candidates, result.pairwise)
+    kemeny_winner = next(c for c in result.candidates if c.id == kemeny_ranking[0])
+    kemeny_answer = extract_boxed(kemeny_winner.text)
 
     return {
         "query": problem["query"],
@@ -71,6 +78,20 @@ def _grade_one(problem: dict, n: int, provider: str) -> dict:
             "had_majority": had_majority,
         },
         "greedy": {"answer": greedy_answer, "correct": is_correct(greedy_answer, ground_truth)},
+        "kemeny_young": {
+            "answer": kemeny_answer,
+            "correct": is_correct(kemeny_answer, ground_truth),
+            "is_optimal": kemeny_is_optimal,
+        },
+        # Raw texts, not just extracted answers: so an anomaly (e.g. a winner
+        # with no \boxed{} answer, as seen in the N=20 pilot) can be
+        # inspected from this file alone, without re-running the pipeline.
+        "winner_texts": {
+            "or_select": result.winner_text,
+            "self_consistency": sc_winner.text,
+            "greedy": greedy_winner.text,
+            "kemeny_young": kemeny_winner.text,
+        },
     }
 
 
@@ -86,6 +107,8 @@ def _failed_row(problem: dict, exc: Exception) -> dict:
         "or_select": {"answer": None, "correct": False},
         "self_consistency": {"answer": None, "correct": False, "had_majority": False},
         "greedy": {"answer": None, "correct": False},
+        "kemeny_young": {"answer": None, "correct": False, "is_optimal": None},
+        "winner_texts": None,
     }
 
 
@@ -124,13 +147,42 @@ def _disagreement_summary(results: list[dict]) -> dict:
     }
 
 
+def _copeland_vs_kemeny_summary(results: list[dict]) -> dict:
+    """Count problems where OR-Select's Copeland-approximate top pick differs
+    from the exact Kemeny-Young winner over the same pairwise matrix -- the
+    direct test of whether selection.py's approximation (see its docstring)
+    actually costs anything in practice."""
+    valid = [r for r in results if "error" not in r]
+    disagreements = [r for r in valid if r["or_select"]["answer"] != r["kemeny_young"]["answer"]]
+    or_select_corrects_kemeny = [
+        r for r in disagreements if r["or_select"]["correct"] and not r["kemeny_young"]["correct"]
+    ]
+    kemeny_corrects_or_select = [
+        r for r in disagreements if r["kemeny_young"]["correct"] and not r["or_select"]["correct"]
+    ]
+    return {
+        "n_disagreements": len(disagreements),
+        "n_or_select_corrects_kemeny_young": len(or_select_corrects_kemeny),
+        "n_kemeny_young_corrects_or_select": len(kemeny_corrects_or_select),
+        "disagreement_queries": [r["query"][:80] for r in disagreements],
+    }
+
+
 def _write_output(output: Path, results: list[dict], n: int, provider: str) -> None:
     summary = _accuracy_summary(results)
     disagreement = _disagreement_summary(results)
+    copeland_vs_kemeny = _copeland_vs_kemeny_summary(results)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(
         json.dumps(
-            {"n_samples": n, "provider": provider, **summary, "disagreement": disagreement, "results": results},
+            {
+                "n_samples": n,
+                "provider": provider,
+                **summary,
+                "disagreement": disagreement,
+                "copeland_vs_kemeny": copeland_vs_kemeny,
+                "results": results,
+            },
             indent=2,
         )
     )
@@ -195,6 +247,7 @@ def main() -> None:
 
     summary = _accuracy_summary(results)
     disagreement = _disagreement_summary(results)
+    copeland_vs_kemeny = _copeland_vs_kemeny_summary(results)
 
     print()
     print(
@@ -214,6 +267,12 @@ def main() -> None:
     )
     print(f"    OR-Select corrected a wrong SC majority: {disagreement['n_or_select_corrects_self_consistency']}")
     print(f"    SC was right where OR-Select was wrong:  {disagreement['n_self_consistency_corrects_or_select']}")
+    print(
+        f"  Copeland-approx (OR-Select) vs exact Kemeny-Young: "
+        f"{copeland_vs_kemeny['n_disagreements']}/{summary['n_valid']} disagreements"
+    )
+    print(f"    OR-Select right, Kemeny-Young wrong: {copeland_vs_kemeny['n_or_select_corrects_kemeny_young']}")
+    print(f"    Kemeny-Young right, OR-Select wrong: {copeland_vs_kemeny['n_kemeny_young_corrects_or_select']}")
     print(f"written: {args.output}")
 
 

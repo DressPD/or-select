@@ -18,7 +18,33 @@ from .pairwise import build_pairwise_matrix
 from .scoring import score_candidates
 from .selection import aggregate_quality, select_best
 
-PROVIDERS = ("placeholder", "openai", "gemini", "openrouter", "both")
+PROVIDERS = ("placeholder", "openai", "gemini", "openrouter", "both", "openrouter_mixed")
+
+# Free OpenRouter models spanning distinct vendors/architectures, used by
+# --provider openrouter_mixed to test whether candidate diversity -- not
+# judge accuracy (ruled out, see docs/reward_bench_preregistration.md: a
+# perfect 49/49 on Reasoning-category preference pairs) -- is why every
+# same-model benchmark run so far (Tracks A-C) saw almost no disagreement.
+# Confirmed to exist via the live OpenRouter /models endpoint, not assumed.
+OPENROUTER_MIXED_MODELS = [
+    "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "openai/gpt-oss-20b:free",
+    "liquid/lfm-2.5-2.6b:free",
+]
+# google/gemma-4-31b-it:free was tried first but dropped: live testing (Track
+# D-heterogeneous, docs/aime_2026_preregistration.md) showed it failing with
+# "temporarily rate-limited upstream" on ~4 of 6 consecutive attempts, badly
+# enough to sink whole problems even though the other two backends were
+# healthy. liquid/lfm-2.5-2.6b:free responded successfully (if slowly) in
+# manual smoke testing and was substituted.
+#
+# z-ai/glm-5.2:free was substituted in next but degraded the same way on
+# 2026-08-20 (11/11 calls hit "temporarily rate-limited upstream" across the
+# first two problems of the retry-failures resume run) -- confirmed via
+# /Users/Q549207/.claude/jobs/efba5254/tmp/aime_2026_hetero_run_resume2.log.
+# openai/gpt-oss-20b:free was smoke-tested live (single-call, real API) and
+# responded correctly in 4.3s; substituted in as the third distinct-vendor
+# backend.
 
 
 def _echo_generate_fn(query: str, seed: int) -> str:
@@ -59,6 +85,7 @@ def run_pipeline(
     generate_fn=None,
     score_fn=None,
     judge_fn=None,
+    validity_fn=None,
 ) -> SelectionResult:
     if provider == "both":
         from . import providers
@@ -67,6 +94,17 @@ def run_pipeline(
         candidates = generate_candidates_heterogeneous(query, backends, n=n)
         score_fn = score_fn or providers.openai_score
         judge_fn = judge_fn or providers.openai_judge
+    elif provider == "openrouter_mixed":
+        from . import providers
+
+        backends = providers.openrouter_heterogeneous_backends(OPENROUTER_MIXED_MODELS)
+        candidates = generate_candidates_heterogeneous(query, backends, n=n)
+        # Judge stays on the single model RewardBench validated -- varying
+        # generation and judging at once would conflate two different
+        # experiments (see docs/aime_2026_preregistration.md's sibling
+        # reasoning for why sub-claim 5 needs one variable isolated at a time).
+        score_fn = score_fn or providers.openrouter_score
+        judge_fn = judge_fn or providers.openrouter_judge
     else:
         default_generate, default_score, default_judge = _resolve_backends(provider)
         generate_fn = generate_fn or default_generate
@@ -78,10 +116,16 @@ def run_pipeline(
     pairwise = build_pairwise_matrix(query, candidates, judge_fn)
     quality = aggregate_quality(candidates, pairwise)
     consistency = compute_consistency(candidates)
-    winner_id, scores = select_best(candidates, quality, consistency)
+    valid = {c.id: validity_fn(c.text) for c in candidates} if validity_fn is not None else None
+    winner_id, scores = select_best(candidates, quality, consistency, valid=valid)
     winner = next(c for c in candidates if c.id == winner_id)
     return SelectionResult(
-        query=query, winner_id=winner_id, winner_text=winner.text, scores=scores, candidates=candidates
+        query=query,
+        winner_id=winner_id,
+        winner_text=winner.text,
+        scores=scores,
+        candidates=candidates,
+        pairwise=pairwise,
     )
 
 

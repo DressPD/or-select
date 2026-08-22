@@ -33,6 +33,7 @@ class SelectionResult:
     winner_text: str
     scores: dict[str, float]
     candidates: list[Candidate]
+    pairwise: dict[tuple[str, str], float] = field(default_factory=dict)
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -41,6 +42,7 @@ class SelectionResult:
             "winner_text": self.winner_text,
             "scores": self.scores,
             "candidates": [c.__dict__ for c in self.candidates],
+            "pairwise": {f"{a}|{b}": w for (a, b), w in self.pairwise.items()},
         }
 
 

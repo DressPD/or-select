@@ -12,10 +12,13 @@ importing this module never requires both providers' keys to be set.
 
 from __future__ import annotations
 
+import json
 import os
 import re
+import threading
 import time
 import zlib
+from collections.abc import Callable
 from functools import lru_cache
 from pathlib import Path
 
@@ -60,11 +63,118 @@ _PERMANENT_ERROR_MARKERS = (
 )
 
 
+STALL_TIMEOUT_SECONDS = 120.0
+
+
+class StallTimeout(Exception):
+    """A single API call produced neither a result nor an error within
+    STALL_TIMEOUT_SECONDS of real wall-clock time.
+
+    Observed live under severe OpenRouter free-tier saturation as hangs
+    lasting 30+ minutes to multiple hours with no exception ever raised
+    (docs/benchmark_results.md, Track C) -- plausibly a trickle of
+    keep-alive bytes resetting the HTTP client's own read-timeout on every
+    partial receive, so a per-read timeout never fires even though the
+    request is never actually progressing. _call_with_stall_timeout enforces
+    a real deadline regardless of that activity by running the call in a
+    worker thread and giving up on waiting for it, rather than trusting the
+    SDK's own timeout. This turns an indefinite hang into an explicit,
+    retryable failure -- this repo's design boundary (README: failed
+    candidates stay explicit, never silently dropped/hung) applied to the
+    one failure mode that previously required a human to notice and kill
+    the process by hand.
+    """
+
+
+def _call_with_stall_timeout(fn, timeout: float = STALL_TIMEOUT_SECONDS):
+    # A ThreadPoolExecutor was tried first, but its worker threads are
+    # non-daemon and concurrent.futures.thread registers a module-level
+    # atexit hook that joins every worker thread ever created, from every
+    # pool, even ones explicitly shut down with wait=False. When a call
+    # genuinely stalls (the exact case this function exists to handle),
+    # that orphaned thread is stuck in a hung network call forever, so the
+    # interpreter hangs at process exit -- observed live: a benchmark run
+    # printed its final summary and `written: ...` but the process itself
+    # sat alive (confirmed via `ps -M`, 5 leftover worker threads) instead
+    # of terminating, silently defeating the whole point of this mechanism.
+    # A plain daemon Thread has no such atexit registration -- daemon
+    # threads are simply abandoned at interpreter shutdown, so a stuck one
+    # can no longer block the process from actually exiting.
+    box: list = []
+    errors: list = []
+
+    def _run() -> None:
+        try:
+            box.append(fn())
+        except BaseException as exc:  # noqa: BLE001 -- re-raised on the caller's thread below
+            errors.append(exc)
+
+    thread = threading.Thread(target=_run, daemon=True)
+    thread.start()
+    thread.join(timeout)
+    if thread.is_alive():
+        raise StallTimeout(f"no result after {timeout:.0f}s")
+    if errors:
+        raise errors[0]
+    return box[0]
+
+
 def _is_retryable_error(exc: Exception) -> bool:
+    # A hard wall-clock deadline was exceeded waiting for this call -- by
+    # construction the same class of transient infra failure as a rate
+    # limit, just caught by our own timer instead of an HTTP error.
+    if isinstance(exc, StallTimeout):
+        return True
+    # A truncated/malformed response body breaks the SDK's own JSON parsing
+    # before our code ever sees a status code or error field -- observed
+    # live under the same upstream saturation that produces the 502/504/404
+    # markers below, just caught one layer earlier. Its message ("Expecting
+    # value: line N column M") carries no provider-specific marker to match
+    # on, so it's checked by exception type instead of by text.
+    if isinstance(exc, json.JSONDecodeError):
+        return True
+    # openai.APITimeoutError (a subclass of APIConnectionError) is raised by
+    # the SDK's *own* internal timeout, separate from our StallTimeout above
+    # -- observed live as ~84 consecutive failures with zero retries during
+    # a sustained OpenRouter outage, because its message is just "Request
+    # timed out." with no provider-specific text marker, so the
+    # "apiconnectionerror" text marker below never actually matched it (the
+    # class name never appears in str(exc)). Checked by type for the same
+    # reason as the two cases above.
+    try:
+        from openai import APIConnectionError
+
+        if isinstance(exc, APIConnectionError):
+            return True
+    except ImportError:
+        pass
     text = str(exc).lower().replace("_", "")
     if any(marker in text for marker in _PERMANENT_ERROR_MARKERS):
         return False
     return any(marker in text for marker in _RETRYABLE_MARKERS)
+
+
+def _reset_clients_if_connection_error(exc: Exception) -> None:
+    """Force fresh HTTP clients (and connection pools) after a connection
+    error, rather than reusing whatever pooled connection just failed.
+
+    Observed live during a very long run: once a client's underlying
+    connection pool picks up one bad connection (e.g. a corporate proxy
+    silently closing an idle keep-alive), the cached client can keep
+    reusing that same broken connection, producing an unbroken streak of
+    identical APIConnectionErrors across every retry and every subsequent
+    problem -- confirmed by the fact that a direct curl to the same
+    endpoint succeeded instantly while the long-running process kept
+    failing. A manual process restart cleared it (fresh client, fresh
+    pool); this does the same thing automatically, mid-run.
+    """
+    try:
+        from openai import APIConnectionError
+    except ImportError:
+        return
+    if isinstance(exc, APIConnectionError):
+        _openai_client.cache_clear()
+        _openrouter_client.cache_clear()
 
 
 def _with_rate_limit_retry(fn, *, max_attempts: int = 5, base_delay: float = 15.0):
@@ -77,6 +187,7 @@ def _with_rate_limit_retry(fn, *, max_attempts: int = 5, base_delay: float = 15.
         except Exception as exc:  # noqa: BLE001 - re-raised below if not retryable
             if not _is_retryable_error(exc):
                 raise
+            _reset_clients_if_connection_error(exc)
             last_exc = exc
             delay = base_delay * (attempt + 1)
             print(
@@ -146,7 +257,7 @@ def _openai_complete(prompt: str, *, seed: int | None = None) -> str:
         )
         return (resp.choices[0].message.content or "").strip()
 
-    return _with_rate_limit_retry(call)
+    return _with_rate_limit_retry(lambda: _call_with_stall_timeout(call))
 
 
 def _gemini_complete(prompt: str) -> str:
@@ -154,15 +265,16 @@ def _gemini_complete(prompt: str) -> str:
         resp = _gemini_client().models.generate_content(model=GEMINI_MODEL, contents=prompt)
         return (resp.text or "").strip()
 
-    return _with_rate_limit_retry(call)
+    return _with_rate_limit_retry(lambda: _call_with_stall_timeout(call))
 
 
-def _openrouter_complete(prompt: str, *, seed: int | None = None) -> str:
+def _openrouter_complete(prompt: str, *, seed: int | None = None, model: str | None = None) -> str:
     resolved_seed = seed if seed is not None else _stable_seed(prompt)
+    resolved_model = model or OPENROUTER_MODEL
 
     def call() -> str:
         resp = _openrouter_client().chat.completions.create(
-            model=OPENROUTER_MODEL,
+            model=resolved_model,
             messages=[{"role": "user", "content": prompt}],
             seed=resolved_seed,
         )
@@ -173,7 +285,7 @@ def _openrouter_complete(prompt: str, *, seed: int | None = None) -> str:
             raise RuntimeError(f"OpenRouter error (treated as rate limit): {resp.error}")
         return (resp.choices[0].message.content or "").strip()
 
-    return _with_rate_limit_retry(call)
+    return _with_rate_limit_retry(lambda: _call_with_stall_timeout(call))
 
 
 # --- generation -------------------------------------------------------
@@ -189,8 +301,22 @@ def gemini_generate(query: str, seed: int) -> str:
     return _gemini_complete(query)
 
 
-def openrouter_generate(query: str, seed: int) -> str:
-    return _openrouter_complete(query, seed=seed)
+def openrouter_generate(query: str, seed: int, model: str | None = None) -> str:
+    return _openrouter_complete(query, seed=seed, model=model)
+
+
+def openrouter_heterogeneous_backends(model_ids: list[str]) -> list[tuple[str, Callable[[str, int], str]]]:
+    """(model_id, generate_fn) pairs for generate_candidates_heterogeneous,
+    one real OpenRouter model per backend rather than one model resampled N
+    times. Built to test whether candidate diversity -- not judge accuracy
+    (see docs/reward_bench_preregistration.md, which ruled the judge out as
+    the bottleneck) -- is what's suppressing disagreement on every
+    same-model benchmark run so far (Tracks A-C).
+    """
+    return [
+        (model_id, lambda query, seed, _model=model_id: openrouter_generate(query, seed, model=_model))
+        for model_id in model_ids
+    ]
 
 
 # --- confidence scoring -------------------------------------------------

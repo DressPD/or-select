@@ -49,10 +49,21 @@ def select_best(
     w_consistency: float = 0.3,
     w_cost: float = 0.01,
     min_quality: float | None = None,
+    valid: dict[str, bool] | None = None,
 ) -> tuple[str, dict[str, float]]:
-    """Solve the selection MIP. Returns (winner_id, per-candidate final scores)."""
+    """Solve the selection MIP. Returns (winner_id, per-candidate final scores).
+
+    `valid` is an optional hard gate (e.g. "does this candidate's text contain
+    a parseable final answer?") -- none of quality/confidence/consistency
+    measure task-completion, so without this gate the IP can select a
+    well-argued but unusable candidate over a complete, correct one in the
+    same pool. Falls back to ungated selection if every candidate is invalid,
+    so a bad batch never makes the MIP infeasible.
+    """
     if not candidates:
         raise ValueError("no candidates to select from")
+
+    gate_invalid = valid is not None and any(valid.values())
 
     model = cp_model.CpModel()
     x = {c.id: model.new_bool_var(f"x_{c.id}") for c in candidates}
@@ -70,6 +81,8 @@ def select_best(
         )
         final_scores[c.id] = score
         if min_quality is not None and quality[c.id] < min_quality:
+            model.add(x[c.id] == 0)
+        if gate_invalid and not valid[c.id]:
             model.add(x[c.id] == 0)
         objective_terms.append(int(round(score * SCALE)) * x[c.id])
 
