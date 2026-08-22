@@ -16,3 +16,6 @@ outputs/runs/
 .venv/
 outputs/
 .DS_Store
+# GPQA is deliberately password-gated upstream to deter contamination;
+# don't re-publish the plaintext questions in this repo's git history.
+data/gpqa_diamond_sample.jsonl
