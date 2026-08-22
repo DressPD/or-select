@@ -58,7 +58,7 @@ a judge cannot differentiate candidates that do not differ.
 ## Sub-claim 5: OR-Select can correct a wrong self-consistency majority
 
 **STILL UNTESTED, but now on strong grounds rather than a stalled small
-sample.** Across 170 graded problems in four independent runs, the
+sample.** Across 173 graded problems in four independent runs, the
 precondition this sub-claim needs — a self-consistency majority that is
 *genuinely* wrong — essentially never arose. This is the strongest and
 most practically relevant form of the hypothesis: candidates disagree,
@@ -102,26 +102,31 @@ extraction technicality rather than a judgment call — documented in
 `scripts/math_benchmark.py`'s "anomaly" comment, not a new finding.)
 
 **Track D — AIME 2026** (`outputs/aime_2026_benchmark.json`, homogeneous
-generation): N=14/30 valid (16 failed to grade — free-tier `StallTimeout`,
+generation): N=15/30 valid (15 failed to grade — free-tier `StallTimeout`,
 Nvidia-provider 502 overload, and `APITimeoutError`/`APIConnectionError`,
-plus a transient daily-quota exhaustion, all infra, not model failures;
-this track plateaued at 14/30 across 3 consecutive `--retry-failures`
-passes with zero net gain, indicating a genuine free-tier ceiling rather
-than remaining transient flakiness). All four methods tied at **100%**
-accuracy on the 14 graded. 0 disagreements.
+plus a transient daily-quota exhaustion, all infra, not model failures).
+This track plateaued at exactly 14/30 across 3 consecutive
+`--retry-failures` passes before finally clearing one more row on a later
+pass — consistent with a free-tier ceiling that occasionally, not
+reliably, yields on further retries. All four methods tied at **100%**
+accuracy on the 15 graded. 0 disagreements.
 
 **Track D-heterogeneous — AIME 2026, 3-vendor generation**
 (`outputs/aime_2026_heterogeneous.json`, `OPENROUTER_MIXED_MODELS` =
-Nemotron + gpt-oss-20b + LFM-2.5, judge held fixed on Nemotron per
-`pipeline.py`'s variable-isolation design): specifically built to break
-the "same model → correlated errors" explanation (Kim et al. 2025, below)
-by forcing genuinely different model families to generate candidates for
-the same problem. N=9/30 valid (21 failed to grade, same infra causes as
-Track D, also plateaued after 3 zero-gain retry passes). All four methods
-tied at **100%** accuracy on the 9 graded. 0 disagreements — cross-vendor
-generation did not surface disagreement either.
+Nemotron + poolside/laguna-s-2.1 + LFM-2.5, judge held fixed on Nemotron
+per `pipeline.py`'s variable-isolation design): specifically built to
+break the "same model → correlated errors" explanation (Kim et al. 2025,
+below) by forcing genuinely different model families to generate
+candidates for the same problem. N=11/30 valid (19 failed to grade, same
+infra causes as Track D). This track plateaued at 9/30 for 3 passes, then
+a retry hit a *permanent* 404: OpenRouter had delisted the free tier of
+`openai/gpt-oss-20b:free` (the original third backend) entirely. Swapping
+it for `poolside/laguna-s-2.1:free` (live-smoke-tested first) unblocked
+2 more problems before free-tier congestion reasserted itself. All four
+methods tied at **100%** accuracy on the 11 graded. 0 disagreements —
+cross-vendor generation did not surface disagreement either.
 
-**Combined across Tracks B, C, D, D-het: 170 graded problems, 0 confirmed
+**Combined across Tracks B, C, D, D-het: 173 graded problems, 0 confirmed
 cases of a genuinely wrong self-consistency majority, and therefore 0
 opportunities for OR-Select to demonstrate a correction in either
 direction.** This is now a repeated result across four independently-run
@@ -144,7 +149,7 @@ arXiv:2607.08065), deliberately used GPQA Diamond and AIME (not GSM8K) to
 study agreement precisely because those benchmarks are not saturated for
 frontier models, and found agreement is a weak correctness signal that
 gets *weaker* for stronger models — AIME 2026 was chosen here for exactly
-this reason, and still tied 100%, though only on N=14 and N=9 valid
+this reason, and still tied 100%, though only on N=15 and N=11 valid
 samples respectively, both well short of the benchmark's 30-problem full
 set. Even Wang et al.'s original self-consistency paper (already cited in
 this repo) reports weaker vote-share/correctness correlation on MATH
@@ -155,7 +160,7 @@ not surface a genuinely wrong majority for this model class.
 
 **What would still move this forward:** a paid API tier to clear the
 free-tier infrastructure ceiling and reach the full N=134/30/30 samples
-per track (currently at 107/134, 14/30, 9/30 — roughly 1.5x more graded
+per track (currently at 107/134, 15/30, 11/30 — roughly 1.5x more graded
 problems available at full completion), a stricter math grader (to stop
 undercounting ties as disagreements, as found above), and/or a benchmark
 harder still than AIME 2026 for this model class. All three remain
@@ -189,14 +194,14 @@ aggregation adds real value over naive baselines — is confirmed in the
 one regime tested for it (sub-claim 3: 3/3 divergence on open-ended
 queries) and, symmetrically, its complement is now strongly confirmed
 across four independent ground-truth benchmarks (sub-claim 4: 40/40 tied
-on GSM8K, 107 graded and tied on MATH Level 5, 14/14 tied on AIME 2026,
-9/9 tied on AIME 2026 heterogeneous — 170 total graded problems, every
+on GSM8K, 107 graded and tied on MATH Level 5, 15/15 tied on AIME 2026,
+11/11 tied on AIME 2026 heterogeneous — 173 total graded problems, every
 method agreeing on every one). Sub-claim 5, the hardest and most
 practically important case — OR-Select correcting a wrong
 self-consistency majority — was pursued directly, in four separate runs
 spanning three benchmarks and two generation regimes (homogeneous and
 3-vendor heterogeneous), and **still found no case of a genuinely wrong
-majority** across all 170 graded problems: Track C's apparent 9
+majority** across all 173 graded problems: Track C's apparent 9
 counterexamples turned out, on inspection, to be grader false negatives
 (formatting variants of the correct answer), not real errors. This is no
 longer an underpowered attempt — it is a repeated, well-checked absence
