@@ -28,7 +28,7 @@ PROVIDERS = ("placeholder", "openai", "gemini", "openrouter", "both", "openroute
 # Confirmed to exist via the live OpenRouter /models endpoint, not assumed.
 OPENROUTER_MIXED_MODELS = [
     "nvidia/nemotron-3-ultra-550b-a55b:free",
-    "openai/gpt-oss-20b:free",
+    "poolside/laguna-s-2.1:free",
     "liquid/lfm-2.5-2.6b:free",
 ]
 # google/gemma-4-31b-it:free was tried first but dropped: live testing (Track
@@ -45,6 +45,16 @@ OPENROUTER_MIXED_MODELS = [
 # openai/gpt-oss-20b:free was smoke-tested live (single-call, real API) and
 # responded correctly in 4.3s; substituted in as the third distinct-vendor
 # backend.
+#
+# openai/gpt-oss-20b:free was itself dropped on 2026-08-22: OpenRouter
+# delisted its free tier entirely -- confirmed both by a live 404
+# ("This model is unavailable for free... use this slug instead:
+# openai/gpt-oss-20b") on row 7/30 of the retry-failures resume run, and by
+# its absence from a fresh /api/v1/models listing (18 free models, this one
+# no longer among them). This is a permanent, not transient, failure -- no
+# amount of retrying would recover it. poolside/laguna-s-2.1:free was
+# smoke-tested live (single-call, real API) same day, responded correctly
+# in 5.5s, and substituted in as the third distinct-vendor backend.
 
 
 def _echo_generate_fn(query: str, seed: int) -> str:
