@@ -12,7 +12,7 @@ import argparse
 import re
 
 from .consistency import compute_consistency
-from .core import Candidate, SelectionResult, run_dir, write_json
+from .core import SelectionResult, run_dir, write_json
 from .generate import generate_candidates, generate_candidates_heterogeneous
 from .pairwise import build_pairwise_matrix
 from .scoring import score_candidates
