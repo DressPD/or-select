@@ -1,6 +1,6 @@
 # Benchmark Results
 
-Two tracks, because they answer different questions and neither alone is
+Multiple tracks, because they answer different questions and none alone is
 sufficient (see Landesberg 2026 in `methodology.md`'s Related Work: judge
 calibration doesn't predict actual selection accuracy — you need a
 checkable answer to know that).
@@ -14,18 +14,23 @@ checkable answer to know that).
   accuracy.
 - **Track C — MATH Level 5, ground truth, harder/unsaturated.** Same
   question as Track B, but on a benchmark chosen specifically because the
-  literature predicts it should *not* be saturated for the model used
-  here — the direct attempt at hypothesis sub-claim 5 (can OR-Select
-  correct a wrong self-consistency majority). Underpowered by an
-  infrastructure constraint; see below.
+  literature predicts it should *not* be saturated for the model used here.
+- **Track D — AIME 2026, ground truth, recent competition math.** Homogeneous
+  and three-vendor heterogeneous generation variants test whether newer,
+  unsaturated problems produce disagreement.
+- **Track E — GPQA Diamond, ground truth, graduate science multiple choice.**
+  Homogeneous and heterogeneous variants test the benchmark family identified
+  by Ding (2026) as producing confident wrong majorities.
 
-All three methods compared throughout:
+Primary methods compared throughout:
 - **OR-Select**: the full pipeline (`or_select/pipeline.py`) — LLM judge +
   deterministic self-consistency term, aggregated via CP-SAT.
 - **Self-consistency alone**: majority vote (`or_select/baselines.py`), no
   LLM judge, no OR.
 - **Greedy single-sample**: just the first of the N candidates, no
   ensemble at all.
+
+Kemeny-Young is additionally reported where benchmark output includes it.
 
 Provider: OpenRouter, `nvidia/nemotron-3-ultra-550b-a55b:free`, for every
 result below (chosen for availability, not because it's the model this
@@ -37,9 +42,11 @@ method is expected to work best with — see "Open questions" at the end).
 |---|---|---|---|
 | A | Open-ended (3 queries, N=5) | Never (0/15) | OR-Select disagreed with both baselines on 3/3; self-consistency undefined every time |
 | B | GSM8K, easy (40/40 problems graded, N=3) | Always (40/40) | All 3 methods tied at 100% accuracy on every problem |
-| C | MATH Level 5, hard (2/20 problems graded, N=3) | Always (2/2) | All 3 methods tied at 100% accuracy; run stopped early by rate-limit saturation, not by design |
+| C | MATH Level 5, hard (107/134 graded, N=3) | Effectively always | All methods tied on extracted answers; nominal 91.6% accuracy, with nine grader false negatives |
+| D | AIME 2026 (15/30 and 11/30 graded, N=3/6) | Always (26/26) | All methods tied at 100% accuracy; both variants stopped by free-tier failures |
+| E | GPQA Diamond (39/198 and 12/198 graded, N=3/6) | Always (51/51) | OR-Select and self-consistency tied on every valid problem; partial runs stopped by free-tier failures |
 
-Both results are consistent with a single underlying prediction, stated in
+The results are consistent with a single underlying prediction, stated in
 `methodology.md` before either track was run: baselines and OR-Select
 should tie when candidates cluster, and diverge when they don't. Neither
 track alone would show this — Track A has no ground truth to confirm
@@ -97,7 +104,7 @@ infrastructure failure into the denominator as if it were a wrong answer
 would have misrepresented it as a modeling result.
 
 **This is not a failed benchmark -- it's the predicted result on easy
-problems, and it's the useful half of a two-track story.**
+problems, and it's the useful convergent case in a multi-track story.**
 `methodology.md`'s Baselines section predicted this shape before any data
 existed: *"The baseline should win exactly when candidates cluster
 tightly... OR-Select should win once candidates diverge."* Grade-school
@@ -105,7 +112,7 @@ arithmetic is well within Nemotron's capability, so candidates cluster
 tightly (Track B) -- there is no headroom for a judge to add value when
 every sample already agrees and is already correct. Open-ended queries
 never cluster at all (Track A) -- that's exactly where the judge's
-differentiation showed up. Together, the two tracks confirm both halves
+differentiation showed up. Together, the tracks confirm both halves
 of the same prediction rather than reporting on two unrelated tasks.
 
 **What this run does not show, and why -- now literature-grounded, not
@@ -127,7 +134,7 @@ benchmark set. Even Wang et al.'s original self-consistency paper
 (already cited here) reports weaker vote-share/correctness correlation on
 MATH (0.68) than GSM8K (0.80). The literature-backed next step is MATH
 Level 5 (difficulty comparable to AMC12/AIME, same problem family as
-GSM8K) or AIME/GPQA Diamond directly -- not yet attempted.
+GSM8K), followed by direct AIME and GPQA Diamond runs reported below.
 
 Methodology: `scripts/gsm8k_benchmark.py` appends a fixed instruction
 ("Solve step by step, then end your response with exactly: The final
@@ -147,7 +154,7 @@ deterministically (no cherry-picking, no random seed to justify). All 40
 graded (see the outage-and-recovery note above for why this took two
 sessions).
 
-## Track C: MATH Level 5, ground truth (N=3, 2/20 problems graded)
+## Track C: MATH Level 5, ground truth (N=3, 107/134 graded)
 
 **Motivation.** Track B (GSM8K) showed 0/40 disagreement — every
 candidate converged on the same correct answer every time, which the
@@ -164,46 +171,54 @@ attempt at hypothesis sub-claim 5: can OR-Select correct a wrong
 self-consistency majority, a scenario that requires candidates to
 actually disagree in the first place.
 
-**What happened.** `scripts/math_benchmark.py` was run against OpenRouter
-with a planned `--limit 20`. Two of the first four problems attempted
-stalled completely — no result, no error, no further output for over 30
-minutes each, under what the retry logs show was severe upstream
-saturation (`Worker local total request limit reached`, observed as high
-as 196/32 and 78/32, i.e. 2–6x the provider's stated capacity). These
-were recorded as explicit `error: "StallTimeout: ..."` rows directly in
-`outputs/math_benchmark.json`, following this repo's design boundary that
-failed candidates stay explicit, never silently dropped — the same
-boundary that motivated `_failed_row()` in both benchmark scripts. After
-roughly 3.5 hours of wall-clock time split across multiple resumed
-attempts, a fixed time budget was reached and the run was stopped by
-decision, not because it finished: **4 of the planned 20 problems have
-any result at all (2 valid, 2 stalled); the remaining 16 were never
-attempted.**
+**What happened.** The later resumed run in `outputs/math_benchmark_full.json`
+reached 107 valid rows out of the full 134-problem Level-5 subset; 27 rows
+remained explicit infrastructure failures. This is the result used for the
+current hypothesis assessment. The earlier 2/20 pilot remains in
+`outputs/math_benchmark.json` as an incident record, not the final Track C
+result.
 
-**Results on the 2 valid problems:**
-
-| Problem | Ground truth | OR-Select | Self-consistency | Greedy |
-|---|---|---|---|---|
-| Sum-of-reciprocal-cubes identity (Intermediate Algebra) | `p - q` | correct | correct (had majority) | correct |
-| Sum of proper divisors of 284 (Number Theory) | `284` | correct | correct (had majority) | correct |
-
-All three methods tied, both correct, both with a genuine self-consistency
-majority (all 3 of 3 candidates agreed) — **0/2 disagreement**,
-`n_or_select_corrects_self_consistency = 0`,
-`n_self_consistency_corrects_or_select = 0`. `accuracy_of_valid`: 100% for
-all three methods, on `n_valid = 2`.
+**Results on the 107 valid problems:** all four methods scored 98/107
+nominally (91.6%). The nine apparent errors were grader false negatives:
+each self-consistency majority expressed the correct value with formatting,
+notation, or ordering that `math_eval` did not normalize. OR-Select matched
+self-consistency on eight of those rows; the ninth differed only in equivalent
+set notation. No genuinely wrong majority was found.
 
 **Honest interpretation.** This is not evidence that MATH Level 5 is also
-saturated for this model — N=2 is far too small to support that claim
-either way. It is evidence that *this specific attempt* to test sub-claim
-5 was underpowered by an operational constraint (free-tier rate-limit
-saturation, observed at multiples of the provider's stated capacity),
-not by anything about the hypothesis or the benchmark choice. The
-literature-backed reasoning that motivated choosing MATH Level 5 over
-GSM8K is unaffected by this outcome; what changed is that closing this
-gap now visibly requires either a paid API tier or a redesigned
+saturated for this model. The full run improved coverage substantially, but
+27 rows still failed under free-tier infrastructure and the grader produced
+known false negatives. The literature-backed reasoning that motivated
+choosing MATH Level 5 over GSM8K is unaffected; closing the remaining gap
+requires a stricter grader, paid API capacity, or a redesigned
 lower-call-count protocol, not just a harder dataset — see `docs/
 hypothesis_validation.md` sub-claim 5 for the full account.
+
+## Track D: AIME 2026
+
+The homogeneous run graded 15/30 problems and the three-vendor heterogeneous
+run graded 11/30. All four methods scored 100% on their valid rows, with zero
+OR-Select/self-consistency disagreements in either run. These are partial
+results, limited by OpenRouter failures, not full-benchmark evidence.
+
+## Track E: GPQA Diamond
+
+GPQA tests the benchmark family highlighted by Ding (2026): graduate-level,
+four-way multiple-choice questions with exact-letter grading, so formatting
+ambiguity cannot explain a correctness split.
+
+| Variant | Valid / total | Samples | OR-Select | Self-consistency | Greedy | Kemeny-Young | OR/SC disagreements |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Homogeneous | 39/198 | 3 | 37/39 (94.9%) | 37/39 (94.9%) | 36/39 (92.3%) | 37/39 (94.9%) | 0 |
+| Heterogeneous | 12/198 | 6 | 11/12 (91.7%) | 11/12 (91.7%) | 11/12 (91.7%) | 10/12 (83.3%) | 0 |
+
+The homogeneous run stopped with 159 infrastructure failures; the
+heterogeneous run stopped with 186. Neither produced an OR-Select versus
+self-consistency disagreement, and therefore neither produced a wrong-
+majority correction case. Kemeny-Young differed from OR-Select once in the
+heterogeneous run, with OR-Select correct and Kemeny-Young wrong. The sample
+is informative about absence of the precondition, not a powered estimate of
+GPQA accuracy.
 
 ## Open questions this benchmark does not resolve
 
@@ -228,18 +243,14 @@ hypothesis_validation.md` sub-claim 5 for the full account.
   `methodology.md`'s "A concrete finding" — identical text got non-
   symmetric scores from this exact model before the exact-match
   short-circuit fixed that specific case).
-- **Sample size**: N=3–5 candidates and 3 queries / 40 graded problems per
-  track are smoke-test scale, bounded by OpenRouter's free-tier
-  reliability, not a statistically powered evaluation.
-- **No test of judge-corrects-a-wrong-majority**: all 40 graded Track B
-  problems were easy enough for Nemotron that every candidate converged on
-  the same correct answer (0/40 disagreement), so accuracy alone can't
-  distinguish the methods. Track C attempted this on MATH Level 5
-  specifically because the literature (Kim et al. 2025, Ding 2026, both
-  cited above) predicts less saturation there — but the run was cut short
-  by rate-limit saturation at 2 valid problems (0/2 disagreement), too few
-  to conclude anything. This remains the single most important open gap:
-  closing it now needs a paid API tier or a lower-call-count protocol to
-  actually reach the sample size the hypothesis requires, not just a
-  harder dataset (which is already in place: `data/math_level5_sample.jsonl`,
-  134 real MATH Level 5 problems, only 4 attempted so far).
+- **Sample size**: N=3–6 candidates and partial valid-row counts remain
+  smoke-test scale, bounded by OpenRouter's free-tier reliability, not a
+  statistically powered evaluation.
+- **No test of judge-corrects-a-wrong-majority**: across GSM8K, MATH Level 5,
+  AIME 2026, and GPQA Diamond, no valid row produced an OR-Select versus
+  self-consistency correctness split. The current total is 224 graded rows
+  across the four ground-truth benchmarks, but the AIME and GPQA runs remain
+  partial. Paid API capacity, a lower-call-count protocol, or frontier-tier
+  models are still needed to determine whether the missing precondition is
+  rare for these model tiers or merely hard to reach under free-tier
+  infrastructure.

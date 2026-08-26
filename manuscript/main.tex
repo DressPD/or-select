@@ -83,10 +83,10 @@ Our contributions:
   exact-match short-circuit that closes this specific failure mode
   entirely by skipping the judge call when it cannot change the
   mathematically-determined answer.
-\item A two-track evaluation -- open-ended queries with no ground truth,
-  and GSM8K \citep{wang2023selfconsistency} with a checkable numeric
-  answer -- because neither alone answers whether the method is correct,
-  only whether it is different (Section~\ref{sec:experiments}).
+\item A multi-track evaluation -- open-ended queries plus four
+  ground-truth benchmarks (GSM8K, MATH Level 5, AIME, and GPQA) -- because
+  neither divergence nor correctness alone answers whether the method is
+  useful (Section~\ref{sec:experiments}).
 \item An ablation showing the self-consistency term has had zero effect
   on any real winner selected so far, and a structural (not
   coincidental) explanation why, reported as a finding rather than
@@ -243,7 +243,7 @@ reasoning text.
 \textbf{Greedy single-sample}: the first of the $N$ candidates, i.e. no
 ensembling at all.
 
-\subsection{Two tracks}
+\subsection{Evaluation tracks}
 
 \textbf{Track A (open-ended, no ground truth)}: three queries with no
 single correct answer (a plot summary, a policy-strategy question, and a
@@ -269,6 +269,17 @@ datasets-server API, $N=3$ candidates each. Chosen specifically because
 \citet{kim2025correlated,ding2026agree} predict it is not saturated for
 the model used here, unlike GSM8K -- the direct attempt at testing
 whether OR-Select can correct a wrong self-consistency majority.
+
+\textbf{Track D (AIME 2026)}: recent competition-math problems, evaluated
+with homogeneous generation ($N=3$, 15/30 valid) and three-vendor
+heterogeneous generation ($N=6$, 11/30 valid). The latter varies generators
+while holding the judge fixed.
+
+\textbf{Track E (GPQA Diamond)}: graduate-level biology, chemistry, and
+physics multiple-choice problems from the 198-question Diamond subset
+\citep{rein2024gpqa}, evaluated with homogeneous generation ($N=3$, 39/198
+valid) and the same three-vendor heterogeneous setup ($N=6$, 12/198 valid).
+Exact-letter grading avoids the formatting ambiguity of free-form math.
 
 \subsection{Ablations}
 \label{sec:ablations}
@@ -315,26 +326,32 @@ reached the identical correct numeric answer -- zero disagreement across
 the entire run. A judge cannot differentiate candidates that do not
 differ, and \citet{kim2025correlated,ding2026agree} (Section 2) show this
 is expected behavior for a strong model on a saturated benchmark, not
-specific to these 40 problems. A harder benchmark (MATH Level 5, AIME, or
-GPQA Diamond) is the literature-motivated next step.
+specific to these 40 problems. MATH Level 5, AIME, and GPQA Diamond are the
+literature-motivated follow-on tracks reported below.
 
 \subsection{Track C: MATH Level 5}
 
-We attempted this next step: 20 MATH Level-5 problems were planned, but
-severe OpenRouter free-tier saturation (worker request-limit errors
-observed at up to $196/32$, i.e. multiples of the provider's stated
-capacity) stalled 2 of the first 4 attempts completely (no response after
-over 30 minutes each; recorded as explicit failures, not silently
-dropped) and a fixed time budget (roughly 3.5 hours of wall-clock across
-several resumed attempts) was reached before the remaining 16 could be
-attempted. Of the 2 problems that graded, both again showed full
-agreement -- all 3 of 3 candidates converged on the same correct answer,
-all three methods tied at 100\% accuracy, $0/2$ disagreement. This is not
-evidence that MATH Level 5 is also saturated for this model: $N=2$ cannot
-support that conclusion either way. It is evidence that this specific
-attempt to test whether OR-Select can correct a wrong majority was
-underpowered by an operational constraint, not by the hypothesis or the
-benchmark choice -- see Section~\ref{sec:limitations}.
+The resumed run graded 107 of 134 problems; 27 remained explicit free-tier
+failures. All four methods scored 98/107 nominally (91.6\%). The nine apparent
+errors were grader false negatives caused by formatting, notation, or ordering
+that the heuristic grader did not normalize. No genuinely wrong majority was
+found, and the earlier 2/20 pilot is retained only as an incident record.
+
+\subsection{Track D: AIME 2026}
+
+The homogeneous run graded 15/30 and the heterogeneous run 11/30. All four
+methods scored 100\% on valid rows, with zero OR-Select/self-consistency
+disagreements in either variant. Free-tier failures prevented full completion.
+
+\subsection{Track E: GPQA Diamond}
+
+The homogeneous run graded 39/198: OR-Select and self-consistency each scored
+37/39 (94.9\%), greedy 36/39 (92.3\%), and Kemeny--Young 37/39 (94.9\%). The
+heterogeneous run graded 12/198: OR-Select, self-consistency, and greedy each
+scored 11/12 (91.7\%), while Kemeny--Young scored 10/12 (83.3\%). Neither
+variant produced an OR-Select/self-consistency disagreement. Kemeny--Young
+differed once in the heterogeneous run, where OR-Select was correct. The
+remaining 159 and 186 rows respectively failed at the provider layer.
 
 \subsection{Ablations}
 
@@ -387,11 +404,11 @@ scores across runs, which remains open.
 \subsection{Limitations}
 \label{sec:limitations}
 
-\textbf{Scale.} $N=3$--$5$ candidates and single-digit query/problem
-counts per track are smoke-test scale, dictated by free-tier rate limits
-encountered during this work (queue depths up to 3517 against a
-32-request provider-side limit were observed), not by design. This is a
-preliminary report, not a powered evaluation.
+\textbf{Scale.} $N=3$--$6$ candidates and partial valid-row counts per
+track remain smoke-test scale, dictated by free-tier rate limits encountered
+during this work (queue depths up to 3517 against a 32-request provider-side
+limit were observed), not by design. This is a preliminary report, not a
+powered evaluation.
 
 \textbf{Single judge model.} Every result uses one model as generator,
 scorer, and judge simultaneously. \citet{correlatederrors2026} show that
@@ -399,25 +416,18 @@ LLM judge panels carry far less independent signal than judge count
 suggests because models make correlated errors, and that improved
 aggregation algorithms close at most 11\% of the resulting gap. Whether
 heterogeneous-provider judging would help here, or merely add cost, is
-untested, not merely under-tested -- no heterogeneous run completed
-during this work (Section~\ref{sec:experiments}).
+untested, not merely under-tested -- heterogeneous generation was tested,
+but heterogeneous judging was not.
 
 \textbf{No test of correcting a wrong majority.} The scenario that most
 directly tests the hypothesis -- candidates disagree, the majority is
 wrong, and OR-Select's judge selects a correct minority answer -- did not
-occur in Track B (0/40 disagreement) or in the 2 valid Track C problems
-(0/2 disagreement). Track B's result is explained by saturation
-\citep{kim2025correlated,ding2026agree}: GSM8K is easy enough that
-candidates from a strong generator do not diverge. Track C was
-deliberately chosen to avoid that explanation, but the attempt was cut
-short by free-tier rate-limit saturation before reaching a sample size
-large enough to be informative (Section~\ref{sec:results}). This remains
-the single most important open question for future work, and the reason
-it is still open changed over the course of this work: it is now an
-infrastructure problem (a paid API tier, or a redesigned protocol using
-fewer API calls per problem, is needed to reach adequate $N$ on a
-genuinely unsaturated benchmark) rather than an unidentified benchmark
-choice.
+occur in Track B, C, D, D-heterogeneous, or either GPQA variant. Across
+224 valid ground-truth rows, OR-Select and self-consistency never disagreed
+in a way that produced a correctness split. GPQA's exact-letter grading
+removes the formatting confound found in MATH, but its runs were heavily
+incomplete (39/198 and 12/198 valid). The remaining question may require
+paid API capacity, frontier-tier models, or a lower-call-count protocol.
 
 \section{Conclusion}
 
@@ -426,15 +436,15 @@ combining LLM-judged pairwise quality, deterministic self-consistency,
 confidence, and cost. The selection step is exactly reproducible given
 fixed inputs; whether those inputs are themselves stable is an empirical
 question we measure rather than assume, finding a concrete provider-side
-non-determinism failure and closing one instance of it. A two-track
-evaluation shows the method diverges from simpler baselines exactly when
-candidates diverge, and ties with them when candidates converge -- both
-predicted by the same underlying mechanism and confirmed independently.
+non-determinism failure and closing one instance of it. A multi-track
+evaluation shows the method diverges from simpler baselines on open-ended
+queries, while matching self-consistency on every ground-truth row tested --
+including partial AIME and GPQA runs.
 The self-consistency term has not yet influenced a real decision, for a
 structural reason identified by ablation rather than assumed. This is
-preliminary, small-scale work; the concrete next step is a larger,
-harder ground-truth benchmark run specifically to force the candidate
-disagreement this report's evaluation never encountered.
+preliminary, small-scale work; the concrete next steps are paid or
+frontier-tier evaluation, stronger answer normalization, and a protocol that
+can reach complete unsaturated benchmark coverage.
 
 \bibliographystyle{elsarticle-num}
 \bibliography{refs}

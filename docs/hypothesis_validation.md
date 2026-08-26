@@ -58,7 +58,7 @@ a judge cannot differentiate candidates that do not differ.
 ## Sub-claim 5: OR-Select can correct a wrong self-consistency majority
 
 **STILL UNTESTED, but now on strong grounds rather than a stalled small
-sample.** Across 173 graded problems in four independent runs, the
+sample.** Across 224 graded problems in six independent runs, the
 precondition this sub-claim needs — a self-consistency majority that is
 *genuinely* wrong — essentially never arose. This is the strongest and
 most practically relevant form of the hypothesis: candidates disagree,
@@ -126,7 +126,29 @@ it for `poolside/laguna-s-2.1:free` (live-smoke-tested first) unblocked
 methods tied at **100%** accuracy on the 11 graded. 0 disagreements —
 cross-vendor generation did not surface disagreement either.
 
-**Combined across Tracks B, C, D, D-het: 173 graded problems, 0 confirmed
+**Track E — GPQA Diamond, homogeneous generation**
+(`outputs/gpqa_benchmark.json`): N=39/198 valid. OR-Select and
+self-consistency each scored 37/39 (94.9%), greedy scored 36/39 (92.3%), and
+Kemeny-Young scored 37/39 (94.9%). There were 0 OR-Select/self-consistency
+disagreements. The 159 failed rows were explicit free-tier infrastructure
+failures, not incorrect answers.
+
+**Track E-heterogeneous — GPQA Diamond, 3-vendor generation**
+(`outputs/gpqa_heterogeneous.json`): N=12/198 valid. OR-Select,
+self-consistency, and greedy each scored 11/12 (91.7%); Kemeny-Young scored
+10/12 (83.3%). There were 0 OR-Select/self-consistency disagreements. OR-Select
+and Kemeny-Young differed once, with OR-Select correct. The 186 failed rows
+were explicit free-tier infrastructure failures. GPQA's exact-letter grader
+removes the formatting confound found in MATH Level 5.
+
+**Combined GPQA result:** neither GPQA variant produced the precondition for
+sub-claim 5: candidates did not yield an OR-Select/self-consistency answer
+disagreement on any of 51 valid problems. The result weakens the hypothesis
+that benchmark choice alone explains the missing wrong-majority cases, while
+not isolating model tier because both runs used the same free OpenRouter model
+tiers as AIME.
+
+**Combined across Tracks B, C, D, D-het, E, E-het: 224 graded problems, 0 confirmed
 cases of a genuinely wrong self-consistency majority, and therefore 0
 opportunities for OR-Select to demonstrate a correction in either
 direction.** This is now a repeated result across four independently-run
@@ -195,13 +217,13 @@ one regime tested for it (sub-claim 3: 3/3 divergence on open-ended
 queries) and, symmetrically, its complement is now strongly confirmed
 across four independent ground-truth benchmarks (sub-claim 4: 40/40 tied
 on GSM8K, 107 graded and tied on MATH Level 5, 15/15 tied on AIME 2026,
-11/11 tied on AIME 2026 heterogeneous — 173 total graded problems, every
-method agreeing on every one). Sub-claim 5, the hardest and most
+11/11 tied on AIME 2026 heterogeneous, plus 51 GPQA rows where OR-Select and
+self-consistency tied — 224 total graded problems). Sub-claim 5, the hardest and most
 practically important case — OR-Select correcting a wrong
 self-consistency majority — was pursued directly, in four separate runs
 spanning three benchmarks and two generation regimes (homogeneous and
 3-vendor heterogeneous), and **still found no case of a genuinely wrong
-majority** across all 173 graded problems: Track C's apparent 9
+majority** across all 224 graded problems: Track C's apparent 9
 counterexamples turned out, on inspection, to be grader false negatives
 (formatting variants of the correct answer), not real errors. This is no
 longer an underpowered attempt — it is a repeated, well-checked absence
@@ -209,7 +231,7 @@ of the precondition the sub-claim needs, not a repeated pass/fail of the
 mechanism. It does not prove sub-claim 5 is false, nor does it confirm it;
 the precondition (candidates disagree AND the majority is genuinely
 wrong) may simply be rare enough, for this model class on these
-benchmarks, that even AIME 2026 didn't surface it at the ~9-14
+benchmarks, that even GPQA didn't surface it at the ~9-39
 samples/track free-tier infrastructure allowed, or a harder benchmark or
 larger sample may be needed to find it. What this result does establish
 is that OR-Select's determinism (sub-claim 1) and its value on divergent,

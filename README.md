@@ -34,7 +34,8 @@ Full formulation, including the pairwise Kemeny-style extension, is in
 `docs/methodology.md`. Ablations (does the self-consistency term matter? does
 bidirectional judging matter?) are in `docs/ablations.md`. Full benchmark
 results (open-ended queries vs. baselines, GSM8K ground-truth accuracy) are in
-`docs/benchmark_results.md`.
+`docs/benchmark_results.md`. GPQA Diamond results and preregistration are
+included alongside the earlier GSM8K, MATH Level 5, and AIME tracks.
 
 ## Folder Map
 
@@ -141,6 +142,9 @@ actual submission — see the note at the top of the file.
 
 - `outputs/runs/<query_id>/selection.json` — full candidate set, scores, and winner for one query
 - `outputs/gsm8k_benchmark*.json` — per-problem grading + accuracy for the GSM8K benchmark
+- `outputs/math_benchmark_full.json` — resumed MATH Level-5 benchmark results
+- `outputs/aime_2026*.json` — homogeneous and heterogeneous AIME results
+- `outputs/gpqa_*.json` — homogeneous and heterogeneous GPQA Diamond results
 - `outputs/ablation_*.json` — ablation results
 
 ## Reproducibility notes
