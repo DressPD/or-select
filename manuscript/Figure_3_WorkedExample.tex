@@ -1,0 +1,53 @@
+\documentclass[tikz,border=5pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+\definecolor{orblue}{RGB}{76,120,168}
+\definecolor{ororange}{RGB}{209,143,0}
+\definecolor{orgreen}{RGB}{80,140,90}
+\definecolor{orred}{RGB}{178,80,80}
+\input{Figure_3_WorkedExample_data.tex}
+
+\begin{document}
+\begin{tikzpicture}
+\node[anchor=west,font=\Large\bfseries] at (0,0) {Objective decomposition: one real run};
+\node[anchor=west,font=\small,text=black!70] at (0,-0.55)
+  {Track A, ``Summarize the plot of Hamlet in one sentence,'' $N=5$. Winner: c2.};
+\draw[black!25] (0,-0.88) -- (13.6,-0.88);
+
+\begin{scope}[yshift=-1.65cm]
+\begin{axis}[
+  at={(0,0)},anchor=north west,
+  width=13.6cm,height=7.0cm,
+  ybar stacked,bar width=28pt,
+  ymin=-0.4,ymax=0.75,
+  ylabel={Contribution to score$_i$},
+  tick label style={font=\scriptsize},
+  ylabel style={font=\scriptsize},
+  symbolic x coords={c0,c1,c2,c3,c4},
+  xtick=data,
+  xticklabel style={font=\small},
+  ymajorgrids=true,grid style={black!12},
+  axis line style={black!70},
+  enlarge x limits=0.15,
+  legend style={at={(0.5,-0.16)},anchor=north,legend columns=4,font=\scriptsize,draw=none}
+]
+\addplot[fill=orblue,draw=none] coordinates {\WorkedExampleQualityBars};
+\addlegendentry{$w_1\cdot\text{quality}_i$}
+\addplot[fill=ororange,draw=none] coordinates {\WorkedExampleConfidenceBars};
+\addlegendentry{$w_2\cdot\text{confidence}_i$}
+\addplot[fill=orgreen,draw=none] coordinates {\WorkedExampleConsistencyBars};
+\addlegendentry{$w_4\cdot\text{consistency}_i$}
+\addplot[fill=orred,draw=none] coordinates {\WorkedExampleCostBars};
+\addlegendentry{$-w_3\cdot\text{cost}_i$}
+\end{axis}
+\end{scope}
+
+\node[anchor=west,font=\footnotesize,text=black!70] at (0,-9.5)
+  {confidence$_i$ and consistency$_i$ are flat across all five candidates here (no exact-text duplicates,
+  uniform scorer confidence); the winner is decided by quality$_i$ and, to a lesser extent, cost$_i$.};
+\end{tikzpicture}
+\end{document}
