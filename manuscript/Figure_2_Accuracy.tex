@@ -1,0 +1,49 @@
+\documentclass[tikz,border=5pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+\definecolor{orgray}{RGB}{122,122,122}
+\definecolor{orblue}{RGB}{76,120,168}
+\definecolor{ororange}{RGB}{209,143,0}
+\definecolor{orgreen}{RGB}{80,140,90}
+\input{Figure_2_Accuracy_data.tex}
+
+\begin{document}
+\begin{tikzpicture}
+\node[anchor=west,font=\Large\bfseries] at (0,0) {Ground-truth accuracy by track};
+\node[anchor=west,font=\small,text=black!70] at (0,-0.55)
+  {D/D$'$ = AIME 2026 homogeneous/heterogeneous generation; E/E$'$ = GPQA Diamond homogeneous/heterogeneous.};
+\draw[black!25] (0,-0.88) -- (15.6,-0.88);
+
+\begin{axis}[
+  at={(0,-1.55)},anchor=north west,
+  width=15.6cm,height=7.2cm,
+  ybar,bar width=6pt,
+  ymin=85,ymax=103,
+  ylabel={Accuracy on valid rows (\%)},
+  tick label style={font=\scriptsize},
+  ylabel style={font=\scriptsize},
+  symbolic x coords={GSM8K-B,MATH5-C,AIME-D,AIME-Dx,GPQA-E,GPQA-Ex},
+  xtick=data,
+  xticklabel style={font=\scriptsize},
+  ymajorgrids=true,grid style={black!12},
+  axis line style={black!70},
+  enlarge x limits=0.09,
+  legend style={at={(0.5,-0.22)},anchor=north,legend columns=4,font=\scriptsize,draw=none}
+]
+\addplot[fill=orgray,draw=none] coordinates {\GreedyCoordinates};
+\addlegendentry{Greedy}
+\addplot[fill=ororange,draw=none] coordinates {\SelfConsistencyCoordinates};
+\addlegendentry{Self-consistency}
+\addplot[fill=orblue,draw=none] coordinates {\ORSelectCoordinates};
+\addlegendentry{OR-Select}
+\addplot[fill=orgreen,draw=none] coordinates {\KemenyYoungCoordinates};
+\addlegendentry{Kemeny--Young}
+\end{axis}
+
+\node[anchor=west,font=\footnotesize,text=black!70] at (0,-8.85)
+  {GSM8K has no Kemeny--Young comparator run. GPQA-E is the only track with a nonzero OR-Select/self-consistency split (2 of 109, both corrected in OR-Select's favor).};
+\end{tikzpicture}
+\end{document}

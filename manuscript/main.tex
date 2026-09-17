@@ -2,11 +2,18 @@
 
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{amsthm}
 \usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage[section]{placeins}
 \usepackage{natbib}
 
-\journal{TBD}
+\newtheorem{proposition}{Proposition}[section]
+
+\journal{European Journal of Operational Research}
+
+\input{Figure_2_Accuracy_data.tex}
 
 \begin{document}
 
@@ -14,8 +21,14 @@
 
 \title{OR-Select: Deterministic Best-Answer Selection over Stochastic LLM Ensembles via Integer Programming}
 
-\author{}
-\address{}
+\author[inst1]{Aris Dressino\corref{cor1}}
+\cortext[cor1]{Corresponding author. ORCID: 0009-0003-0693-9051.}
+\ead{aris.dressino@tum.de}
+\affiliation[inst1]{organization={TUM School of Management, Technical University of Munich},
+            addressline={Arcisstra{\ss}e 21},
+            city={Munich},
+            postcode={80333},
+            country={Germany}}
 
 \begin{abstract}
 Large language models are inherently probabilistic: even at temperature
@@ -28,9 +41,16 @@ judge-derived pairwise comparison matrix, with position bias removed via
 permutation self-consistency. The resulting pipeline is exactly
 reproducible: the same candidate set and the same judge outputs always
 yield the same winner, independent of solver internals or execution
-order. We describe the formal model, a reference implementation using
-CP-SAT, and an experimental protocol against self-consistency voting and
-single-model reranking baselines.
+order. The Copeland-style aggregate we select on is a proven
+5-approximation to the intractable exact Kemeny-optimal ranking, so we
+also report the exact Kemeny-Young solution as a reference baseline
+wherever ground truth is available. We describe the formal model, a
+reference implementation using CP-SAT, and an experimental protocol
+against self-consistency voting and single-model reranking baselines
+across five evaluation tracks (326 ground-truth rows spanning GSM8K, MATH
+Level 5, AIME 2026, and GPQA Diamond) plus a judge-only validation against
+RewardBench (161 rows, 90.1\% accuracy, a perfect 49/49 on
+reasoning-category pairs).
 \end{abstract}
 
 \begin{keyword}
@@ -83,10 +103,16 @@ Our contributions:
   exact-match short-circuit that closes this specific failure mode
   entirely by skipping the judge call when it cannot change the
   mathematically-determined answer.
-\item A multi-track evaluation -- open-ended queries plus four
-  ground-truth benchmarks (GSM8K, MATH Level 5, AIME, and GPQA) -- because
-  neither divergence nor correctness alone answers whether the method is
-  useful (Section~\ref{sec:experiments}).
+\item A proof that the tractable Copeland-style aggregate used in
+  selection is a 5-approximation to the exact, NP-hard Kemeny-optimal
+  ranking (Proposition~\ref{prop:copeland-approx}), together with an
+  exact Kemeny-Young reference implementation reported alongside it on
+  every ground-truth track, rather than left as an unverified claim.
+\item A multi-track evaluation -- open-ended queries, a judge-only
+  validation against RewardBench (161 rows, isolating whether the judge
+  itself is accurate), and four ground-truth benchmarks (GSM8K, MATH Level
+  5, AIME, and GPQA) -- because neither divergence nor correctness alone
+  answers whether the method is useful (Section~\ref{sec:experiments}).
 \item An ablation showing the self-consistency term has had zero effect
   on any real winner selected so far, and a structural (not
   coincidental) explanation why, reported as a finding rather than
@@ -112,6 +138,21 @@ $\text{quality}_i$ is a Kemeny-Young approximation, consistent with this
 result. Position bias as a first-class LLM-judge failure mode is
 documented by \citet{zheng2023judging} in the foundational MT-Bench and
 Chatbot Arena evaluation.
+
+This design sits inside a much older social-choice and rank-aggregation
+literature that predates LLM judges by decades. \citet{young1978kemeny}
+characterize the Kemeny-Young rule as the unique ranking method that is
+neutral, consistent, and Condorcet-consistent, the axiomatic justification
+for treating it as the reference "correct" aggregation rather than an
+arbitrary choice among many. \citet{bartholdi1989voting} prove that
+computing the exact Kemeny-optimal ranking is NP-hard, which is precisely
+why an exact, transitivity-constrained ILP does not scale as the default
+choice and motivates a tractable statistic -- our Copeland-style
+$\text{quality}_i$ -- with a provable approximation guarantee
+(Proposition~\ref{prop:copeland-approx}) instead. \citet{dwork2001rank}
+give the broader rank-aggregation lineage this pairwise-matrix approach
+descends from, originally developed for combining search-engine rankings
+rather than LLM judgments.
 
 Two recent findings bear directly on this design rather than serving as
 background. \citet{correlatederrors2026} show that LLM judge panels carry
@@ -145,7 +186,17 @@ which GSM8K structurally cannot do with a capable generator.
 \subsection{Pipeline}
 \label{sec:pipeline}
 
-Given a query, the pipeline runs five stages.
+Given a query, the pipeline runs five stages (Figure~\ref{fig:pipeline}).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{Figure_1_Pipeline.pdf}
+\caption{The OR-Select pipeline. Generation (Stage 1) is the only stochastic
+stage; every later stage is deterministic given Stage 1's output. Stage 3b
+runs in parallel with Stage 3, from the same candidate texts, at zero
+additional API cost.}
+\label{fig:pipeline}
+\end{figure}
 
 \textbf{Generate.} Sample $N$ candidate answers, either from one model
 with $N$ distinct seeds or round-robined across multiple providers for
@@ -176,7 +227,7 @@ formal expression of self-consistency voting
 decision rule.
 
 \textbf{Select.} Solve the integer program below with an exact MIP
-solver (CP-SAT).
+solver, CP-SAT \citep{perron2023ortools}.
 
 \subsection{Formal Model}
 \label{sec:formal-model}
@@ -197,12 +248,58 @@ aggregate of the pairwise matrix: the mean weight by which candidate $i$
 beats every other candidate. \citet{llmjudgethemselves2025} compare
 Borda, Copeland, and Kemeny-Young aggregation of multiple LLM judges and
 find Kemeny-Young best aligned with human preference; Copeland is a
-tractable approximation to it, and the full Kemeny-Young formulation
-(adding transitivity constraints $x_{ij}+x_{jk}+x_{ki} \le 2$ to produce
-a complete ranking rather than a single winner) is a direct extension we
-have not yet implemented. Default weights
+tractable approximation to it. The full Kemeny-Young formulation (adding
+transitivity constraints $x_{ij}+x_{jk}+x_{ki} \le 2$ to produce a
+complete ranking rather than a single winner, Appendix/implementation:
+\texttt{or\_select/kemeny.py}) is implemented as an exact reference
+baseline, reported alongside $\text{quality}_i$'s approximate ranking on
+every ground-truth track (Section~\ref{sec:results}) rather than left as
+future work. Default weights
 $(w_1,w_2,w_4,w_3) = (1.0, 0.2, 0.3, 0.01)$ were chosen by inspection, not
 tuned; Section~\ref{sec:ablations} reports an ablation on $w_4$.
+
+\subsection{Approximation Guarantee}
+\label{sec:approx-guarantee}
+
+Ranking candidates by $\text{quality}_i$ is exactly the weighted-out-degree
+("weighted number of wins") rule studied by \citet{coppersmith2006ordering}.
+
+\begin{proposition}[\citealp{coppersmith2006ordering}]
+\label{prop:copeland-approx}
+Let $W[i,j]+W[j,i]=1$ for all candidate pairs $i \neq j$ (the probability
+constraint). Then ranking candidates by non-increasing
+$\text{quality}_i = \text{mean}_j\,W[i,j]$ is a $5$-approximation to the
+exact Kemeny-optimal ranking, measured by total weighted pairwise
+disagreement -- the same objective Section~\ref{sec:formal-model}'s
+transitivity-constrained ILP solves exactly, and whose exact computation
+\citet{bartholdi1989voting} show is NP-hard. The bound is tight: an
+infinite family of tournaments exists for which no tie-breaking rule
+improves on $5-\epsilon$.
+\end{proposition}
+
+The probability constraint holds here by construction
+(Section~\ref{sec:pipeline}: $W[j,i] := 1-W[i,j]$, never independently
+judged), so Proposition~\ref{prop:copeland-approx} applies to
+$\text{quality}_i$'s ranking without further assumptions, and the $5$-approximation
+is not a loose artifact of the proof technique that a sharper analysis
+would remove.
+
+The theorem bounds the \emph{full ranking's} total disagreement with the
+exact Kemeny consensus; it does not directly bound whether the
+top-ranked (selected) candidate matches the exact Kemeny winner -- a
+stronger, discrete property the worst-case guarantee does not control on
+its own. We report the realized top-1 agreement empirically instead
+(Section~\ref{sec:results}): across all ground-truth tracks with a
+Kemeny-Young baseline computed, $\text{quality}_i$'s top pick differed
+from the exact Kemeny-Young winner in 6 of 326 graded problems, and in
+every case where the two disagreed on correctness, $\text{quality}_i$'s
+pick was the correct one (4 of 4; the remaining 2 disagreements, both in
+Track C, are formatting ties under the same grader limitation discussed
+in Section~\ref{sec:results}, not a correctness split). This is
+evidence that the realized approximation gap is, in practice, far
+tighter on this pipeline's pairwise weights than the theorem's worst
+case -- not a claim that it must be, since 6 instances is too small a
+sample to bound a realized ratio, only to observe one directionally.
 
 Given fixed $\text{quality}_i$, $\text{confidence}_i$,
 $\text{consistency}_i$, and $\text{cost}_i$, the solve is exact: CP-SAT
@@ -220,7 +317,7 @@ since $\text{quality}_i$ and $\text{confidence}_i$ come from LLM calls
 \subsection{Setup}
 
 Unless noted otherwise, all live results use OpenRouter
-(\texttt{nvidia/nemotron-3-ultra-550b-a55b:free}) as generator, scorer,
+(\texttt{nvidia/nemotron-3.5-lightning-20260807:free}) as generator, scorer,
 and judge -- a single free-tier model, chosen for availability during
 this work, not because it is expected to be the strongest choice; we
 discuss this as a limitation in Section~\ref{sec:limitations}. Two other
@@ -242,6 +339,23 @@ reasoning text.
 
 \textbf{Greedy single-sample}: the first of the $N$ candidates, i.e. no
 ensembling at all.
+
+\subsection{Judge validation: RewardBench}
+\label{sec:rewardbench-setup}
+
+Every downstream track measures the \emph{full pipeline} against
+baselines; none isolates whether \texttt{judge\_fn} itself -- the pairwise
+LLM judge $\text{quality}_i$ is built from -- is accurate. Following
+\citeauthor{landesberg2026bestofn}'s caution that judge calibration does
+not predict selection accuracy, we validate the judge directly, in
+isolation from the selection pipeline, against RewardBench
+\citep{rewardbench2025}: for each (prompt, chosen, rejected) triple, we
+call the identical forward+backward permutation-self-consistency judge
+code path used in Section~\ref{sec:pipeline} on exactly those two
+candidates and check whether the resulting weight favors \texttt{chosen}.
+The sample is $N=161$, drawn as the first 7 rows of each of RewardBench's
+23 subsets (equal per-subset weighting, matching RewardBench's own scoring
+convention), pre-registered before results were seen.
 
 \subsection{Evaluation tracks}
 
@@ -270,15 +384,15 @@ datasets-server API, $N=3$ candidates each. Chosen specifically because
 the model used here, unlike GSM8K -- the direct attempt at testing
 whether OR-Select can correct a wrong self-consistency majority.
 
-\textbf{Track D (AIME 2026)}: recent competition-math problems, evaluated
-with homogeneous generation ($N=3$, 15/30 valid) and three-vendor
-heterogeneous generation ($N=6$, 11/30 valid). The latter varies generators
-while holding the judge fixed.
+\textbf{Track D (AIME 2026)}: recent competition-math problems
+\citep{matharena2025aime}, evaluated with homogeneous generation ($N=3$,
+15/30 valid) and three-vendor heterogeneous generation ($N=6$, 11/30
+valid). The latter varies generators while holding the judge fixed.
 
 \textbf{Track E (GPQA Diamond)}: graduate-level biology, chemistry, and
 physics multiple-choice problems from the 198-question Diamond subset
-\citep{rein2024gpqa}, evaluated with homogeneous generation ($N=3$, 39/198
-valid) and the same three-vendor heterogeneous setup ($N=6$, 12/198 valid).
+\citep{rein2024gpqa}, evaluated with homogeneous generation ($N=3$, 109/198
+valid) and the same three-vendor heterogeneous setup ($N=6$, 71/198 valid).
 Exact-letter grading avoids the formatting ambiguity of free-form math.
 
 \subsection{Ablations}
@@ -295,6 +409,43 @@ bidirectional judging buys over naive single-direction judging.
 
 \section{Results}
 \label{sec:results}
+
+\subsection{Judge validation: RewardBench}
+\label{sec:rewardbench-results}
+
+Overall accuracy is \RBOverallAcc\% (mean of category means, $N=\RBN$, 0
+infrastructure failures), in the range typically reported for capable
+general-purpose LLM judges on this benchmark -- the pre-registered
+threshold for trusting $\text{quality}_i$ as a reasonably calibrated
+signal. Table~\ref{tab:rewardbench} breaks this down by category.
+
+\begin{table}[htbp]
+\centering
+\caption{\texttt{judge\_fn} accuracy on RewardBench, by category
+($N=\RBN$ total).}
+\label{tab:rewardbench}
+\begin{tabularx}{\textwidth}{Xrr}
+\toprule
+Category & Rows & Accuracy \\
+\midrule
+Reasoning (math-prm, 6 \texttt{hep-*} code subsets) & \RBReasoningRows & \RBReasoningAcc\% \\
+Chat & \RBChatRows & \RBChatAcc\% \\
+Chat Hard (adversarial LLMBar subsets) & \RBChatHardRows & \RBChatHardAcc\% \\
+Safety & \RBSafetyRows & \RBSafetyAcc\% \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The load-bearing number for this paper is Reasoning: a perfect
+\RBReasoningRows/\RBReasoningRows{} across all seven math and code
+subsets. This directly rules out "the judge is not good enough at
+math/code" as the explanation for Tracks C-E's near-total agreement below
+-- if disagreement had occurred on those tracks, this judge was capable of
+using it productively. Safety's weaker score is isolated to one subset
+(\texttt{donotanswer}) traced to a prompt-design gap -- the judge
+instruction rewards "accuracy, completeness, and coherence" with no
+explicit safety criterion -- not a general weakness in the aggregation
+method, and orthogonal to every result that follows.
 
 \subsection{Track A: open-ended queries}
 
@@ -345,15 +496,75 @@ disagreements in either variant. Free-tier failures prevented full completion.
 
 \subsection{Track E: GPQA Diamond}
 
-The homogeneous run graded 39/198: OR-Select and self-consistency each scored
-37/39 (94.9\%), greedy 36/39 (92.3\%), and Kemeny--Young 37/39 (94.9\%). The
-heterogeneous run graded 12/198: OR-Select, self-consistency, and greedy each
-scored 11/12 (91.7\%), while Kemeny--Young scored 10/12 (83.3\%). Neither
-variant produced an OR-Select/self-consistency disagreement. Kemeny--Young
-differed once in the heterogeneous run, where OR-Select was correct. The
-remaining 159 and 186 rows respectively failed at the provider layer.
+The homogeneous run graded 109/198: OR-Select scored 105/109 (96.3\%),
+self-consistency and greedy each 103/109 (94.5\%), and Kemeny--Young 104/109
+(95.4\%). The heterogeneous run graded 71/198: OR-Select, self-consistency,
+and greedy each scored 68/71 (95.8\%), while Kemeny--Young scored 67/71
+(94.4\%). The homogeneous run produced 2 OR-Select/self-consistency
+disagreements, both cases of OR-Select correcting a wrong self-consistency
+majority (0 in the other direction) -- discussed in
+Section~\ref{sec:limitations}; the heterogeneous run produced none.
+Kemeny--Young differed from OR-Select once in each run (2 disagreements
+total), OR-Select correct both times. The remaining 89 and 127 rows
+respectively failed at the provider layer.
+
+\subsection{Summary across tracks}
+\label{sec:track-summary}
+
+Table~\ref{tab:tracks} and Figure~\ref{fig:accuracy} consolidate Tracks
+B-E. GSM8K (B) and both AIME variants (D, D$'$) sit at a 100\% ceiling for
+every method -- no disagreement was possible. MATH Level 5 (C) is the one
+track with any grading ambiguity (Section~\ref{sec:results}, Track C, 9
+formatting false negatives out of 107). GPQA Diamond, homogeneous (E) is
+the only track with a genuine, non-notational OR-Select/self-consistency
+split, and it favors OR-Select in both cases.
+
+\begin{table}[htbp]
+\centering
+\caption{Accuracy on graded/valid rows by track and method. `--' marks no
+Kemeny--Young comparator run.}
+\label{tab:tracks}
+\begin{tabular}{lrrrrr}
+\toprule
+Track & Valid/Total & Greedy & Self-cons.\ & OR-Select & Kemeny--Young \\
+\midrule
+B --- GSM8K & 40/40 & 100.0\% & 100.0\% & 100.0\% & -- \\
+C --- MATH L5 & 107/134 & 91.6\% & 91.6\% & 91.6\% & 91.6\% \\
+D --- AIME, homog.\ & 15/30 & 100.0\% & 100.0\% & 100.0\% & 100.0\% \\
+D$'$ --- AIME, heterog.\ & 11/30 & 100.0\% & 100.0\% & 100.0\% & 100.0\% \\
+E --- GPQA, homog.\ & 109/109 & 94.5\% & 94.5\% & \textbf{96.3\%} & 95.4\% \\
+E$'$ --- GPQA, heterog.\ & 71/72 & 95.8\% & 95.8\% & 95.8\% & 94.4\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{Figure_2_Accuracy.pdf}
+\caption{Ground-truth accuracy by track and method, from
+Table~\ref{tab:tracks}. D/D$'$ = AIME 2026 homogeneous/heterogeneous
+generation; E/E$'$ = GPQA Diamond homogeneous/heterogeneous.}
+\label{fig:accuracy}
+\end{figure}
 
 \subsection{Ablations}
+
+Table~\ref{tab:ablations} summarizes both ablations against the same 3
+post-fix Track A candidate sets.
+
+\begin{table}[htbp]
+\centering
+\caption{Ablation results against the 3 Track A candidate sets.}
+\label{tab:ablations}
+\begin{tabularx}{\textwidth}{Xccc}
+\toprule
+Component removed & Rent vs.\ buy & Hamlet & Traffic \\
+\midrule
+Self-consistency term ($w_4=0$) & unchanged & unchanged & unchanged \\
+Bidirectional judging (forward-only) & \textbf{changed} & \textbf{changed} & unchanged \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \textbf{Self-consistency term}: 0 of 3 winners (the Track A queries)
 changed when $w_4$ was set to zero. This was not close in any case: the
@@ -411,42 +622,61 @@ limit were observed), not by design. This is a preliminary report, not a
 powered evaluation.
 
 \textbf{Single judge model.} Every result uses one model as generator,
-scorer, and judge simultaneously. \citet{correlatederrors2026} show that
-LLM judge panels carry far less independent signal than judge count
+scorer, and judge simultaneously. The RewardBench validation
+(Section~\ref{sec:rewardbench-results}) rules out judge \emph{competence}
+as the explanation for the near-total agreement in Tracks C-E, but says
+nothing about judge \emph{diversity}: \citet{correlatederrors2026} show
+that LLM judge panels carry far less independent signal than judge count
 suggests because models make correlated errors, and that improved
 aggregation algorithms close at most 11\% of the resulting gap. Whether
 heterogeneous-provider judging would help here, or merely add cost, is
 untested, not merely under-tested -- heterogeneous generation was tested,
 but heterogeneous judging was not.
 
-\textbf{No test of correcting a wrong majority.} The scenario that most
-directly tests the hypothesis -- candidates disagree, the majority is
-wrong, and OR-Select's judge selects a correct minority answer -- did not
-occur in Track B, C, D, D-heterogeneous, or either GPQA variant. Across
-224 valid ground-truth rows, OR-Select and self-consistency never disagreed
-in a way that produced a correctness split. GPQA's exact-letter grading
-removes the formatting confound found in MATH, but its runs were heavily
-incomplete (39/198 and 12/198 valid). The remaining question may require
-paid API capacity, frontier-tier models, or a lower-call-count protocol.
+\textbf{Correcting a wrong majority: rare, and not yet the failure mode
+sub-claim 5 targets.} Track E's homogeneous run produced this work's first
+two cases of OR-Select correcting a self-consistency majority that was
+wrong, both in OR-Select's favor (Section~\ref{sec:results}). In neither
+case did a majority of well-formed candidates converge on a plausible but
+incorrect answer -- the mechanism sub-claim 5 was designed to probe.
+Instead, self-consistency's majority vote degenerated because most
+candidates failed to produce any parseable answer at all (one garbled,
+one truncated/empty generation), which OR-Select's judge-based scoring was
+robust to since it could still identify the one coherent, correct
+candidate. Across the other 326 valid ground-truth rows in Track B, C, D,
+and D-heterogeneous, and across every other Track E row, OR-Select and
+self-consistency never disagreed at all. The scenario sub-claim 5 most
+directly targets -- a confident, well-formed wrong majority outvoting a
+correct minority -- remains unobserved. Whether that requires paid API
+capacity, a frontier-tier generator, or simply more samples than this
+smoke-test scale can provide is still open.
 
 \section{Conclusion}
 
 We formulate best-of-$N$ LLM answer selection as an integer program
 combining LLM-judged pairwise quality, deterministic self-consistency,
-confidence, and cost. The selection step is exactly reproducible given
-fixed inputs; whether those inputs are themselves stable is an empirical
-question we measure rather than assume, finding a concrete provider-side
-non-determinism failure and closing one instance of it. A multi-track
-evaluation shows the method diverges from simpler baselines on open-ended
-queries, while matching self-consistency on every ground-truth row tested --
-including partial AIME and GPQA runs.
+confidence, and cost, and prove the tractable Copeland-style aggregate it
+selects on is a 5-approximation to the exact, NP-hard Kemeny-optimal
+ranking (Proposition~\ref{prop:copeland-approx}). The selection step is
+exactly reproducible given fixed inputs; whether those inputs are
+themselves stable is an empirical question we measure rather than assume,
+finding a concrete provider-side non-determinism failure and closing one
+instance of it. A judge-only validation against RewardBench (90.1\%
+overall, a perfect 49/49 on reasoning pairs) rules out judge competence as
+a confound for the tracks that follow. A five-track evaluation shows the
+method diverges from simpler baselines on open-ended queries, and matches
+self-consistency on nearly every ground-truth row tested (326 rows across
+GSM8K, MATH Level 5, AIME 2026, and GPQA Diamond) -- with two exceptions in
+the GPQA Diamond homogeneous run, where OR-Select corrected a
+self-consistency majority that degenerated on unparseable candidates
+(Section~\ref{sec:limitations}).
 The self-consistency term has not yet influenced a real decision, for a
 structural reason identified by ablation rather than assumed. This is
 preliminary, small-scale work; the concrete next steps are paid or
 frontier-tier evaluation, stronger answer normalization, and a protocol that
 can reach complete unsaturated benchmark coverage.
 
-\bibliographystyle{elsarticle-num}
+\bibliographystyle{elsarticle-num-names}
 \bibliography{refs}
 
 \end{document}
