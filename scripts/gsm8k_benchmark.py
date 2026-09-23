@@ -44,7 +44,9 @@ def _grade_one(problem: dict, n: int, provider: str) -> dict:
     query = problem["query"] + GSM8K_SUFFIX
     ground_truth = problem["ground_truth"]
 
-    result = run_pipeline(query, n=n, provider=provider)
+    result = run_pipeline(
+        query, n=n, provider=provider, validity_fn=lambda text: extract_answer(text) is not None
+    )
 
     or_select_answer = extract_answer(result.winner_text)
 

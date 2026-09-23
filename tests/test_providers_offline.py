@@ -195,7 +195,7 @@ class EmptyCompletionRetriesTest(unittest.TestCase):
         self.assertEqual(client.chat.completions.create.call_count, 3)
 
     def test_empty_content_exhausting_all_retries_raises_stall_timeout(self) -> None:
-        client = self._client_returning("", "", "", "", "", "")
+        client = self._client_returning(*([""] * 9))  # matches max_attempts=9
         with mock.patch("or_select.providers._openrouter_client", return_value=client), mock.patch(
             "or_select.providers.time.sleep"
         ):

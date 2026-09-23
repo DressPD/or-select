@@ -88,7 +88,17 @@ MAX_OUTPUT_TOKENS = 2048
 # -- that still catches calls that never return at all; this catches calls
 # that return but never stop.
 
-STALL_TIMEOUT_SECONDS = 600.0
+STALL_TIMEOUT_SECONDS = 900.0
+# Raised from 600s after a local network outage (not a provider-side issue)
+# produced a run of permanent FAILED rows during 2026 gap-filling: with the
+# client-side connection down, every call either stalled past the 600s
+# ceiling or raised APIConnectionError, and 6 attempts at 15s-linear backoff
+# (max ~90s sleep) wasn't enough headroom to outlast an outage lasting
+# several minutes. 900s per attempt plus more attempts at a longer backoff
+# (see max_attempts/base_delay below) gives real slack for a transient local
+# or upstream outage to clear mid-run instead of burning through retries and
+# marking rows permanently failed.
+
 # Raised from 300s after direct evidence that provider latency has gotten
 # much worse than when 300s was set: a manual, unwrapped call using the
 # exact query/prompt that had been failing for hours (problem 2 of GPQA
@@ -223,9 +233,17 @@ def _reset_clients_if_connection_error(exc: Exception) -> None:
         _openrouter_client.cache_clear()
 
 
-def _with_rate_limit_retry(fn, *, max_attempts: int = 6, base_delay: float = 15.0):
+def _with_rate_limit_retry(fn, *, max_attempts: int = 9, base_delay: float = 20.0):
     """Retry fn() on rate-limit / transient-network errors with linear backoff.
     Re-raises anything else.
+
+    Raised from 6 attempts at base_delay=15s after a local network outage
+    (not provider-side) during 2026 gap-filling runs: the outage outlasted
+    the ~4.75min total backoff window (15+30+45+60+75+90s), so every
+    in-flight call permanently failed instead of surviving to reconnect.
+    9 attempts at base_delay=20s gives ~15min of total backoff sleep
+    (20+40+...+180s) before a call gives up, enough slack for a short
+    connectivity gap to clear mid-retry.
 
     Raised from 4 attempts: a GPQA Diamond problem needs every one of its
     N generation calls plus its O(N^2) bidirectional judging calls to

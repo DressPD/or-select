@@ -52,7 +52,7 @@ class AccuracySummaryTest(unittest.TestCase):
         self.assertEqual(summary["accuracy_of_valid"]["or_select"], 0.5)
 
 
-def _ok_result(query: str, n: int, provider: str) -> SelectionResult:
+def _ok_result(query: str, n: int, provider: str, validity_fn=None) -> SelectionResult:
     c = Candidate(id="c0", text="42", source_model="m", confidence=1.0, cost=1)
     return SelectionResult(query=query, winner_id="c0", winner_text="42", scores={"c0": 1.0}, candidates=[c])
 
@@ -71,10 +71,10 @@ class RetryFailuresTest(unittest.TestCase):
             return run_benchmark(self.problems, 1, "placeholder", self.output, **kwargs)
 
     def test_plain_resume_leaves_a_failed_row_failed(self) -> None:
-        def failing(query, n, provider):
+        def failing(query, n, provider, validity_fn=None):
             if query.startswith("q_fail"):
                 raise RuntimeError("simulated")
-            return _ok_result(query)
+            return _ok_result(query, n, provider)
 
         first = self._run(failing, resume=False)
         self.output.write_text(json.dumps({"results": first}))
@@ -82,7 +82,7 @@ class RetryFailuresTest(unittest.TestCase):
 
         calls = []
 
-        def track_and_fail(query, n, provider):
+        def track_and_fail(query, n, provider, validity_fn=None):
             calls.append(query)
             return failing(query, n, "placeholder")
 
@@ -91,7 +91,7 @@ class RetryFailuresTest(unittest.TestCase):
         self.assertTrue(any("error" in r for r in second))
 
     def test_retry_failures_re_attempts_and_can_succeed(self) -> None:
-        def always_fails(query, n, provider):
+        def always_fails(query, n, provider, validity_fn=None):
             raise RuntimeError("simulated")
 
         first = self._run(always_fails, resume=False)
