@@ -29,7 +29,7 @@ load_dotenv()
 PROMPTS_DIR = Path(__file__).resolve().parents[1] / "prompts"
 OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-5.6-terra")
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
-OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "nvidia/nemotron-3-ultra-550b-a55b:free")
+OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "nvidia/nemotron-3.5-lightning-20260807:free")
 
 _NUMBER_RE = re.compile(r"[-+]?\d*\.?\d+")
 # Lowercase, no-underscore markers: matches "RESOURCE_EXHAUSTED" (Gemini),
@@ -63,7 +63,45 @@ _PERMANENT_ERROR_MARKERS = (
 )
 
 
-STALL_TIMEOUT_SECONDS = 120.0
+MAX_OUTPUT_TOKENS = 2048
+# Added after live evidence that "successful" (non-empty, non-timed-out)
+# completions were degenerating into runaway garbage under upstream
+# saturation: verified winner_texts this session included a 787-char
+# CORRECT candidate sitting next to a same-problem 7,806-char candidate that
+# had hallucinated into unrelated cryptocurrency/JSON content, a 24,598-char
+# candidate of multilingual gibberish, and others up to ~100,000 characters
+# -- none of these hit StallTimeout or came back empty, they are the model
+# rambling without ever reaching an ANSWER:/\boxed{} line, because nothing
+# ever told it to stop.
+#
+# Value measured, not guessed: scanning every winner_texts entry across both
+# GPQA Diamond tracks (n=449) that actually reached an ANSWER:/\boxed{}
+# marker (i.e. excluding the gibberish tail this cap targets) gave mean=757
+# chars (~189 tokens), p95=1465 chars (~366 tokens), p99=1931 chars (~483
+# tokens), max=3208 chars (~800 tokens) at a ~4 chars/token estimate. 2048
+# tokens is ~2.6x that observed max -- real headroom for a harder problem
+# needing more reasoning than anything seen so far -- while sitting far
+# below the pathological tail (6,000-25,000+ tokens) that was corrupting
+# self-consistency majority votes and fooling exact Kemeny-Young pairwise
+# judging (both read from the same winner_texts a truncation-free response
+# would have produced). This does not replace STALL_TIMEOUT_SECONDS below
+# -- that still catches calls that never return at all; this catches calls
+# that return but never stop.
+
+STALL_TIMEOUT_SECONDS = 600.0
+# Raised from 300s after direct evidence that provider latency has gotten
+# much worse than when 300s was set: a manual, unwrapped call using the
+# exact query/prompt that had been failing for hours (problem 2 of GPQA
+# Diamond Track E) took 360.5s and still returned a valid answer -- i.e.
+# our own 300s ceiling would have killed a call that was going to
+# succeed. This followed a long (~1.5 day) stretch where BOTH benchmark
+# tracks produced zero new completions despite two earlier rounds of
+# tuning (STALL_TIMEOUT_SECONDS 180->300, max_attempts 4->6) and a
+# dominant, near-100% APITimeoutError signature -- this repo's own
+# documented marker (see class docstring below) for sustained upstream
+# overload rather than a dead connection. 600s gives real headroom above
+# the measured 360.5s data point while still being tiny next to the
+# multi-hour true hangs this mechanism was built to catch.
 
 
 class StallTimeout(Exception):
@@ -109,13 +147,21 @@ def _call_with_stall_timeout(fn, timeout: float = STALL_TIMEOUT_SECONDS):
         except BaseException as exc:  # noqa: BLE001 -- re-raised on the caller's thread below
             errors.append(exc)
 
+    start = time.perf_counter()
     thread = threading.Thread(target=_run, daemon=True)
     thread.start()
     thread.join(timeout)
+    elapsed = time.perf_counter() - start
     if thread.is_alive():
         raise StallTimeout(f"no result after {timeout:.0f}s")
     if errors:
         raise errors[0]
+    # Only log slow-but-successful calls (not every fast one) -- this is the
+    # data point that was previously missing entirely: without it, tuning
+    # STALL_TIMEOUT_SECONDS was a guess against OpenRouter's aggregate P50/
+    # throughput stats rather than this pipeline's actual observed latency.
+    if elapsed > 15.0:
+        print(f"  (slow call: {elapsed:.1f}s, timeout={timeout:.0f}s)", flush=True)
     return box[0]
 
 
@@ -177,9 +223,22 @@ def _reset_clients_if_connection_error(exc: Exception) -> None:
         _openrouter_client.cache_clear()
 
 
-def _with_rate_limit_retry(fn, *, max_attempts: int = 5, base_delay: float = 15.0):
+def _with_rate_limit_retry(fn, *, max_attempts: int = 6, base_delay: float = 15.0):
     """Retry fn() on rate-limit / transient-network errors with linear backoff.
-    Re-raises anything else."""
+    Re-raises anything else.
+
+    Raised from 4 attempts: a GPQA Diamond problem needs every one of its
+    N generation calls plus its O(N^2) bidirectional judging calls to
+    succeed (scripts/gpqa_benchmark.py's _grade_one has no partial-credit
+    path -- any single exhausted call aborts the whole problem). Measured
+    live after the STALL_TIMEOUT_SECONDS=300 change: 5/6 new homogeneous
+    and 3/4 new heterogeneous problems still failed this way, each on one
+    remaining exhausted call after several other calls for the same
+    problem had already succeeded. Each extra attempt multiplies down the
+    probability that any one call exhausts its retries, which compounds
+    into a much lower chance that a whole problem fails on one unlucky
+    call, at the cost of a longer worst-case wait for the (rare) calls
+    that are genuinely, permanently dead."""
     last_exc: Exception | None = None
     for attempt in range(max_attempts):
         try:
@@ -254,16 +313,33 @@ def _openai_complete(prompt: str, *, seed: int | None = None) -> str:
             model=OPENAI_MODEL,
             messages=[{"role": "user", "content": prompt}],
             seed=resolved_seed,
+            max_tokens=MAX_OUTPUT_TOKENS,
         )
-        return (resp.choices[0].message.content or "").strip()
+        text = (resp.choices[0].message.content or "").strip()
+        # A 200 with an empty body is the same degenerate-output failure mode
+        # documented on StallTimeout (severe upstream saturation), just caught
+        # after the call returns instead of during it -- retry it the same way
+        # rather than silently accepting a blank candidate as "successful".
+        if not text:
+            raise StallTimeout("empty completion, retrying")
+        return text
 
     return _with_rate_limit_retry(lambda: _call_with_stall_timeout(call))
 
 
 def _gemini_complete(prompt: str) -> str:
     def call() -> str:
-        resp = _gemini_client().models.generate_content(model=GEMINI_MODEL, contents=prompt)
-        return (resp.text or "").strip()
+        from google.genai import types
+
+        resp = _gemini_client().models.generate_content(
+            model=GEMINI_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(max_output_tokens=MAX_OUTPUT_TOKENS),
+        )
+        text = (resp.text or "").strip()
+        if not text:
+            raise StallTimeout("empty completion, retrying")
+        return text
 
     return _with_rate_limit_retry(lambda: _call_with_stall_timeout(call))
 
@@ -277,13 +353,17 @@ def _openrouter_complete(prompt: str, *, seed: int | None = None, model: str | N
             model=resolved_model,
             messages=[{"role": "user", "content": prompt}],
             seed=resolved_seed,
+            max_tokens=MAX_OUTPUT_TOKENS,
         )
         # OpenRouter returns HTTP 200 with no `choices` and an `error` field
         # when the upstream (free-tier) provider is saturated, instead of a
         # 429 the SDK would raise on its own.
         if not resp.choices:
             raise RuntimeError(f"OpenRouter error (treated as rate limit): {resp.error}")
-        return (resp.choices[0].message.content or "").strip()
+        text = (resp.choices[0].message.content or "").strip()
+        if not text:
+            raise StallTimeout("empty completion, retrying")
+        return text
 
     return _with_rate_limit_retry(lambda: _call_with_stall_timeout(call))
 

@@ -33,6 +33,7 @@ GPQA_SUFFIX = (
 )
 
 _ANSWER_RE = re.compile(r"ANSWER:\s*\(?([A-D])\)?", re.IGNORECASE)
+_BOXED_RE = re.compile(r"\\boxed\{\(?([A-D])\)?\}", re.IGNORECASE)
 _LAST_LINE_LETTER_RE = re.compile(r"^\(?([A-D])\)?\.?$", re.IGNORECASE)
 
 
@@ -40,17 +41,27 @@ def extract_choice(text: str) -> str | None:
     """Extract the model's chosen option letter (A-D).
 
     Prefers the last `ANSWER: X` marker (the format requested by
-    GPQA_SUFFIX). Falls back to the last non-empty line if it is *nothing
-    but* a bare letter (e.g. a model that answers "B" on its own line
-    without the requested prefix) -- deliberately not a bare `\bA\b`-style
-    scan over the full response, which would false-positive on stray
+    GPQA_SUFFIX). Falls back to the last `\\boxed{X}` (models with
+    heavy math/AIME-style training default to this convention even when
+    asked for ANSWER: X -- confirmed live: a complete, correctly-reasoned
+    heterogeneous-track response ending "...the correct answer is
+    \\(\\boxed{B}\\)." was being scored as an extraction failure purely
+    because this fallback didn't exist, silently inflating the
+    Copeland-vs-Kemeny-Young disagreement count 5/5 -> 1/5 once added).
+    Falls back further to the last non-empty line if it is *nothing but*
+    a bare letter (e.g. a model that answers "B" on its own line without
+    the requested prefix) -- deliberately not a bare `\bA\b`-style scan
+    over the full response, which would false-positive on stray
     single-letter tokens inside the reasoning (variable names, "a" as an
     article, etc.). Returns None -- an explicit ungraded failure, never a
-    guess -- if neither pattern is found.
+    guess -- if none of these patterns are found.
     """
     matches = _ANSWER_RE.findall(text)
     if matches:
         return matches[-1].upper()
+    boxed = _BOXED_RE.findall(text)
+    if boxed:
+        return boxed[-1].upper()
     for line in reversed(text.strip().splitlines()):
         line = line.strip()
         if not line:

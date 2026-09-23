@@ -27,10 +27,14 @@ PROVIDERS = ("placeholder", "openai", "gemini", "openrouter", "both", "openroute
 # same-model benchmark run so far (Tracks A-C) saw almost no disagreement.
 # Confirmed to exist via the live OpenRouter /models endpoint, not assumed.
 OPENROUTER_MIXED_MODELS = [
-    "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "nvidia/nemotron-3.5-lightning-20260807:free",
     "poolside/laguna-s-2.1:free",
     "liquid/lfm-2.5-2.6b:free",
 ]
+# nvidia/nemotron-3-ultra-550b-a55b:free was delisted from OpenRouter's live
+# /models endpoint (confirmed 2026-09-17, surfaced as 404 "Function id ...
+# not found" on every call) and replaced with nvidia/nemotron-3.5-lightning
+# -20260807:free above, its current free-tier successor.
 # google/gemma-4-31b-it:free was tried first but dropped: live testing (Track
 # D-heterogeneous, docs/aime_2026_preregistration.md) showed it failing with
 # "temporarily rate-limited upstream" on ~4 of 6 consecutive attempts, badly
@@ -101,14 +105,14 @@ def run_pipeline(
         from . import providers
 
         backends = [("openai", providers.openai_generate), ("gemini", providers.gemini_generate)]
-        candidates = generate_candidates_heterogeneous(query, backends, n=n)
+        candidates = generate_candidates_heterogeneous(query, backends, n=n, validity_fn=validity_fn)
         score_fn = score_fn or providers.openai_score
         judge_fn = judge_fn or providers.openai_judge
     elif provider == "openrouter_mixed":
         from . import providers
 
         backends = providers.openrouter_heterogeneous_backends(OPENROUTER_MIXED_MODELS)
-        candidates = generate_candidates_heterogeneous(query, backends, n=n)
+        candidates = generate_candidates_heterogeneous(query, backends, n=n, validity_fn=validity_fn)
         # Judge stays on the single model RewardBench validated -- varying
         # generation and judging at once would conflate two different
         # experiments (see docs/aime_2026_preregistration.md's sibling
@@ -120,7 +124,7 @@ def run_pipeline(
         generate_fn = generate_fn or default_generate
         score_fn = score_fn or default_score
         judge_fn = judge_fn or default_judge
-        candidates = generate_candidates(query, generate_fn, n=n, source_model=provider)
+        candidates = generate_candidates(query, generate_fn, n=n, source_model=provider, validity_fn=validity_fn)
 
     candidates = score_candidates(query, candidates, score_fn)
     pairwise = build_pairwise_matrix(query, candidates, judge_fn)

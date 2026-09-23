@@ -19,6 +19,16 @@ class ExtractChoiceTest(unittest.TestCase):
         text = "First I think ANSWER: A, but reconsidering, ANSWER: C"
         self.assertEqual(extract_choice(text), "C")
 
+    def test_falls_back_to_boxed_notation(self) -> None:
+        self.assertEqual(extract_choice(r"Reasoning... the correct answer is \(\boxed{B}\)."), "B")
+
+    def test_boxed_notation_with_parens(self) -> None:
+        self.assertEqual(extract_choice(r"So \boxed{(C)} is correct."), "C")
+
+    def test_answer_marker_takes_priority_over_boxed(self) -> None:
+        text = r"First \boxed{A}, but on reflection, ANSWER: C"
+        self.assertEqual(extract_choice(text), "C")
+
     def test_falls_back_to_bare_letter_on_its_own_line(self) -> None:
         self.assertEqual(extract_choice("Long reasoning here.\n\nB"), "B")
 

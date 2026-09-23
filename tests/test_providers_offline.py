@@ -6,11 +6,13 @@ import unittest
 from unittest import mock
 
 from or_select.providers import (
+    MAX_OUTPUT_TOKENS,
     StallTimeout,
     _call_with_stall_timeout,
     _is_retryable_error,
     _openai_client,
     _openrouter_client,
+    _openrouter_complete,
     _parse_score,
     _reset_clients_if_connection_error,
     _stable_seed,
@@ -161,6 +163,62 @@ class StallTimeoutTest(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             _call_with_stall_timeout(raises, timeout=1.0)
+
+
+def _fake_response(content: str | None):
+    message = mock.Mock(content=content)
+    choice = mock.Mock(message=message)
+    return mock.Mock(choices=[choice])
+
+
+class EmptyCompletionRetriesTest(unittest.TestCase):
+    # Empty content used to be accepted as a "successful" candidate -- a
+    # winner_text could end up literally "" (extract_choice("") -> None)
+    # even though the API call raised no exception, silently mixing
+    # unusable output into what n_valid otherwise implies is real model
+    # output. An empty/whitespace-only body is the same class of failure as
+    # StallTimeout (severe upstream saturation producing degenerate
+    # responses), so it must burn a retry attempt instead of returning "".
+
+    def _client_returning(self, *contents):
+        client = mock.Mock()
+        client.chat.completions.create.side_effect = [_fake_response(c) for c in contents]
+        return client
+
+    def test_empty_content_is_retried_until_a_real_answer_arrives(self) -> None:
+        client = self._client_returning("", "   ", "the real answer")
+        with mock.patch("or_select.providers._openrouter_client", return_value=client), mock.patch(
+            "or_select.providers.time.sleep"
+        ):
+            result = _openrouter_complete("query", seed=0)
+        self.assertEqual(result, "the real answer")
+        self.assertEqual(client.chat.completions.create.call_count, 3)
+
+    def test_empty_content_exhausting_all_retries_raises_stall_timeout(self) -> None:
+        client = self._client_returning("", "", "", "", "", "")
+        with mock.patch("or_select.providers._openrouter_client", return_value=client), mock.patch(
+            "or_select.providers.time.sleep"
+        ):
+            with self.assertRaises(StallTimeout):
+                _openrouter_complete("query", seed=0)
+
+
+class MaxOutputTokensTest(unittest.TestCase):
+    # A "successful" (non-empty, non-timed-out) completion could still
+    # degenerate into unbounded rambling with nothing to stop it -- verified
+    # live this session as candidates up to ~100,000 characters that never
+    # reached an ANSWER:/\boxed{} line, corrupting self-consistency majority
+    # votes and fooling exact Kemeny-Young pairwise judging. max_tokens caps
+    # that tail; this locks in that every call actually requests the cap
+    # rather than silently dropping it in a future edit.
+
+    def test_openrouter_call_requests_the_output_token_cap(self) -> None:
+        client = mock.Mock()
+        client.chat.completions.create.return_value = _fake_response("ANSWER: A")
+        with mock.patch("or_select.providers._openrouter_client", return_value=client):
+            _openrouter_complete("query", seed=0)
+        _, kwargs = client.chat.completions.create.call_args
+        self.assertEqual(kwargs.get("max_tokens"), MAX_OUTPUT_TOKENS)
 
 
 class StableSeedTest(unittest.TestCase):
