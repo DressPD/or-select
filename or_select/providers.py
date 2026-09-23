@@ -457,5 +457,5 @@ def gemini_judge(query: str, text_a: str, text_b: str) -> float:
     return _parse_score(_gemini_complete(_judge_prompt(query, text_a, text_b)))
 
 
-def openrouter_judge(query: str, text_a: str, text_b: str) -> float:
-    return _parse_score(_openrouter_complete(_judge_prompt(query, text_a, text_b)))
+def openrouter_judge(query: str, text_a: str, text_b: str, model: str | None = None) -> float:
+    return _parse_score(_openrouter_complete(_judge_prompt(query, text_a, text_b), model=model))

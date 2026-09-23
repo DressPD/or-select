@@ -35,11 +35,13 @@ from or_select.pipeline import PROVIDERS  # noqa: E402
 from or_select.reward_bench import score_summary  # noqa: E402
 
 
-def _judge_fn_for(provider: str):
+def _judge_fn_for(provider: str, model: str | None = None):
     if provider == "placeholder":
         return lambda query, a, b: 1.0 if len(a) >= len(b) else 0.0
     from or_select import providers
 
+    if provider == "openrouter_mixed":
+        return lambda query, a, b: providers.openrouter_judge(query, a, b, model=model)
     return {
         "openai": providers.openai_judge,
         "gemini": providers.gemini_judge,
@@ -51,20 +53,23 @@ def _load_rows(path: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 
 
-def _grade_one(row: dict, judge_fn) -> dict:
+def _grade_one(row: dict, judge_fn, judge_model: str | None = None) -> dict:
     candidates = [
         Candidate(id="chosen", text=row["chosen"], source_model="ground_truth"),
         Candidate(id="rejected", text=row["rejected"], source_model="ground_truth"),
     ]
     pairwise = build_pairwise_matrix(row["prompt"], candidates, judge_fn)
     weight_chosen = pairwise[("chosen", "rejected")]
-    return {
+    result = {
         "id": row["id"],
         "subset": row["subset"],
         "weight_chosen": weight_chosen,
         "correct": weight_chosen > 0.5,
         "tied": weight_chosen == 0.5,
     }
+    if judge_model is not None:
+        result["judge_model"] = judge_model
+    return result
 
 
 def _failed_row(row: dict, exc: Exception) -> dict:
@@ -78,7 +83,23 @@ def _failed_row(row: dict, exc: Exception) -> dict:
 
 
 def run_benchmark(rows: list[dict], provider: str, output: Path, resume: bool, retry_failures: bool) -> list[dict]:
-    judge_fn = _judge_fn_for(provider)
+    # openrouter_mixed round-robins the judge model by row index, one real
+    # OpenRouter model per row rather than one model for the whole run --
+    # the same "distinct vendor per slot" heterogeneous pattern the other
+    # scripts use for candidate generation (pipeline.py's
+    # openrouter_heterogeneous_backends), applied here to judging: does the
+    # judge_fn accuracy measured against RewardBench's human labels hold up
+    # across different judge models, or is it an artifact of the one model
+    # used everywhere else in this repo?
+    heterogeneous = provider == "openrouter_mixed"
+    judge_models: list[str] = []
+    if heterogeneous:
+        from or_select.pipeline import OPENROUTER_MIXED_MODELS
+
+        judge_models = OPENROUTER_MIXED_MODELS
+    else:
+        judge_fn = _judge_fn_for(provider)
+
     results: list[dict] = []
     done_ids: set[int] = set()
     if resume and output.exists():
@@ -92,9 +113,16 @@ def run_benchmark(rows: list[dict], provider: str, output: Path, resume: bool, r
         if row["id"] in done_ids:
             print(f"[{i}/{len(rows)}] skipped (already graded): id={row['id']}", flush=True)
             continue
-        print(f"[{i}/{len(rows)}] subset={row['subset']!r} id={row['id']}...", flush=True)
+        judge_model = judge_models[(i - 1) % len(judge_models)] if heterogeneous else None
+        if heterogeneous:
+            judge_fn = _judge_fn_for(provider, model=judge_model)
+        print(
+            f"[{i}/{len(rows)}] subset={row['subset']!r} id={row['id']}"
+            f"{f' judge={judge_model}' if judge_model else ''}...",
+            flush=True,
+        )
         try:
-            result = _grade_one(row, judge_fn)
+            result = _grade_one(row, judge_fn, judge_model=judge_model)
         except Exception as exc:  # noqa: BLE001 -- one row's failure must not kill the batch
             result = _failed_row(row, exc)
             print(f"    FAILED: {result['error']}", flush=True)
