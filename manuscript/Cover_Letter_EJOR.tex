@@ -1,0 +1,25 @@
+\documentclass[11pt]{letter}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\signature{Aris Dressino}
+\address{TUM School of Management \\ Technical University of Munich \\ Arcisstra{\ss}e 21 \\ 80333 Munich, Germany \\ aris.dressino@tum.de}
+\longindentation=0pt
+
+\begin{document}
+
+\begin{letter}{Professor Roman S{\l}owi{\'n}ski \\ Co-ordinating Editor-in-Chief \\ European Journal of Operational Research \\ Institute of Computing Science, Pozna{\'n} University of Technology \\ 60-965 Pozna{\'n}, Poland}
+
+\opening{Dear Professor S{\l}owi{\'n}ski,}
+
+Please find enclosed our manuscript, \textbf{``OR-Select: Deterministic Best-Answer Selection over Stochastic LLM Ensembles via Integer Programming,''} submitted for consideration as a Research Article in the \emph{European Journal of Operational Research}.
+
+Large language models sample stochastically, so ensembling $N$ candidate answers to the same query is now common practice, but the standard aggregation rule -- self-consistency (majority vote) -- is undefined once candidates fail to repeat verbatim, which we show occurs on essentially every open-ended query. OR-Select reformulates best-of-$N$ selection as a multi-objective integer program over an LLM-judged pairwise comparison matrix, aggregated by a Copeland-style statistic that we prove is a 5-approximation to the exact, NP-hard Kemeny-optimal ranking (via Coppersmith, Fleischer, and Rudra's tournament result), with the exact Kemeny-Young solution itself implemented and reported as a reference baseline. The selection step is solved exactly and deterministically with CP-SAT; what is not automatically reproducible -- whether the judge's own outputs are stable -- is measured directly rather than assumed, and we report a concrete provider-side seed non-determinism failure together with the fix that closes it.
+
+We believe this manuscript is a good fit for \emph{EJOR}'s readership at the intersection of classical rank-aggregation theory and a genuinely new application domain: selection among stochastic outputs of large language models. The paper validates the judge component in isolation against RewardBench (161 human-labeled preference pairs, 90.1\% accuracy) before reporting five evaluation tracks and 353 ground-truth rows across four public benchmarks (GSM8K, MATH Level 5, AIME 2026, and GPQA Diamond), comparing OR-Select against self-consistency, greedy single-sampling, and the exact Kemeny-Young baseline throughout. We report the work's limitations directly, including its current preliminary scale and a self-consistency term that has not yet been load-bearing on any real winner, rather than rounding the evaluation up to a cleaner story.
+
+All authors have approved the manuscript and agree to its submission to \emph{European Journal of Operational Research}. We have no conflicts of interest to disclose. Thank you for your consideration.
+
+\closing{Sincerely,}
+
+\end{letter}
+\end{document}

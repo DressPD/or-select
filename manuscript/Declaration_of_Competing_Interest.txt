@@ -1,0 +1,7 @@
+Declaration of Competing Interest
+
+Manuscript title: OR-Select: Deterministic Best-Answer Selection over Stochastic LLM Ensembles via Integer Programming
+
+Author: Aris Dressino
+
+The author declares that he has no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.

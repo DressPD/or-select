@@ -17,7 +17,8 @@
 }
 
 @misc{llmpeerreview2025,
-  title = {Scoring, Reasoning, and Selecting the Best! Ensembling LLMs via a Peer-Review Process},
+  title = {Scoring, Reasoning, and Selecting the Best! Ensembling Large Language Models via a Peer-Review Process},
+  author = {Chen, Zhijun and Ji, Zeyu and Mao, Qianren and Wu, Hao and Song, Jinhuan and Cheng, Junhang and Qin, Bangjie and Li, Zhuoran and Li, Jingzheng and Sun, Kai and Wang, Zizhe and Ban, Yikun and Sun, Zhu and Ji, Xiangyang and Sun, Hailong and Huang, Xiao},
   year = {2025},
   eprint = {2512.23213},
   archivePrefix = {arXiv},
@@ -26,6 +27,7 @@
 
 @misc{llmjudgethemselves2025,
   title = {LLMs Judge Themselves: A Game-Theoretic Framework for Human-Aligned Evaluation},
+  author = {Yang, Gao and Liu, Yuhang and Miao, Siyu and Liang, Xinyue and Liu, Zhengyang and Huang, Heyan},
   year = {2025},
   eprint = {2510.15746},
   archivePrefix = {arXiv},
@@ -52,7 +54,7 @@
 
 @misc{landesberg2026bestofn,
   title = {When LLM Judge Scores Look Good but Best-of-N Decisions Fail},
-  author = {Landesberg},
+  author = {Landesberg, Eddie},
   year = {2026},
   eprint = {2603.12520},
   archivePrefix = {arXiv},
@@ -99,7 +101,7 @@
 }
 
 @inproceedings{rein2024gpqa,
-  title = {GPQA: A Graduate-Level Google-Proof Q&A Benchmark},
+  title = {GPQA: A Graduate-Level Google-Proof Q\&A Benchmark},
   author = {Rein, David and Hou, Betty Li and Stickland, Asa Cooper and Petty, Jackson and Pang, Richard Yuanzhe and Dirani, Julien and Michael, Julian and Bowman, Samuel R.},
   booktitle = {Conference on Language Modeling (COLM)},
   year = {2024},
@@ -117,6 +119,17 @@
   note = {Introduces the process-supervision-trained PRM and, as a byproduct, MATH-500 -- a 500-problem curated subset of the Hendrycks MATH test set, later packaged as HuggingFaceH4/MATH-500. This work uses only its Level-5 (hardest) subset, 134 problems, as Track C -- MATH-500 is unsaturated for the model used here, unlike GSM8K, so it is the direct test of hypothesis sub-claim 5.}
 }
 
+@article{coppersmith2006ordering,
+  title = {Ordering by Weighted Number of Wins Gives a Good Ranking for Weighted Tournaments},
+  author = {Coppersmith, Don and Fleischer, Lisa and Rudra, Atri},
+  journal = {ACM Transactions on Algorithms},
+  volume = {6},
+  number = {3},
+  pages = {55:1--55:13},
+  year = {2010},
+  note = {Originally presented at SODA 2006, pp.\ 776--782. Proves that ranking vertices of a weighted tournament by weighted out-degree (equivalently, weighted number of wins) is a 5-approximation to the exact Kemeny-optimal ranking, provided weights satisfy the probability constraint $w_{uv}+w_{vu}=1$; also shows the bound is tight (a family of tournaments exists for which no tie-break improves on $5-\epsilon$). Directly applies to this work's $\text{quality}_i$ ranking (Section~\ref{sec:formal-model}), since $W[j,i]:=1-W[i,j]$ by construction.}
+}
+
 @inproceedings{jiang2023llmblender,
   title = {LLM-Blender: Ensembling Large Language Models with Pairwise Ranking and Generative Fusion},
   author = {Jiang, Dongfu and Ren, Xiang and Lin, Bill Yuchen},
@@ -125,4 +138,54 @@
   eprint = {2306.02561},
   archivePrefix = {arXiv},
   note = {PairRM: a small local pairwise reward model, proposed as an alternative judge\_fn backend that avoids the provider-seed non-determinism observed empirically with OpenRouter/Nemotron.}
+}
+
+@article{young1978kemeny,
+  title = {A Consistent Extension of {C}ondorcet's Election Principle},
+  author = {Young, H. P. and Levenglick, A.},
+  journal = {SIAM Journal on Applied Mathematics},
+  volume = {35},
+  number = {2},
+  pages = {285--300},
+  year = {1978},
+  doi = {10.1137/0135023},
+  note = {Establishes the Kemeny-Young rule as the unique ranking method that is neutral, consistent, and Condorcet-consistent -- the social-choice foundation for the exact Kemeny-Young baseline in this work (Section~\ref{sec:formal-model}) and for the approximation guarantee in Proposition~\ref{prop:copeland-approx}.}
+}
+
+@article{bartholdi1989voting,
+  title = {Voting Schemes for which It Can Be Difficult to Tell Who Won the Election},
+  author = {Bartholdi, John J. and Tovey, Craig A. and Trick, Michael A.},
+  journal = {Social Choice and Welfare},
+  volume = {6},
+  number = {2},
+  pages = {157--165},
+  year = {1989},
+  doi = {10.1007/BF00303169},
+  note = {Proves that computing the exact Kemeny-optimal ranking is NP-hard, motivating this work's use of the tractable Copeland-style $\text{quality}_i$ statistic (with the Coppersmith et al.\ approximation guarantee, Proposition~\ref{prop:copeland-approx}) rather than always solving the exact transitivity-constrained ILP.}
+}
+
+@inproceedings{dwork2001rank,
+  title = {Rank Aggregation Methods for the {W}eb},
+  author = {Dwork, Cynthia and Kumar, Ravi and Naor, Moni and Sivakumar, D.},
+  booktitle = {Proceedings of the 10th International Conference on World Wide Web (WWW)},
+  pages = {613--622},
+  year = {2001},
+  doi = {10.1145/371920.372165},
+  note = {Foundational rank-aggregation paper connecting Kemeny-optimal aggregation to Spearman footrule distance and giving efficient approximation algorithms; the broader OR/social-choice lineage this work's pairwise-matrix aggregation sits in.}
+}
+
+@misc{perron2023ortools,
+  title = {{OR-Tools} {CP-SAT} Solver},
+  author = {Perron, Laurent and Furnon, Vincent},
+  year = {2023},
+  howpublished = {Google, \url{https://developers.google.com/optimization/}},
+  note = {The exact CP-SAT constraint-programming/MIP solver used as the reference implementation for the integer program in Section~\ref{sec:formal-model}, run single-threaded for reproducibility.}
+}
+
+@misc{matharena2025aime,
+  title = {{MathArena}: Evaluating {LLM}s on Uncontaminated Math Competitions},
+  author = {Balunovi{\'c}, Mislav and Dekoninck, Jasper and Petrov, Ivo and Jovanovi{\'c}, Nikola and Vechev, Martin},
+  year = {2025},
+  howpublished = {SRI Lab, ETH Zurich, \url{https://matharena.ai/}},
+  note = {Source of the AIME 2026 (Track D) problem set (\texttt{MathArena/aime\_2026}, 30 problems from the two 2026 AIME sittings), curated specifically to be released after model training cutoffs to resist contamination.}
 }
