@@ -30,7 +30,7 @@ MATH_SUFFIX = (
 )
 
 _WHITESPACE_RE = re.compile(r"\s+")
-_LATEX_SPACING_RE = re.compile(r"\\[!,;:]")
+_LATEX_SPACING_RE = re.compile(r"\\[!,;: ]")
 _TEXT_WRAP_RE = re.compile(r"\\text\{([^{}]*)\}")
 _LEFT_RIGHT_RE = re.compile(r"\\left|\\right")
 _DOLLAR_RE = re.compile(r"\$")
@@ -64,9 +64,10 @@ def extract_boxed(text: str) -> str | None:
 def normalize(expr: str) -> str:
     """Canonicalize a LaTeX math expression for string comparison.
 
-    Strips formatting that doesn't change meaning (spacing commands,
-    \\left/\\right, $ delimiters, \\text{} wrappers, \\dfrac/\\tfrac ->
-    \\frac, trailing period, all whitespace) so that e.g.
+    Strips formatting that doesn't change meaning (spacing commands
+    including LaTeX's "\\ " thin-space macro, \\left/\\right, $ delimiters,
+    \\text{} wrappers, \\dfrac/\\tfrac -> \\frac, trailing period, all
+    whitespace) so that e.g.
     "\\dfrac{1}{2}" and "\\frac{1}{2}" compare equal. Does not attempt
     algebraic simplification (e.g. "2/4" vs "1/2" are NOT normalized to
     equal) -- see module docstring.

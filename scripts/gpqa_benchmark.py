@@ -92,6 +92,12 @@ def _grade_one(problem: dict, n: int, provider: str) -> dict:
             "greedy": greedy_winner.text,
             "kemeny_young": kemeny_winner.text,
         },
+        # Full candidate pool, not just the 4 winners -- see
+        # scripts/math_benchmark.py's identical field for why.
+        "candidates": [
+            {"seed": c.metadata.get("seed"), "source_model": c.source_model, "text": c.text}
+            for c in result.candidates
+        ],
     }
 
 
@@ -99,7 +105,7 @@ def _failed_row(problem: dict, exc: Exception) -> dict:
     """Explicit failure record: one problem's persistent API failure must not
     silently drop it or kill the rest of the batch (README's design boundary:
     failed candidates remain explicit failures, never silently dropped)."""
-    return {
+    row = {
         "query": problem["query"],
         "ground_truth": problem["ground_truth"],
         "subject": problem.get("subject"),
@@ -109,7 +115,13 @@ def _failed_row(problem: dict, exc: Exception) -> dict:
         "greedy": {"answer": None, "correct": False},
         "kemeny_young": {"answer": None, "correct": False, "is_optimal": None},
         "winner_texts": None,
+        "candidates": None,
     }
+    # See scripts/math_benchmark.py's identical block for why.
+    last_response = getattr(exc, "last_response", None)
+    if last_response is not None:
+        row["failed_last_response"] = last_response[:4000]
+    return row
 
 
 def _accuracy_summary(results: list[dict]) -> dict:

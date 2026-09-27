@@ -29,6 +29,14 @@ class ExtractChoiceTest(unittest.TestCase):
         text = r"First \boxed{A}, but on reflection, ANSWER: C"
         self.assertEqual(extract_choice(text), "C")
 
+    def test_falls_back_to_answer_is_prose(self) -> None:
+        self.assertEqual(extract_choice("Long reasoning here. The answer is B."), "B")
+
+    def test_answer_is_prose_takes_priority_over_bare_letter_fallback(self) -> None:
+        # boxed/ANSWER: markers still win if present; this only checks the
+        # prose fallback fires when neither is around.
+        self.assertEqual(extract_choice("Some analysis.\n\nSo the answer is: C"), "C")
+
     def test_falls_back_to_bare_letter_on_its_own_line(self) -> None:
         self.assertEqual(extract_choice("Long reasoning here.\n\nB"), "B")
 

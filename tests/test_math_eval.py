@@ -46,6 +46,16 @@ class NormalizeTest(unittest.TestCase):
     def test_case_insensitive(self) -> None:
         self.assertEqual(normalize("ABC"), normalize("abc"))
 
+    def test_strips_latex_thin_space_macro(self) -> None:
+        # "\ " (backslash-space) is a LaTeX spacing command, not a literal
+        # backslash character -- observed live producing a false
+        # disagreement between "\{-2, 1+\sqrt5, 1-\sqrt5\}" and
+        # "\{-2,\ 1+\sqrt5,\ 1-\sqrt5\}" (same set, same value).
+        self.assertEqual(
+            normalize("\\{-2, 1+\\sqrt5, 1-\\sqrt5\\}"),
+            normalize("\\{-2,\\ 1+\\sqrt5,\\ 1-\\sqrt5\\}"),
+        )
+
     def test_does_not_simplify_unequal_fractions(self) -> None:
         # Known limitation, not a bug: 2/4 and 1/2 are mathematically equal
         # but this normalizer does not do algebraic simplification.

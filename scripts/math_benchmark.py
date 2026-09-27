@@ -92,6 +92,14 @@ def _grade_one(problem: dict, n: int, provider: str) -> dict:
             "greedy": greedy_winner.text,
             "kemeny_young": kemeny_winner.text,
         },
+        # Full candidate pool, not just the 4 winners: previously it was
+        # impossible to tell whether a differently-formatted-but-correct
+        # candidate existed among the ones no method selected (see
+        # docs/hypothesis_validation.md's explicit regret about this gap).
+        "candidates": [
+            {"seed": c.metadata.get("seed"), "source_model": c.source_model, "text": c.text}
+            for c in result.candidates
+        ],
     }
 
 
@@ -99,7 +107,7 @@ def _failed_row(problem: dict, exc: Exception) -> dict:
     """Explicit failure record: one problem's persistent API failure must not
     silently drop it or kill the rest of the batch (README's design boundary:
     failed candidates remain explicit failures, never silently dropped)."""
-    return {
+    row = {
         "query": problem["query"],
         "ground_truth": problem["ground_truth"],
         "subject": problem.get("subject"),
@@ -109,7 +117,16 @@ def _failed_row(problem: dict, exc: Exception) -> dict:
         "greedy": {"answer": None, "correct": False},
         "kemeny_young": {"answer": None, "correct": False, "is_optimal": None},
         "winner_texts": None,
+        "candidates": None,
     }
+    # A ValidityExhausted failure means real candidates were generated and
+    # discarded -- capture the last one's full text (not just its length,
+    # which is all the error message carries) so it's possible to see why
+    # extraction kept failing without burning another API call to find out.
+    last_response = getattr(exc, "last_response", None)
+    if last_response is not None:
+        row["failed_last_response"] = last_response[:4000]
+    return row
 
 
 def _accuracy_summary(results: list[dict]) -> dict:

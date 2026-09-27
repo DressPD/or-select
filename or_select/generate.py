@@ -28,18 +28,41 @@ VALIDITY_RETRY_ATTEMPTS = 3
 # their answer format.
 
 
+class ValidityExhausted(RuntimeError):
+    """All VALIDITY_RETRY_ATTEMPTS attempts for one seed produced text that
+    failed validity_fn. Carries the last attempt's full text (not just its
+    length) so a caller can log/persist it for diagnosis -- previously this
+    was discarded entirely along with the other successful candidates
+    already generated for the same problem, leaving no way to tell why
+    extraction kept failing."""
+
+    def __init__(self, seed: int, last_response: str):
+        self.seed = seed
+        self.last_response = last_response
+        super().__init__(
+            f"seed={seed} produced no valid candidate in {VALIDITY_RETRY_ATTEMPTS} attempts "
+            f"(last response: {len(last_response)} chars)"
+        )
+
+
 def _generate_valid(generate_fn: GenerateFn, query: str, seed: int, validity_fn: ValidityFn | None) -> str:
     if validity_fn is None:
         return generate_fn(query, seed)
     text = ""
     for attempt in range(VALIDITY_RETRY_ATTEMPTS):
-        text = generate_fn(query, seed)
+        # Vary the seed actually sent on each retry. Reusing the identical
+        # seed on all 3 attempts meant a backend that honors `seed` for
+        # reproducibility would deterministically repeat the exact same
+        # invalid completion 3x -- burning the whole retry budget for zero
+        # additional chance of success. The seed recorded on the resulting
+        # Candidate (in generate_candidates below) is still the caller's
+        # original seed, unaffected by this -- only what's sent to the API
+        # on retries changes.
+        attempt_seed = seed if attempt == 0 else seed + attempt * 10_000
+        text = generate_fn(query, attempt_seed)
         if validity_fn(text):
             return text
-    raise RuntimeError(
-        f"seed={seed} produced no valid candidate in {VALIDITY_RETRY_ATTEMPTS} attempts "
-        f"(last response: {len(text)} chars)"
-    )
+    raise ValidityExhausted(seed, text)
 
 
 def generate_candidates(

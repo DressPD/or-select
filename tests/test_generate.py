@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import unittest
 
-from or_select.generate import generate_candidates, generate_candidates_heterogeneous
+from or_select.generate import (
+    ValidityExhausted,
+    generate_candidates,
+    generate_candidates_heterogeneous,
+)
 
 
 class GenerateCandidatesValidityRetryTest(unittest.TestCase):
@@ -30,21 +34,44 @@ class GenerateCandidatesValidityRetryTest(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             generate_candidates("q", lambda q, s: "garbage", n=1, validity_fn=lambda t: "ANSWER:" in t)
 
+    def test_exhausted_exception_carries_the_last_response_text(self) -> None:
+        # Previously only the length was recoverable; the full text is
+        # needed to diagnose *why* extraction kept failing.
+        with self.assertRaises(ValidityExhausted) as ctx:
+            generate_candidates("q", lambda q, s: "garbage response", n=1, validity_fn=lambda t: "ANSWER:" in t)
+        self.assertEqual(ctx.exception.last_response, "garbage response")
+        self.assertEqual(ctx.exception.seed, 0)
+
     def test_each_seed_gets_its_own_retry_budget(self) -> None:
-        # seed 0 needs two tries, seed 1 succeeds first try -- a failure on
-        # one candidate must not consume or corrupt another's budget.
+        # seed slot 0 needs two tries, seed slot 1 succeeds first try -- a
+        # failure on one candidate must not consume or corrupt another's
+        # budget. Retries vary the seed sent to generate_fn, so recover the
+        # original slot via modulo rather than comparing the raw seed.
         calls: list[int] = []
 
         def generate_fn(query: str, seed: int) -> str:
-            calls.append(seed)
-            if seed == 0 and calls.count(0) == 1:
+            slot = seed % 10_000
+            calls.append(slot)
+            if slot == 0 and calls.count(0) == 1:
                 return "garbage"
-            return f"ANSWER: {seed}"
+            return f"ANSWER: {slot}"
 
         candidates = generate_candidates(
             "q", generate_fn, n=2, validity_fn=lambda t: "ANSWER:" in t
         )
         self.assertEqual([c.text for c in candidates], ["ANSWER: 0", "ANSWER: 1"])
+
+    def test_retries_vary_the_seed_instead_of_repeating_it(self) -> None:
+        # A backend that honors `seed` for reproducibility must not be able
+        # to force 3 identical, guaranteed-failing attempts out of this loop.
+        seen_seeds: list[int] = []
+
+        def generate_fn(query: str, seed: int) -> str:
+            seen_seeds.append(seed)
+            return "ANSWER: A" if len(seen_seeds) >= 3 else "garbage"
+
+        generate_candidates("q", generate_fn, n=1, validity_fn=lambda t: "ANSWER:" in t)
+        self.assertEqual(len(set(seen_seeds)), len(seen_seeds))
 
     def test_heterogeneous_backends_also_retry_on_invalid_text(self) -> None:
         responses = iter(["garbage", "ANSWER: B"])

@@ -34,6 +34,11 @@ GPQA_SUFFIX = (
 
 _ANSWER_RE = re.compile(r"ANSWER:\s*\(?([A-D])\)?", re.IGNORECASE)
 _BOXED_RE = re.compile(r"\\boxed\{\(?([A-D])\)?\}", re.IGNORECASE)
+# Prose form of a final-answer statement ("the answer is B", "answer: B").
+# Safe as a fallback specifically because GPQA's answer space is bounded to
+# 4 letters (A-D) -- unlike MATH's open-ended expressions, there's no room
+# for this to latch onto the wrong one of several candidate values.
+_ANSWER_PHRASE_RE = re.compile(r"answer\s+is\s*:?\s*\(?([A-D])\)?\b", re.IGNORECASE)
 _LAST_LINE_LETTER_RE = re.compile(r"^\(?([A-D])\)?\.?$", re.IGNORECASE)
 
 
@@ -48,13 +53,14 @@ def extract_choice(text: str) -> str | None:
     \\(\\boxed{B}\\)." was being scored as an extraction failure purely
     because this fallback didn't exist, silently inflating the
     Copeland-vs-Kemeny-Young disagreement count 5/5 -> 1/5 once added).
-    Falls back further to the last non-empty line if it is *nothing but*
-    a bare letter (e.g. a model that answers "B" on its own line without
-    the requested prefix) -- deliberately not a bare `\bA\b`-style scan
-    over the full response, which would false-positive on stray
-    single-letter tokens inside the reasoning (variable names, "a" as an
-    article, etc.). Returns None -- an explicit ungraded failure, never a
-    guess -- if none of these patterns are found.
+    Falls back further to a prose "the answer is X" statement, then to the
+    last non-empty line if it is *nothing but* a bare letter (e.g. a model
+    that answers "B" on its own line without the requested prefix) --
+    deliberately not a bare `\bA\b`-style scan over the full response,
+    which would false-positive on stray single-letter tokens inside the
+    reasoning (variable names, "a" as an article, etc.). Returns None --
+    an explicit ungraded failure, never a guess -- if none of these
+    patterns are found.
     """
     matches = _ANSWER_RE.findall(text)
     if matches:
@@ -62,6 +68,9 @@ def extract_choice(text: str) -> str | None:
     boxed = _BOXED_RE.findall(text)
     if boxed:
         return boxed[-1].upper()
+    phrase = _ANSWER_PHRASE_RE.findall(text)
+    if phrase:
+        return phrase[-1].upper()
     for line in reversed(text.strip().splitlines()):
         line = line.strip()
         if not line:
