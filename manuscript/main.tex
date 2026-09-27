@@ -49,7 +49,7 @@ also report the exact Kemeny-Young solution as a reference baseline
 wherever ground truth is available. We describe the formal model, a
 reference implementation using CP-SAT, and an experimental protocol
 against self-consistency voting and greedy single-sampling baselines
-across five evaluation tracks (353 ground-truth rows spanning GSM8K, MATH
+across five evaluation tracks (367 ground-truth rows spanning GSM8K, MATH
 Level 5, AIME 2026, and GPQA Diamond) plus a judge-only validation against
 RewardBench (161 rows, 90.1\% accuracy, a perfect 49/49 on
 reasoning-category pairs).
@@ -203,7 +203,15 @@ additional API cost.}
 \textbf{Generate.} Sample $N$ candidate answers, either from one model
 with $N$ distinct seeds or round-robined across multiple providers for
 heterogeneity. This is the only stage that is not, and is not intended to
-be, deterministic.
+be, deterministic. Each candidate must additionally satisfy a
+domain-specific validity predicate before being accepted -- e.g., for
+GPQA, that an answer letter is extractable at all -- since a non-empty
+completion can still be useless for the domain: a response that reasons
+at length but never states a parseable final answer. On failure, the
+pipeline resamples the same slot, with a freshly varied seed each attempt
+(Section~\ref{sec:validity-fix}), up to three times before recording the
+row as an infrastructure failure rather than silently accepting or
+discarding the invalid text.
 
 \textbf{Score.} Obtain a per-candidate confidence estimate
 $\text{confidence}_i \in [0,1]$ and a cost proxy $\text{cost}_i$ (token
@@ -400,19 +408,17 @@ stronger, discrete property the worst-case guarantee does not control on
 its own. We report the realized top-1 agreement empirically instead
 (Section~\ref{sec:results}): across all ground-truth tracks with a
 Kemeny-Young baseline computed, $\text{quality}_i$'s top pick differed
-from the exact Kemeny-Young winner in 4 of 313 graded problems (the
+from the exact Kemeny-Young winner in 4 of 327 graded problems (the
 tracks with a Kemeny-Young baseline computed: MATH Level 5, AIME 2026
 homogeneous and heterogeneous, and GPQA Diamond homogeneous and
-heterogeneous -- GSM8K has none, Table~\ref{tab:tracks}), and in every
-case where the two disagreed on correctness, $\text{quality}_i$'s pick
-was the correct one (2 of 2, both in GPQA Diamond; the remaining 2
-disagreements, both in MATH Level 5, are formatting ties under the same
-grader limitation discussed in Section~\ref{sec:results}, not a
-correctness split). This is evidence that the realized approximation
-gap is, in practice, far tighter on this pipeline's pairwise weights
-than the theorem's worst case -- not a claim that it must be, since 4
-instances is too small a sample to bound a realized ratio, only to
-observe one directionally.
+heterogeneous -- GSM8K has none, Table~\ref{tab:tracks}). Of the 4
+disagreements, 2 (both in MATH Level 5) split neither correct; of the
+remaining 2, one favors $\text{quality}_i$'s pick and one favors the
+exact Kemeny-Young winner (both in GPQA Diamond, one per variant). At
+this sample size the realized split does not favor either aggregation
+rule -- 4 instances is too small to bound a realized approximation ratio
+in either direction, and we report it as such rather than as directional
+evidence for the tractable heuristic.
 
 Given fixed $\text{quality}_i$, $\text{confidence}_i$,
 $\text{consistency}_i$, and $\text{cost}_i$, the solve is exact: CP-SAT
@@ -496,13 +502,13 @@ whether OR-Select can correct a wrong self-consistency majority.
 
 \textbf{Track D (AIME 2026)}: recent competition-math problems
 \citep{matharena2025aime}, evaluated with homogeneous generation ($N=3$,
-15/30 valid) and three-vendor heterogeneous generation ($N=6$, 11/30
+17/30 valid) and three-vendor heterogeneous generation ($N=6$, 11/30
 valid). The latter varies generators while holding the judge fixed.
 
 \textbf{Track E (GPQA Diamond)}: graduate-level biology, chemistry, and
 physics multiple-choice problems from the 198-question Diamond subset
-\citep{rein2024gpqa}, evaluated with homogeneous generation ($N=3$, 109/198
-valid) and the same three-vendor heterogeneous setup ($N=6$, 71/198 valid).
+\citep{rein2024gpqa}, evaluated with homogeneous generation ($N=3$, 112/198
+valid) and the same three-vendor heterogeneous setup ($N=6$, 73/198 valid).
 Exact-letter grading avoids the formatting ambiguity of free-form math.
 
 \subsection{Ablations}
@@ -524,10 +530,29 @@ bidirectional judging buys over naive single-direction judging.
 \label{sec:rewardbench-results}
 
 Overall accuracy is \RBOverallAcc\% (mean of category means, $N=\RBN$, 0
-infrastructure failures), in the range typically reported for capable
-general-purpose LLM judges on this benchmark -- the pre-registered
-threshold for trusting $\text{quality}_i$ as a reasonably calibrated
-signal. Table~\ref{tab:rewardbench} breaks this down by category.
+infrastructure failures, micro-average 95\% Wilson interval
+[\RBOverallCILow\%, \RBOverallCIHigh\%]), in the range typically reported
+for capable general-purpose LLM judges on this benchmark -- the
+pre-registered threshold for trusting $\text{quality}_i$ as a reasonably
+calibrated signal. Table~\ref{tab:rewardbench} breaks this down by
+category.
+
+Raw agreement is an incomplete validation on its own: the LLM-judge
+reliability literature documents length bias (systematic over-preference
+for the longer response, independent of correctness) as a common
+first-order failure mode alongside the positional bias
+Section~\ref{sec:pipeline} already corrects for. We check this directly
+on the same $N=161$ rows, split by which side (chosen or rejected) is
+longer by raw character count: accuracy is 96.2\% (76/79, 95\% CI
+[89.4\%, 98.7\%]) when the human-preferred response happens to be the
+longer one, versus 85.4\% (70/82, 95\% CI [76.1\%, 91.4\%]) when it is the
+shorter one. The intervals overlap, so this is not a clean statistical
+separation at this $N$, but the direction is consistent with a length
+preference dragging accuracy down specifically on the rows where the
+correct answer is also the shorter one -- reported as a directional
+finding to watch, not a proven bias, in the same spirit as
+Section~\ref{sec:approx-guarantee}'s single-instance approximation-ratio
+observation.
 
 \begin{table}[htbp]
 \centering
@@ -588,41 +613,40 @@ literature-motivated follow-on tracks reported below.
 
 \subsection{Track C: MATH Level 5}
 
-We evaluate 107 of the 134 Level-5 problems, $N=3$ candidates each. All
-four methods scored 98/107 nominally (91.6\%). Nine of the apparent errors
-were grader false negatives caused by formatting, notation, or ordering
-that the heuristic grader did not normalize, not genuine wrong answers; no
-genuinely wrong majority was found.
+We evaluate 114 of the 134 Level-5 problems, $N=3$ candidates each. All
+four methods scored 104/114 (91.2\%). Two rows show an
+OR-Select/self-consistency disagreement; on both, neither method's pick
+was correct, so neither disagreement changes which method is more
+accurate.
 
 \subsection{Track D: AIME 2026}
 
-The homogeneous run evaluates 15 of 30 problems and the heterogeneous run
+The homogeneous run evaluates 17 of 30 problems and the heterogeneous run
 11 of 30. All four methods scored 100\% on valid rows, with zero
 OR-Select/self-consistency disagreements in either variant.
 
 \subsection{Track E: GPQA Diamond}
 
-The homogeneous run graded 109/198: OR-Select scored 105/109 (96.3\%),
-self-consistency and greedy each 103/109 (94.5\%), and Kemeny-Young 104/109
-(95.4\%). The heterogeneous run graded 71/198: OR-Select, self-consistency,
-and greedy each scored 68/71 (95.8\%), while Kemeny-Young scored 67/71
-(94.4\%). The homogeneous run produced 2 OR-Select/self-consistency
-disagreements, both cases of OR-Select correcting a wrong self-consistency
-majority (0 in the other direction) -- discussed in
-Section~\ref{sec:limitations}; the heterogeneous run produced none.
-Kemeny-Young differed from OR-Select once in each run (2 disagreements
-total), OR-Select correct both times.
+The homogeneous run graded 112/198: OR-Select and greedy each scored
+106/112 (94.6\%), self-consistency and Kemeny-Young each 107/112 (95.5\%).
+The heterogeneous run graded 73/198: OR-Select, self-consistency, and
+greedy each scored 70/73 (95.9\%), Kemeny-Young 69/73 (94.5\%). The
+homogeneous run produced one OR-Select/self-consistency disagreement, in
+which self-consistency's pick was correct and OR-Select's was not; the
+heterogeneous run produced none. OR-Select and Kemeny-Young differed once
+in each run (2 disagreements total): one favored OR-Select, one favored
+Kemeny-Young.
 
 \subsection{Summary across tracks}
 \label{sec:track-summary}
 
 Table~\ref{tab:tracks} and Figure~\ref{fig:accuracy} consolidate Tracks
 B-E. GSM8K (B) and both AIME variants (D, D$'$) sit at a 100\% ceiling for
-every method -- no disagreement was possible. MATH Level 5 (C) is the one
-track with any grading ambiguity (Section~\ref{sec:results}, Track C, 9
-formatting false negatives out of 107). GPQA Diamond, homogeneous (E) is
-the only track with a genuine, non-notational OR-Select/self-consistency
-split, and it favors OR-Select in both cases.
+every method -- no disagreement was possible. Across the five tracks, the
+four methods disagree on only 3 of 367 valid rows in total (Table
+\ref{tab:tracks}): 2 in MATH Level 5, where neither disputed pick was
+correct, and 1 in GPQA Diamond homogeneous, where self-consistency's pick
+was correct and OR-Select's was not.
 
 \begin{table}[htbp]
 \centering
@@ -634,11 +658,11 @@ Kemeny-Young comparator run.}
 Track & Valid/Total & Greedy & Self-cons.\ & OR-Select & Kemeny-Young \\
 \midrule
 B --- GSM8K & 40/40 & 100.0\% & 100.0\% & 100.0\% & -- \\
-C --- MATH L5 & 107/134 & 91.6\% & 91.6\% & 91.6\% & 91.6\% \\
-D --- AIME, homog.\ & 15/30 & 100.0\% & 100.0\% & 100.0\% & 100.0\% \\
+C --- MATH L5 & 114/134 & 91.2\% & 91.2\% & 91.2\% & 91.2\% \\
+D --- AIME, homog.\ & 17/30 & 100.0\% & 100.0\% & 100.0\% & 100.0\% \\
 D$'$ --- AIME, heterog.\ & 11/30 & 100.0\% & 100.0\% & 100.0\% & 100.0\% \\
-E --- GPQA, homog.\ & 109/109 & 94.5\% & 94.5\% & \textbf{96.3\%} & 95.4\% \\
-E$'$ --- GPQA, heterog.\ & 71/72 & 95.8\% & 95.8\% & 95.8\% & 94.4\% \\
+E --- GPQA, homog.\ & 112/198 & 94.6\% & \textbf{95.5\%} & 94.6\% & 95.5\% \\
+E$'$ --- GPQA, heterog.\ & 73/198 & 95.9\% & 95.9\% & 95.9\% & 94.5\% \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -717,6 +741,24 @@ since identical text never reaches the judge at all; it does not address
 the general case of two \emph{different} texts receiving unstable judge
 scores across runs, which remains open.
 
+\subsection{Retry independence and extraction fallbacks}
+\label{sec:validity-fix}
+
+Each validity-retry attempt (Section~\ref{sec:pipeline}) draws with a
+freshly varied seed, so a persistently-invalid slot gets three
+independent samples rather than three repeats of whatever a
+seed-honoring backend already returned once. Extraction itself accepts
+more than one literal marker: GPQA additionally recognizes a prose
+``the answer is X'' pattern alongside \texttt{ANSWER:\ X} and
+\texttt{\textbackslash boxed\{X\}}, since its answer space is bounded to
+four letters and the risk of misidentifying which one was intended is
+low. MATH's open-ended \texttt{\textbackslash boxed\{\}} extraction
+(Track C) has no equivalent prose fallback: an open-ended expression
+admits far more ways to state an answer without the requested marker,
+and a wrong guess there would convert an honest ``ungraded'' row into a
+confidently incorrect one. This asymmetry is a design choice, not an
+oversight.
+
 \subsection{Limitations}
 \label{sec:limitations}
 
@@ -724,7 +766,16 @@ scores across runs, which remains open.
 benchmark (Table~\ref{tab:tracks}) mean this is a preliminary report, not
 a statistically powered evaluation. A full-coverage run at larger $N$ is
 necessary before the accuracy differences in Table~\ref{tab:tracks} can
-be treated as more than suggestive.
+be treated as more than suggestive. We pre-registered McNemar's exact
+test on discordant pairs as the direct test of whether OR-Select
+corrects self-consistency; we do not report it here because every track
+currently has 0 or 1 discordant pair (computed directly, not assumed),
+far below the number our own pre-registered power analysis requires for
+the test to be informative -- reporting a $p$-value from 0--1 discordant
+observations would be more misleading than omitting it. We disclose the
+omission explicitly, rather than silently dropping a pre-registered
+analysis, and will report it once the corrected-pipeline re-collection
+produces enough discordant pairs to make it meaningful.
 
 \textbf{Single judge model.} Every result uses one model as generator,
 scorer, and judge simultaneously. The RewardBench validation
@@ -738,29 +789,21 @@ heterogeneous-provider judging would help here, or merely add cost, is
 untested, not merely under-tested -- heterogeneous generation was tested,
 but heterogeneous judging was not.
 
-\textbf{Correcting a wrong majority: rare, and not yet the strongest test
-of the method.} The most direct test of whether OR-Select adds value over
-self-consistency is the scenario in which a confident, well-formed
-majority of candidates converges on a \emph{wrong} answer while a correct
-minority exists -- majority vote fails outright, and only judge-based
-selection can recover the correct answer. Track E's homogeneous run
-produced this work's first two cases of OR-Select correcting a
-self-consistency majority that was wrong, both in OR-Select's favor
-(Section~\ref{sec:results}). In neither case did a majority of
-well-formed candidates converge on a plausible but incorrect answer,
-however: self-consistency's majority vote degenerated because most
-candidates failed to produce any parseable answer at all (one garbled,
-one truncated/empty generation), which OR-Select's judge-based scoring was
-robust to since it could still identify the one coherent, correct
-candidate. The only other rows where OR-Select and self-consistency
-disagree are two Track C rows, both formatting-only variants of the same
-underlying answer (Section~\ref{sec:approx-guarantee}) rather than a
-substantive split; across the remaining 349 of 353 valid ground-truth
-rows they never disagreed at all. The scenario this method is
-ultimately meant to address -- a confident, well-formed wrong majority
-outvoting a correct minority -- remains unobserved in this evaluation,
-and whether it requires a stronger (more error-prone) generator or simply
-a larger sample is an open question for future work.
+\textbf{Correcting a wrong majority: not yet observed.} The most direct
+test of whether OR-Select adds value over self-consistency is the
+scenario in which a confident, well-formed majority of candidates
+converges on a \emph{wrong} answer while a correct minority exists --
+majority vote fails outright, and only judge-based selection can recover
+the correct answer. Across all 367 valid ground-truth rows in this
+evaluation, the two methods disagree on 3: two in MATH Level 5, where
+neither disputed pick was correct, and one in GPQA Diamond homogeneous,
+where self-consistency's pick was correct and OR-Select's was not
+(Section~\ref{sec:results}). No row in this dataset shows OR-Select
+correcting a wrong self-consistency majority. The scenario this method is
+ultimately meant to address remains unobserved, and a larger,
+adequately-powered evaluation under the current pipeline
+(Section~\ref{sec:validity-fix}) is the direct next step, not a
+restatement of this preliminary count.
 
 \section{Conclusion}
 
@@ -776,12 +819,13 @@ instance of it. A judge-only validation against RewardBench (90.1\%
 overall, a perfect 49/49 on reasoning pairs) rules out judge competence as
 a confound for the tracks that follow. A five-track evaluation shows the
 method diverges from simpler baselines on open-ended queries, and matches
-self-consistency on 349 of 353 ground-truth rows tested across GSM8K,
-MATH Level 5, AIME 2026, and GPQA Diamond -- two of the four exceptions
-are formatting-only ties in MATH Level 5, and the other two are the GPQA
-Diamond homogeneous run, where OR-Select corrected a self-consistency
-majority that degenerated on unparseable candidates
-(Section~\ref{sec:limitations}).
+self-consistency on 364 of 367 ground-truth rows tested across GSM8K,
+MATH Level 5, AIME 2026, and GPQA Diamond; of the 3 disagreements, none
+favors OR-Select (Section~\ref{sec:limitations}). Correcting a wrong
+self-consistency majority -- the scenario this method is ultimately meant
+to address -- remains unobserved in this evaluation; a larger,
+adequately-powered run under the current pipeline
+(Section~\ref{sec:validity-fix}) is the direct next step.
 The self-consistency term has not yet influenced a real decision, for a
 structural reason identified by ablation rather than assumed. This is
 preliminary, small-scale work; the concrete next steps are paid or

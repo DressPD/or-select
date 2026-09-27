@@ -10,6 +10,7 @@ Figure_N_..._data.tex): numbers are computed here, once, from the same
 outputs/*.json the prose in main.tex was written from, so the manuscript
 never hand-types a number that isn't traceable to a run artifact.
 """
+import argparse
 import json
 import os
 
@@ -96,8 +97,12 @@ def worked_example():
         print(r)
 
 
-def load(name):
-    with open(os.path.join(OUT_DIR, name)) as f:
+def load(name, source_dir=OUT_DIR):
+    """RewardBench is always read from OUT_DIR (never archived mid-run);
+    the five ground-truth tracks accept --source-dir so this script can
+    regenerate from an archived snapshot (e.g. outputs/pilot_pre_extraction_fix)
+    without touching a live run's in-progress output files."""
+    with open(os.path.join(source_dir, name)) as f:
         return json.load(f)
 
 
@@ -123,12 +128,23 @@ def track_row(label, data, methods=("or_select", "self_consistency", "greedy", "
 
 
 def main():
-    gsm8k = load("gsm8k_benchmark_initial.json")
-    math5 = load("math_benchmark_full.json")
-    aime_h = load("aime_2026_benchmark.json")
-    aime_x = load("aime_2026_heterogeneous.json")
-    gpqa_h = load("gpqa_benchmark.json")
-    gpqa_x = load("gpqa_heterogeneous.json")
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--source-dir",
+        default=OUT_DIR,
+        help="Directory to read the five ground-truth track JSON files from "
+        "(default: outputs/). RewardBench is always read from outputs/. "
+        "Pass outputs/pilot_pre_extraction_fix to regenerate from an "
+        "archived snapshot instead of a live run's in-progress files.",
+    )
+    args = parser.parse_args()
+
+    gsm8k = load("gsm8k_benchmark_initial.json")  # never archived; always the live file
+    math5 = load("math_benchmark_full.json", args.source_dir)
+    aime_h = load("aime_2026_benchmark.json", args.source_dir)
+    aime_x = load("aime_2026_heterogeneous.json", args.source_dir)
+    gpqa_h = load("gpqa_benchmark.json", args.source_dir)
+    gpqa_x = load("gpqa_heterogeneous.json", args.source_dir)
     rb = load("reward_bench_benchmark.json")
 
     rows = [
@@ -167,6 +183,9 @@ def main():
     lines.append(r"\def\RBSafetyRows{%d}" % rb_cats["Safety"]["n_rows"])
     lines.append(r"\def\RBOverallAcc{%.1f}" % (rb["overall_accuracy"] * 100))
     lines.append(r"\def\RBN{%d}" % rb["n_valid"])
+    rb_ci_lo, rb_ci_hi = rb["overall_ci95_micro"]
+    lines.append(r"\def\RBOverallCILow{%.1f}" % (rb_ci_lo * 100))
+    lines.append(r"\def\RBOverallCIHigh{%.1f}" % (rb_ci_hi * 100))
 
     with open(DEST, "w") as f:
         f.write("\n".join(lines) + "\n")
