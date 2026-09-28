@@ -63,25 +63,41 @@ _PERMANENT_ERROR_MARKERS = (
 )
 
 
-MAX_OUTPUT_TOKENS = 2048
-# Added after live evidence that "successful" (non-empty, non-timed-out)
-# completions were degenerating into runaway garbage under upstream
-# saturation: verified winner_texts this session included a 787-char
-# CORRECT candidate sitting next to a same-problem 7,806-char candidate that
-# had hallucinated into unrelated cryptocurrency/JSON content, a 24,598-char
+MAX_OUTPUT_TOKENS = 4096
+# Originally set to 2048 after live evidence that "successful" (non-empty,
+# non-timed-out) completions were degenerating into runaway garbage under
+# upstream saturation: verified winner_texts included a 787-char CORRECT
+# candidate sitting next to a same-problem 7,806-char candidate that had
+# hallucinated into unrelated cryptocurrency/JSON content, a 24,598-char
 # candidate of multilingual gibberish, and others up to ~100,000 characters
 # -- none of these hit StallTimeout or came back empty, they are the model
 # rambling without ever reaching an ANSWER:/\boxed{} line, because nothing
-# ever told it to stop.
+# ever told it to stop. That gibberish tail (6,000-25,000+ tokens) is far
+# above this cap either way, so doubling it does not reopen that failure
+# mode; it targets a different, since-measured one.
+#
+# Doubled to 4096 after inspecting captured failed_last_response text
+# (or_select/generate.py's ValidityExhausted) across 65 GPQA/MATH validity
+# failures under the 2048 cap: ~87% (57/65) were cut off mid-reasoning at
+# exactly the 2048-token/~4000-char ceiling, having never written a final
+# answer at all -- not gibberish, not empty, just genuinely out of room on
+# harder problems (multi-step organic mechanisms, QFT loop-counting,
+# combinatorial casework). No extraction fallback can recover an answer
+# that was never stated, so more budget was the only available lever. The
+# gibberish failure mode was also directly observed in this same sample
+# (a 727-char word-salad response, still within the old 2048 cap), so it
+# is not solved by this change and remains possible at 4096 too; this is a
+# trade-off, not a fix, made because truncation was measured to dominate
+# gibberish roughly 9-to-1 in the inspected sample.
 #
 # Value measured, not guessed: scanning every winner_texts entry across both
 # GPQA Diamond tracks (n=449) that actually reached an ANSWER:/\boxed{}
 # marker (i.e. excluding the gibberish tail this cap targets) gave mean=757
 # chars (~189 tokens), p95=1465 chars (~366 tokens), p99=1931 chars (~483
-# tokens), max=3208 chars (~800 tokens) at a ~4 chars/token estimate. 2048
-# tokens is ~2.6x that observed max -- real headroom for a harder problem
-# needing more reasoning than anything seen so far -- while sitting far
-# below the pathological tail (6,000-25,000+ tokens) that was corrupting
+# tokens), max=3208 chars (~800 tokens) at a ~4 chars/token estimate.
+# 4096 tokens is ~5.3x that observed max -- real headroom for the harder
+# problems now confirmed to need it -- while still sitting below the
+# pathological tail (6,000-25,000+ tokens) that was corrupting
 # self-consistency majority votes and fooling exact Kemeny-Young pairwise
 # judging (both read from the same winner_texts a truncation-free response
 # would have produced). This does not replace STALL_TIMEOUT_SECONDS below
