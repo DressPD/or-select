@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import random
 import sys
 from pathlib import Path
 
@@ -93,10 +94,24 @@ def run_benchmark(rows: list[dict], provider: str, output: Path, resume: bool, r
     # used everywhere else in this repo?
     heterogeneous = provider == "openrouter_mixed"
     judge_models: list[str] = []
+    run_offset = 0
     if heterogeneous:
         from or_select.pipeline import OPENROUTER_MIXED_MODELS
 
         judge_models = OPENROUTER_MIXED_MODELS
+        # Offset the round-robin by a fresh random amount each process
+        # invocation. Without this, a row's judge model is a pure function
+        # of its position in the file -- identical on every
+        # --retry-failures relaunch, since the file order never changes.
+        # Live evidence (ids 4678/4681, both landing on the same
+        # underperforming model on every single relaunch, StallTimeout/
+        # APITimeoutError every time) showed this leaves a row with zero
+        # chance of a different outcome no matter how many times it's
+        # retried -- the same class of bug as generate.py's pre-fix
+        # identical-seed-per-retry issue. The offset still keeps assignment
+        # deterministic and round-robin-fair within a single run; it just
+        # stops being deterministic *across* runs.
+        run_offset = random.randrange(len(judge_models))
     else:
         judge_fn = _judge_fn_for(provider)
 
@@ -113,7 +128,7 @@ def run_benchmark(rows: list[dict], provider: str, output: Path, resume: bool, r
         if row["id"] in done_ids:
             print(f"[{i}/{len(rows)}] skipped (already graded): id={row['id']}", flush=True)
             continue
-        judge_model = judge_models[(i - 1) % len(judge_models)] if heterogeneous else None
+        judge_model = judge_models[(i - 1 + run_offset) % len(judge_models)] if heterogeneous else None
         if heterogeneous:
             judge_fn = _judge_fn_for(provider, model=judge_model)
         print(

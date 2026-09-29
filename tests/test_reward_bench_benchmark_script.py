@@ -36,12 +36,32 @@ class HeterogeneousRoundRobinTest(unittest.TestCase):
         self.tmpdir.cleanup()
 
     def test_each_row_gets_a_distinct_model_round_robin(self) -> None:
+        # random.randrange is pinned to 0 so the round-robin's starting
+        # offset is reproducible here; test_relaunch_offset_varies below
+        # covers the offset itself.
         with patch("or_select.pipeline.OPENROUTER_MIXED_MODELS", self.models), patch(
             "or_select.providers.openrouter_judge", return_value=1.0
-        ):
+        ), patch("scripts.reward_bench_benchmark.random.randrange", return_value=0):
             results = run_benchmark(self.rows, "openrouter_mixed", self.output, resume=False, retry_failures=False)
         used_models = [r["judge_model"] for r in results]
         self.assertEqual(used_models, ["model-a", "model-b", "model-c", "model-a", "model-b"])
+
+    def test_relaunch_offset_varies_a_stuck_rows_judge_model(self) -> None:
+        # The bug this covers: a row's judge model was a pure function of
+        # its position, so a row stuck on an underperforming model (live
+        # evidence: RewardBench ids 4678/4681, StallTimeout/APITimeoutError
+        # on every relaunch) had zero chance of a different outcome no
+        # matter how many times it was retried. Different random offsets
+        # across two "relaunches" must route the same row to a different
+        # model.
+        with patch("or_select.pipeline.OPENROUTER_MIXED_MODELS", self.models), patch(
+            "or_select.providers.openrouter_judge", return_value=1.0
+        ):
+            with patch("scripts.reward_bench_benchmark.random.randrange", return_value=0):
+                first = run_benchmark(self.rows[:1], "openrouter_mixed", self.output, resume=False, retry_failures=False)
+            with patch("scripts.reward_bench_benchmark.random.randrange", return_value=1):
+                second = run_benchmark(self.rows[:1], "openrouter_mixed", self.output, resume=False, retry_failures=False)
+        self.assertNotEqual(first[0]["judge_model"], second[0]["judge_model"])
 
     def test_homogeneous_runs_do_not_record_a_judge_model(self) -> None:
         with patch("or_select.providers.openrouter_judge", return_value=1.0):
@@ -59,7 +79,7 @@ class HeterogeneousRoundRobinTest(unittest.TestCase):
 
         with patch("or_select.pipeline.OPENROUTER_MIXED_MODELS", self.models), patch(
             "or_select.providers.openrouter_judge", side_effect=flaky
-        ):
+        ), patch("scripts.reward_bench_benchmark.random.randrange", return_value=0):
             first = run_benchmark(self.rows[:2], "openrouter_mixed", self.output, resume=False, retry_failures=False)
             self.output.write_text(json.dumps({"results": first}))
             self.assertTrue(all("error" in r for r in first))
