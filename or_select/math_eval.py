@@ -35,6 +35,7 @@ _TEXT_WRAP_RE = re.compile(r"\\text\{([^{}]*)\}")
 _LEFT_RIGHT_RE = re.compile(r"\\left|\\right")
 _DOLLAR_RE = re.compile(r"\$")
 _TRAILING_PERIOD_RE = re.compile(r"\.$")
+_VAR_PREFIX_RE = re.compile(r"^[a-zA-Z]\s*=\s*")
 
 
 def extract_boxed(text: str) -> str | None:
@@ -66,14 +67,20 @@ def normalize(expr: str) -> str:
 
     Strips formatting that doesn't change meaning (spacing commands
     including LaTeX's "\\ " thin-space macro, \\left/\\right, $ delimiters,
-    \\text{} wrappers, \\dfrac/\\tfrac -> \\frac, trailing period, all
-    whitespace) so that e.g.
+    \\text{} wrappers, \\dfrac/\\tfrac -> \\frac, a leading "x=" variable-name
+    prefix, trailing period, all whitespace) so that e.g.
     "\\dfrac{1}{2}" and "\\frac{1}{2}" compare equal. Does not attempt
     algebraic simplification (e.g. "2/4" vs "1/2" are NOT normalized to
     equal) -- see module docstring.
     """
     s = expr.strip()
     s = _DOLLAR_RE.sub("", s)
+    # A leading "x=" (or "y=", etc.) is stripped, applied to BOTH sides in
+    # is_correct() -- live evidence: ground truth "x=5" vs. a model's boxed
+    # "5" (the same answer, every method extracted it) was scored incorrect
+    # solely because the ground truth data includes the variable name and
+    # the model's \boxed{} answer, by convention, doesn't.
+    s = _VAR_PREFIX_RE.sub("", s)
     s = _LEFT_RIGHT_RE.sub("", s)
     s = _LATEX_SPACING_RE.sub("", s)
     s = _TEXT_WRAP_RE.sub(r"\1", s)

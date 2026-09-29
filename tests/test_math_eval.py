@@ -61,6 +61,19 @@ class NormalizeTest(unittest.TestCase):
         # but this normalizer does not do algebraic simplification.
         self.assertNotEqual(normalize("\\frac{2}{4}"), normalize("\\frac{1}{2}"))
 
+    def test_strips_leading_variable_assignment(self) -> None:
+        # Live evidence: ground truth "x=5" vs. a model's boxed "5" (the
+        # same answer) scored incorrect purely because the ground truth
+        # data includes the variable name and the model's answer doesn't.
+        self.assertEqual(normalize("x=5"), normalize("5"))
+        self.assertEqual(normalize("y = 2x + 3"), normalize("2x+3"))
+
+    def test_does_not_strip_multi_letter_prefix(self) -> None:
+        # "xy=5" is not "<var>=<value>" -- the prefix regex requires
+        # exactly one letter before "=" so it doesn't eat part of a longer
+        # expression that happens to start with a letter.
+        self.assertEqual(normalize("xy=5"), "xy=5")
+
 
 class IsCorrectTest(unittest.TestCase):
     def test_exact_match(self) -> None:
@@ -74,6 +87,9 @@ class IsCorrectTest(unittest.TestCase):
 
     def test_formatting_differences_still_match(self) -> None:
         self.assertTrue(is_correct("\\dfrac{1}{2}", "\\frac{1}{2}"))
+
+    def test_variable_prefix_does_not_block_a_match(self) -> None:
+        self.assertTrue(is_correct("5", "x=5"))
 
 
 if __name__ == "__main__":
