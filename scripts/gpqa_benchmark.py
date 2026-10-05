@@ -37,7 +37,9 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from or_select.baselines import greedy_single_sample, self_consistency_winner  # noqa: E402
+from or_select.generate import is_settled_truncation  # noqa: E402
 from or_select.gpqa import GPQA_SUFFIX, extract_choice, is_correct  # noqa: E402
+from or_select.providers import MAX_OUTPUT_TOKENS  # noqa: E402
 from or_select.kemeny import solve_kemeny_ranking  # noqa: E402
 from or_select.pipeline import PROVIDERS, run_pipeline  # noqa: E402
 
@@ -123,6 +125,7 @@ def _failed_row(problem: dict, exc: Exception) -> dict:
         row["failed_last_response"] = last_response[:4000]
     if getattr(exc, "truncated", False):
         row["truncated"] = True
+        row["truncated_at_tokens"] = MAX_OUTPUT_TOKENS
     return row
 
 
@@ -205,7 +208,7 @@ def run_benchmark(
         existing = json.loads(output.read_text())
         results = existing.get("results", [])
         if retry_failures:
-            results = [r for r in results if "error" not in r]
+            results = [r for r in results if "error" not in r or is_settled_truncation(r, MAX_OUTPUT_TOKENS)]
         done_queries = {r["query"] for r in results}
 
     for i, problem in enumerate(problems, start=1):

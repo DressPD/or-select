@@ -62,6 +62,13 @@ class ValidityExhausted(RuntimeError):
             )
 
 
+def is_settled_truncation(row: dict, current_cap: int) -> bool:
+    """A failed row that already hit the output-token cap at `current_cap` or
+    higher. Retrying it with the same budget just spends a full-length call
+    to truncate again, so resume logic keeps it as a failure instead."""
+    return bool(row.get("truncated")) and row.get("truncated_at_tokens", 0) >= current_cap
+
+
 def _generate_valid(generate_fn: GenerateFn, query: str, seed: int, validity_fn: ValidityFn | None) -> str:
     if validity_fn is None:
         return generate_fn(query, seed)

@@ -5,6 +5,7 @@ import unittest
 from or_select.generate import (
     TruncatedOutput,
     ValidityExhausted,
+    is_settled_truncation,
     generate_candidates,
     generate_candidates_heterogeneous,
 )
@@ -58,6 +59,15 @@ class GenerateCandidatesValidityRetryTest(unittest.TestCase):
         self.assertTrue(ctx.exception.truncated)
         self.assertEqual(ctx.exception.last_response, "cut off mid-reasoning")
         self.assertIn("truncated", str(ctx.exception))
+
+    def test_settled_truncation_is_only_a_row_truncated_at_this_cap_or_higher(self) -> None:
+        self.assertTrue(is_settled_truncation({"truncated": True, "truncated_at_tokens": 8192}, 8192))
+        self.assertTrue(is_settled_truncation({"truncated": True, "truncated_at_tokens": 16384}, 8192))
+        # Truncated at a smaller cap earlier: deserves a retry with more room.
+        self.assertFalse(is_settled_truncation({"truncated": True, "truncated_at_tokens": 4096}, 8192))
+        # Old-style failure rows (no flag) and non-truncation failures retry.
+        self.assertFalse(is_settled_truncation({"error": "ValidityExhausted: x"}, 8192))
+        self.assertFalse(is_settled_truncation({"truncated": True}, 8192))
 
     def test_ordinary_invalid_text_is_not_flagged_truncated(self) -> None:
         with self.assertRaises(ValidityExhausted) as ctx:

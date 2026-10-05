@@ -393,12 +393,18 @@ def _openrouter_complete(
     resolved_seed = seed if seed is not None else _stable_seed(prompt)
     resolved_model = model or OPENROUTER_MODEL
 
+    # Opt-in: not every free model accepts a reasoning-effort parameter, so
+    # it is only sent when OPENROUTER_REASONING_EFFORT (low/medium/high) is set.
+    effort = os.environ.get("OPENROUTER_REASONING_EFFORT")
+    extra = {"extra_body": {"reasoning": {"effort": effort}}} if effort else {}
+
     def call() -> str:
         resp = _openrouter_client().chat.completions.create(
             model=resolved_model,
             messages=[{"role": "user", "content": prompt}],
             seed=resolved_seed,
             max_tokens=MAX_OUTPUT_TOKENS,
+            **extra,
         )
         # OpenRouter returns HTTP 200 with no `choices` and an `error` field
         # when the upstream (free-tier) provider is saturated, instead of a

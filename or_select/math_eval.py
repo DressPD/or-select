@@ -26,7 +26,9 @@ import re
 
 MATH_SUFFIX = (
     "\n\nSolve step by step, then end your response with the final answer "
-    "in a LaTeX \\boxed{} expression, e.g. \\boxed{42} or \\boxed{\\frac{1}{2}}."
+    "in a LaTeX \\boxed{} expression, e.g. \\boxed{42} or \\boxed{\\frac{1}{2}}. "
+    "Keep your reasoning concise and decisive: do not re-derive or second-guess "
+    "settled steps, and reach the \\boxed{} answer well before you run out of space."
 )
 
 _WHITESPACE_RE = re.compile(r"\s+")

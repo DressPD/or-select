@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import time
 import unittest
 from unittest import mock
@@ -253,6 +254,21 @@ class TruncationTest(unittest.TestCase):
     def test_default_path_still_returns_truncated_text(self) -> None:
         with mock.patch("or_select.providers._openrouter_client", return_value=self._truncated_client()):
             self.assertEqual(_openrouter_complete("query", seed=0), "long reasoning with no final answer")
+
+    def test_reasoning_effort_is_opt_in(self) -> None:
+        client = mock.Mock()
+        client.chat.completions.create.return_value = _fake_response("ANSWER: A")
+        with mock.patch("or_select.providers._openrouter_client", return_value=client), mock.patch.dict(
+            "os.environ", {}, clear=False
+        ):
+            os.environ.pop("OPENROUTER_REASONING_EFFORT", None)
+            _openrouter_complete("query", seed=0)
+            self.assertNotIn("extra_body", client.chat.completions.create.call_args.kwargs)
+            os.environ["OPENROUTER_REASONING_EFFORT"] = "low"
+            _openrouter_complete("query", seed=0)
+        self.assertEqual(
+            client.chat.completions.create.call_args.kwargs["extra_body"], {"reasoning": {"effort": "low"}}
+        )
 
     def test_normal_stop_is_not_truncation(self) -> None:
         response = _fake_response("ANSWER: A")

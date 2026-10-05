@@ -29,7 +29,9 @@ import re
 GPQA_SUFFIX = (
     "\n\nThink it through, then end your response on its own line in the "
     "exact form: ANSWER: X -- where X is the single letter (A, B, C, or D) "
-    "of the correct option."
+    "of the correct option. Keep your reasoning concise and decisive: do not "
+    "re-derive or second-guess settled steps, and reach the ANSWER line well "
+    "before you run out of space."
 )
 
 _ANSWER_RE = re.compile(r"ANSWER:\s*\(?([A-D])\)?", re.IGNORECASE)
