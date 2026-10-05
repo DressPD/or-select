@@ -5,6 +5,7 @@ import time
 import unittest
 from unittest import mock
 
+from or_select.generate import TruncatedOutput
 from or_select.providers import (
     MAX_OUTPUT_TOKENS,
     StallTimeout,
@@ -16,6 +17,7 @@ from or_select.providers import (
     _parse_score,
     _reset_clients_if_connection_error,
     _stable_seed,
+    openrouter_generate,
     openrouter_heterogeneous_backends,
 )
 
@@ -219,6 +221,46 @@ class MaxOutputTokensTest(unittest.TestCase):
             _openrouter_complete("query", seed=0)
         _, kwargs = client.chat.completions.create.call_args
         self.assertEqual(kwargs.get("max_tokens"), MAX_OUTPUT_TOKENS)
+
+
+class TruncationTest(unittest.TestCase):
+    # finish_reason == "length" means the model was cut off at the cap, so
+    # the text is a fragment. Generation must surface that explicitly; the
+    # judge path (short outputs, last-number parsing) keeps returning text.
+
+    def _truncated_client(self):
+        response = _fake_response("long reasoning with no final answer")
+        response.choices[0].finish_reason = "length"
+        client = mock.Mock()
+        client.chat.completions.create.return_value = response
+        return client
+
+    def test_generation_raises_truncated_output_on_length_stop(self) -> None:
+        with mock.patch("or_select.providers._openrouter_client", return_value=self._truncated_client()):
+            with self.assertRaises(TruncatedOutput) as ctx:
+                openrouter_generate("query", 0)
+        self.assertEqual(ctx.exception.text, "long reasoning with no final answer")
+
+    def test_truncation_is_not_retried_by_the_transport_layer(self) -> None:
+        client = self._truncated_client()
+        with mock.patch("or_select.providers._openrouter_client", return_value=client), mock.patch(
+            "or_select.providers.time.sleep"
+        ):
+            with self.assertRaises(TruncatedOutput):
+                openrouter_generate("query", 0)
+        self.assertEqual(client.chat.completions.create.call_count, 1)
+
+    def test_default_path_still_returns_truncated_text(self) -> None:
+        with mock.patch("or_select.providers._openrouter_client", return_value=self._truncated_client()):
+            self.assertEqual(_openrouter_complete("query", seed=0), "long reasoning with no final answer")
+
+    def test_normal_stop_is_not_truncation(self) -> None:
+        response = _fake_response("ANSWER: A")
+        response.choices[0].finish_reason = "stop"
+        client = mock.Mock()
+        client.chat.completions.create.return_value = response
+        with mock.patch("or_select.providers._openrouter_client", return_value=client):
+            self.assertEqual(openrouter_generate("query", 0), "ANSWER: A")
 
 
 class StableSeedTest(unittest.TestCase):

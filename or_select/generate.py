@@ -28,21 +28,38 @@ VALIDITY_RETRY_ATTEMPTS = 3
 # their answer format.
 
 
+class TruncatedOutput(Exception):
+    """The backend stopped because it hit the output-token cap, so the text
+    is a cut-off fragment, not an answer. Carries that fragment."""
+
+    def __init__(self, text: str):
+        self.text = text
+        super().__init__(f"output truncated at the token cap ({len(text)} chars)")
+
+
 class ValidityExhausted(RuntimeError):
     """All VALIDITY_RETRY_ATTEMPTS attempts for one seed produced text that
-    failed validity_fn. Carries the last attempt's full text (not just its
-    length) so a caller can log/persist it for diagnosis -- previously this
-    was discarded entirely along with the other successful candidates
-    already generated for the same problem, leaving no way to tell why
-    extraction kept failing."""
+    failed validity_fn, or (truncated=True) the first attempt hit the output
+    token cap and was not re-sampled. Carries the last attempt's full text
+    (not just its length) so a caller can log/persist it for diagnosis --
+    previously this was discarded entirely along with the other successful
+    candidates already generated for the same problem, leaving no way to
+    tell why extraction kept failing."""
 
-    def __init__(self, seed: int, last_response: str):
+    def __init__(self, seed: int, last_response: str, truncated: bool = False):
         self.seed = seed
         self.last_response = last_response
-        super().__init__(
-            f"seed={seed} produced no valid candidate in {VALIDITY_RETRY_ATTEMPTS} attempts "
-            f"(last response: {len(last_response)} chars)"
-        )
+        self.truncated = truncated
+        if truncated:
+            super().__init__(
+                f"seed={seed} output truncated at the token cap "
+                f"({len(last_response)} chars); not re-sampled"
+            )
+        else:
+            super().__init__(
+                f"seed={seed} produced no valid candidate in {VALIDITY_RETRY_ATTEMPTS} attempts "
+                f"(last response: {len(last_response)} chars)"
+            )
 
 
 def _generate_valid(generate_fn: GenerateFn, query: str, seed: int, validity_fn: ValidityFn | None) -> str:
@@ -59,7 +76,13 @@ def _generate_valid(generate_fn: GenerateFn, query: str, seed: int, validity_fn:
         # original seed, unaffected by this -- only what's sent to the API
         # on retries changes.
         attempt_seed = seed if attempt == 0 else seed + attempt * 10_000
-        text = generate_fn(query, attempt_seed)
+        try:
+            text = generate_fn(query, attempt_seed)
+        except TruncatedOutput as exc:
+            # Out of token budget is a property of the problem, not of the
+            # seed: re-sampling just spends two more full-length calls to
+            # hit the cap again, so record it as a failure right away.
+            raise ValidityExhausted(seed, exc.text, truncated=True) from exc
         if validity_fn(text):
             return text
     raise ValidityExhausted(seed, text)

@@ -24,6 +24,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from .generate import TruncatedOutput
+
 load_dotenv()
 
 PROMPTS_DIR = Path(__file__).resolve().parents[1] / "prompts"
@@ -63,7 +65,14 @@ _PERMANENT_ERROR_MARKERS = (
 )
 
 
-MAX_OUTPUT_TOKENS = 4096
+MAX_OUTPUT_TOKENS = 8192
+# Raised 4096 -> 8192 after a full 4096-cap pass over the remaining hard
+# GPQA/AIME/MATH rows: ~92 rows failed, all with 11-16K-char responses cut
+# off at the cap (finish_reason "length"), none having reached a final
+# answer. Generation calls now raise TruncatedOutput on that stop reason so
+# such rows are recorded as explicit truncation failures instead of being
+# re-sampled.
+#
 # Originally set to 2048 after live evidence that "successful" (non-empty,
 # non-timed-out) completions were degenerating into runaway garbage under
 # upstream saturation: verified winner_texts included a 787-char CORRECT
@@ -378,7 +387,9 @@ def _gemini_complete(prompt: str) -> str:
     return _with_rate_limit_retry(lambda: _call_with_stall_timeout(call))
 
 
-def _openrouter_complete(prompt: str, *, seed: int | None = None, model: str | None = None) -> str:
+def _openrouter_complete(
+    prompt: str, *, seed: int | None = None, model: str | None = None, raise_on_truncation: bool = False
+) -> str:
     resolved_seed = seed if seed is not None else _stable_seed(prompt)
     resolved_model = model or OPENROUTER_MODEL
 
@@ -397,6 +408,8 @@ def _openrouter_complete(prompt: str, *, seed: int | None = None, model: str | N
         text = (resp.choices[0].message.content or "").strip()
         if not text:
             raise StallTimeout("empty completion, retrying")
+        if raise_on_truncation and resp.choices[0].finish_reason == "length":
+            raise TruncatedOutput(text)
         return text
 
     return _with_rate_limit_retry(lambda: _call_with_stall_timeout(call))
@@ -416,7 +429,7 @@ def gemini_generate(query: str, seed: int) -> str:
 
 
 def openrouter_generate(query: str, seed: int, model: str | None = None) -> str:
-    return _openrouter_complete(query, seed=seed, model=model)
+    return _openrouter_complete(query, seed=seed, model=model, raise_on_truncation=True)
 
 
 def openrouter_heterogeneous_backends(model_ids: list[str]) -> list[tuple[str, Callable[[str, int], str]]]:

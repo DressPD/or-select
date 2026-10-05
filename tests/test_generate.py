@@ -3,6 +3,7 @@ from __future__ import annotations
 import unittest
 
 from or_select.generate import (
+    TruncatedOutput,
     ValidityExhausted,
     generate_candidates,
     generate_candidates_heterogeneous,
@@ -41,6 +42,27 @@ class GenerateCandidatesValidityRetryTest(unittest.TestCase):
             generate_candidates("q", lambda q, s: "garbage response", n=1, validity_fn=lambda t: "ANSWER:" in t)
         self.assertEqual(ctx.exception.last_response, "garbage response")
         self.assertEqual(ctx.exception.seed, 0)
+
+    def test_truncated_output_fails_immediately_without_resampling(self) -> None:
+        # Hitting the token cap is a property of the problem; re-sampling
+        # would only spend two more full-length calls to truncate again.
+        calls: list[int] = []
+
+        def generate_fn(query: str, seed: int) -> str:
+            calls.append(seed)
+            raise TruncatedOutput("cut off mid-reasoning")
+
+        with self.assertRaises(ValidityExhausted) as ctx:
+            generate_candidates("q", generate_fn, n=1, validity_fn=lambda t: "ANSWER:" in t)
+        self.assertEqual(len(calls), 1)
+        self.assertTrue(ctx.exception.truncated)
+        self.assertEqual(ctx.exception.last_response, "cut off mid-reasoning")
+        self.assertIn("truncated", str(ctx.exception))
+
+    def test_ordinary_invalid_text_is_not_flagged_truncated(self) -> None:
+        with self.assertRaises(ValidityExhausted) as ctx:
+            generate_candidates("q", lambda q, s: "garbage", n=1, validity_fn=lambda t: "ANSWER:" in t)
+        self.assertFalse(ctx.exception.truncated)
 
     def test_each_seed_gets_its_own_retry_budget(self) -> None:
         # seed slot 0 needs two tries, seed slot 1 succeeds first try -- a

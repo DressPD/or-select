@@ -126,6 +126,8 @@ def _failed_row(problem: dict, exc: Exception) -> dict:
     last_response = getattr(exc, "last_response", None)
     if last_response is not None:
         row["failed_last_response"] = last_response[:4000]
+    if getattr(exc, "truncated", False):
+        row["truncated"] = True
     return row
 
 
