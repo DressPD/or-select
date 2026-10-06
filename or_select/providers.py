@@ -201,6 +201,11 @@ def _call_with_stall_timeout(fn, timeout: float = STALL_TIMEOUT_SECONDS):
 
 
 def _is_retryable_error(exc: Exception) -> bool:
+    # Checked by type first: its message embeds a character count, and counts
+    # like 24291 or 4295 contain the "429" marker below, which made a
+    # truncation look like a rate limit and retry it up to 9 times.
+    if isinstance(exc, TruncatedOutput):
+        return False
     # A hard wall-clock deadline was exceeded waiting for this call -- by
     # construction the same class of transient infra failure as a rate
     # limit, just caught by our own timer instead of an HTTP error.

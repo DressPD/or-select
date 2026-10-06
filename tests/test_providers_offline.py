@@ -251,6 +251,11 @@ class TruncationTest(unittest.TestCase):
                 openrouter_generate("query", 0)
         self.assertEqual(client.chat.completions.create.call_count, 1)
 
+    def test_truncation_is_never_retryable_even_if_its_char_count_looks_like_a_status_code(self) -> None:
+        # "(24291 chars)" and "(4295 chars)" contain the "429" rate-limit marker.
+        for size in (24291, 4295, 40712, 15040):
+            self.assertFalse(_is_retryable_error(TruncatedOutput("x" * size)), size)
+
     def test_default_path_still_returns_truncated_text(self) -> None:
         with mock.patch("or_select.providers._openrouter_client", return_value=self._truncated_client()):
             self.assertEqual(_openrouter_complete("query", seed=0), "long reasoning with no final answer")
