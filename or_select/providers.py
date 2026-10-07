@@ -68,8 +68,23 @@ _PERMANENT_ERROR_MARKERS = (
 MAX_SHORT_ANSWER_TOKENS = 256
 # Cap for judge/score calls (one number out); see _openrouter_complete.
 
-MAX_OUTPUT_TOKENS = 8192
-# Raised 4096 -> 8192 after a full 4096-cap pass over the remaining hard
+MAX_OUTPUT_TOKENS = 16384
+# Per-model ceilings below the global cap: the free liquid/lfm endpoint rejects
+# anything above 8192 completion tokens (poolside/laguna-s-2.1:free allows
+# 32768, nvidia/nemotron-3.5-lightning:free 65536), checked against the live
+# /models listing.
+MODEL_OUTPUT_LIMITS = {"liquid/lfm-2.5-2.6b:free": 8192}
+# Generation is streamed. At the free tier's measured 17-30 tokens/s a
+# 16384-token completion takes up to ~16 min, longer than the ~600s a
+# non-streamed call survives; OpenRouter's SSE keep-alive comments hold the
+# connection open, and this deadline bounds the whole stream.
+STREAM_TIMEOUT_SECONDS = 2400.0
+# Raised 8192 -> 16384 after a paid-slug test (30 samples of 5 AIME rows that
+# were cut off at 8192): 14 finished within 16384 tokens versus 9 within 8192,
+# and 13 of those 14 were correct. A cut-off draw is also re-sampled (see
+# generate.py), since the same prompt looped to the cap in one draw and solved
+# in ~5K tokens in the next.
+# Earlier history: raised 4096 -> 8192 after a full 4096-cap pass over the remaining hard
 # GPQA/AIME/MATH rows: ~92 rows failed, all with 11-16K-char responses cut
 # off at the cap (finish_reason "length"), none having reached a final
 # answer. Generation calls now raise TruncatedOutput on that stop reason so
@@ -395,6 +410,30 @@ def _gemini_complete(prompt: str) -> str:
     return _with_rate_limit_retry(lambda: _call_with_stall_timeout(call))
 
 
+def _output_cap(model: str) -> int:
+    return min(MAX_OUTPUT_TOKENS, MODEL_OUTPUT_LIMITS.get(model, MAX_OUTPUT_TOKENS))
+
+
+def _streamed_completion(create, **kwargs) -> tuple[str, str | None]:
+    """Run a chat completion with stream=True; return (content, finish_reason).
+    Reasoning deltas are ignored, matching the non-streamed path which only
+    reads message.content."""
+    parts: list[str] = []
+    finish = None
+    for chunk in create(stream=True, **kwargs):
+        if not chunk.choices:
+            err = getattr(chunk, "error", None)
+            if err:
+                raise RuntimeError(f"OpenRouter stream error (treated as rate limit): {err}")
+            continue
+        choice = chunk.choices[0]
+        if choice.delta is not None and choice.delta.content:
+            parts.append(choice.delta.content)
+        if choice.finish_reason:
+            finish = choice.finish_reason
+    return "".join(parts).strip(), finish
+
+
 def _openrouter_complete(
     prompt: str,
     *,
@@ -421,11 +460,25 @@ def _openrouter_complete(
         # and "exclude" did not help (10/10 still truncated at 1024).
         extra = {"extra_body": {"reasoning": {"enabled": False}}}
         raise_on_truncation = True
-    max_tokens = MAX_SHORT_ANSWER_TOKENS if short_answer else MAX_OUTPUT_TOKENS
+    max_tokens = MAX_SHORT_ANSWER_TOKENS if short_answer else _output_cap(resolved_model)
+    stream = not short_answer and os.environ.get("OPENROUTER_STREAM", "1") != "0"
 
     def call() -> str:
         create = _openrouter_client().chat.completions.create
         messages = [{"role": "user", "content": prompt}]
+        if stream:
+            text, finish = _streamed_completion(
+                create, model=resolved_model, messages=messages, seed=resolved_seed, max_tokens=max_tokens, **extra
+            )
+            if finish == "error":
+                raise RuntimeError("OpenRouter stream ended with finish_reason=error (treated as rate limit)")
+            # A cut-off draw may carry no answer text at all (the budget was
+            # spent on reasoning), so truncation is checked before emptiness.
+            if raise_on_truncation and finish == "length":
+                raise TruncatedOutput(text)
+            if not text:
+                raise StallTimeout("empty completion, retrying")
+            return text
         try:
             resp = create(model=resolved_model, messages=messages, seed=resolved_seed, max_tokens=max_tokens, **extra)
         except Exception as exc:  # noqa: BLE001 -- narrowed by the message check below
@@ -434,20 +487,23 @@ def _openrouter_complete(
             # full cap without it; a cut-off reply still raises TruncatedOutput.
             if not (short_answer and "reasoning is mandatory" in str(exc).lower()):
                 raise
-            resp = create(model=resolved_model, messages=messages, seed=resolved_seed, max_tokens=MAX_OUTPUT_TOKENS)
+            resp = create(
+                model=resolved_model, messages=messages, seed=resolved_seed, max_tokens=_output_cap(resolved_model)
+            )
         # OpenRouter returns HTTP 200 with no `choices` and an `error` field
         # when the upstream (free-tier) provider is saturated, instead of a
         # 429 the SDK would raise on its own.
         if not resp.choices:
             raise RuntimeError(f"OpenRouter error (treated as rate limit): {resp.error}")
         text = (resp.choices[0].message.content or "").strip()
-        if not text:
-            raise StallTimeout("empty completion, retrying")
         if raise_on_truncation and resp.choices[0].finish_reason == "length":
             raise TruncatedOutput(text)
+        if not text:
+            raise StallTimeout("empty completion, retrying")
         return text
 
-    return _with_rate_limit_retry(lambda: _call_with_stall_timeout(call))
+    deadline = STREAM_TIMEOUT_SECONDS if stream else STALL_TIMEOUT_SECONDS
+    return _with_rate_limit_retry(lambda: _call_with_stall_timeout(call, timeout=deadline))
 
 
 # --- generation -------------------------------------------------------

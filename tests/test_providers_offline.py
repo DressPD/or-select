@@ -10,6 +10,7 @@ from or_select.generate import TruncatedOutput
 from or_select.providers import (
     MAX_OUTPUT_TOKENS,
     MAX_SHORT_ANSWER_TOKENS,
+    MODEL_OUTPUT_LIMITS,
     SHORT_ANSWER_ATTEMPTS,
     StallTimeout,
     _call_with_stall_timeout,
@@ -17,6 +18,7 @@ from or_select.providers import (
     _openai_client,
     _openrouter_client,
     _openrouter_complete,
+    _output_cap,
     _parse_score,
     _reset_clients_if_connection_error,
     _stable_seed,
@@ -25,6 +27,21 @@ from or_select.providers import (
     openrouter_judge,
     openrouter_score,
 )
+
+
+_ENV_PATCH = None
+
+
+def setUpModule() -> None:
+    # Most tests below mock the plain (non-streamed) client; the streaming
+    # path has its own tests that switch it back on.
+    global _ENV_PATCH
+    _ENV_PATCH = mock.patch.dict(os.environ, {"OPENROUTER_STREAM": "0"})
+    _ENV_PATCH.start()
+
+
+def tearDownModule() -> None:
+    _ENV_PATCH.stop()
 
 
 class ParseScoreTest(unittest.TestCase):
@@ -337,7 +354,7 @@ class TruncationTest(unittest.TestCase):
         first, second = client.chat.completions.create.call_args_list
         self.assertIn("extra_body", first.kwargs)
         self.assertNotIn("extra_body", second.kwargs)
-        self.assertEqual(second.kwargs["max_tokens"], MAX_OUTPUT_TOKENS)
+        self.assertEqual(second.kwargs["max_tokens"], MODEL_OUTPUT_LIMITS["liquid/lfm-2.5-2.6b:free"])
 
     def test_other_errors_are_not_swallowed_by_the_fallback(self) -> None:
         client = mock.Mock()
@@ -365,6 +382,90 @@ class TruncationTest(unittest.TestCase):
         client.chat.completions.create.return_value = response
         with mock.patch("or_select.providers._openrouter_client", return_value=client):
             self.assertEqual(openrouter_generate("query", 0), "ANSWER: A")
+
+
+def _chunk(content=None, finish=None, choices=True, error=None):
+    if not choices:
+        return mock.Mock(choices=[], error=error)
+    delta = mock.Mock(content=content)
+    return mock.Mock(choices=[mock.Mock(delta=delta, finish_reason=finish)])
+
+
+class StreamingGenerationTest(unittest.TestCase):
+    def setUp(self) -> None:
+        patcher = mock.patch.dict(os.environ, {"OPENROUTER_STREAM": "1"})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def _client(self, chunks):
+        client = mock.Mock()
+        client.chat.completions.create.side_effect = lambda **kwargs: iter(chunks)
+        return client
+
+    def test_stream_chunks_are_joined_into_the_answer(self) -> None:
+        client = self._client([_chunk("ANS"), _chunk(None), _chunk("WER: A", finish="stop")])
+        with mock.patch("or_select.providers._openrouter_client", return_value=client):
+            self.assertEqual(openrouter_generate("query", 0), "ANSWER: A")
+        kwargs = client.chat.completions.create.call_args.kwargs
+        self.assertTrue(kwargs["stream"])
+        self.assertEqual(kwargs["max_tokens"], MAX_OUTPUT_TOKENS)
+
+    def test_cut_off_stream_with_no_answer_text_raises_truncated_not_empty_retry(self) -> None:
+        # The whole budget can go to reasoning deltas, leaving content empty.
+        client = self._client([_chunk(None), _chunk(None, finish="length")])
+        with mock.patch("or_select.providers._openrouter_client", return_value=client), mock.patch(
+            "or_select.providers.time.sleep"
+        ):
+            with self.assertRaises(TruncatedOutput):
+                openrouter_generate("query", 0)
+        self.assertEqual(client.chat.completions.create.call_count, 1)
+
+    def test_cut_off_stream_keeps_the_partial_text(self) -> None:
+        client = self._client([_chunk("partial "), _chunk("reasoning", finish="length")])
+        with mock.patch("or_select.providers._openrouter_client", return_value=client):
+            with self.assertRaises(TruncatedOutput) as ctx:
+                openrouter_generate("query", 0)
+        self.assertEqual(ctx.exception.text, "partial reasoning")
+
+    def test_error_chunk_without_choices_raises(self) -> None:
+        client = self._client([_chunk(choices=False, error={"code": 429})])
+        with mock.patch("or_select.providers._openrouter_client", return_value=client), mock.patch(
+            "or_select.providers.time.sleep"
+        ):
+            with self.assertRaises(RuntimeError):
+                _openrouter_complete("query", seed=0, model="m")
+
+    def test_judge_calls_are_never_streamed(self) -> None:
+        response = _fake_response("0.7")
+        response.choices[0].finish_reason = "stop"
+        client = mock.Mock()
+        client.chat.completions.create.return_value = response
+        with mock.patch("or_select.providers._openrouter_client", return_value=client):
+            self.assertEqual(openrouter_judge("q", "a", "b"), 0.7)
+        self.assertNotIn("stream", client.chat.completions.create.call_args.kwargs)
+
+
+class OutputCapTest(unittest.TestCase):
+    def test_lfm_is_clamped_to_its_endpoint_limit_others_get_the_global_cap(self) -> None:
+        self.assertEqual(_output_cap("liquid/lfm-2.5-2.6b:free"), 8192)
+        self.assertEqual(_output_cap("poolside/laguna-s-2.1:free"), MAX_OUTPUT_TOKENS)
+        self.assertEqual(_output_cap("nvidia/nemotron-3.5-lightning-20260807:free"), MAX_OUTPUT_TOKENS)
+
+    def test_call_for_lfm_requests_the_clamped_cap(self) -> None:
+        client = mock.Mock()
+        client.chat.completions.create.return_value = _fake_response("ANSWER: A")
+        with mock.patch("or_select.providers._openrouter_client", return_value=client):
+            _openrouter_complete("q", seed=0, model="liquid/lfm-2.5-2.6b:free")
+        self.assertEqual(client.chat.completions.create.call_args.kwargs["max_tokens"], 8192)
+
+    def test_non_streamed_cut_off_reply_with_empty_text_is_truncation_not_a_stall(self) -> None:
+        response = _fake_response("")
+        response.choices[0].finish_reason = "length"
+        client = mock.Mock()
+        client.chat.completions.create.return_value = response
+        with mock.patch("or_select.providers._openrouter_client", return_value=client):
+            with self.assertRaises(TruncatedOutput):
+                openrouter_generate("query", 0)
 
 
 class StableSeedTest(unittest.TestCase):

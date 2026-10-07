@@ -62,7 +62,7 @@ class ValidityExhausted(RuntimeError):
             )
 
 
-MAX_TRUNCATION_ATTEMPTS = 2
+MAX_TRUNCATION_ATTEMPTS = 1
 
 
 def is_settled_truncation(row: dict, current_cap: int, max_attempts: int = MAX_TRUNCATION_ATTEMPTS) -> bool:
@@ -91,6 +91,7 @@ def _generate_valid(generate_fn: GenerateFn, query: str, seed: int, validity_fn:
     if validity_fn is None:
         return generate_fn(query, seed)
     text = ""
+    truncated = False
     for attempt in range(VALIDITY_RETRY_ATTEMPTS):
         # Vary the seed actually sent on each retry. Reusing the identical
         # seed on all 3 attempts meant a backend that honors `seed` for
@@ -104,13 +105,18 @@ def _generate_valid(generate_fn: GenerateFn, query: str, seed: int, validity_fn:
         try:
             text = generate_fn(query, attempt_seed)
         except TruncatedOutput as exc:
-            # Out of token budget is a property of the problem, not of the
-            # seed: re-sampling just spends two more full-length calls to
-            # hit the cap again, so record it as a failure right away.
-            raise ValidityExhausted(seed, exc.text, truncated=True) from exc
+            # A completion cut off at the token cap has no final answer, like
+            # any other output the validity predicate rejects. Measured:
+            # whether a given prompt loops to the cap is largely stochastic
+            # (the same AIME prompt hit 16K tokens in one draw and solved in
+            # 5K in the next), so it gets a freshly seeded re-sample from the
+            # same budget instead of failing the slot on the first cut-off.
+            truncated = True
+            text = exc.text
+            continue
         if validity_fn(text):
             return text
-    raise ValidityExhausted(seed, text)
+    raise ValidityExhausted(seed, text, truncated=truncated)
 
 
 def generate_candidates(

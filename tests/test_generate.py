@@ -45,9 +45,21 @@ class GenerateCandidatesValidityRetryTest(unittest.TestCase):
         self.assertEqual(ctx.exception.last_response, "garbage response")
         self.assertEqual(ctx.exception.seed, 0)
 
-    def test_truncated_output_fails_immediately_without_resampling(self) -> None:
-        # Hitting the token cap is a property of the problem; re-sampling
-        # would only spend two more full-length calls to truncate again.
+    def test_truncated_output_is_resampled_with_a_new_seed_like_any_invalid_text(self) -> None:
+        seeds: list[int] = []
+
+        def generate_fn(query: str, seed: int) -> str:
+            seeds.append(seed)
+            if len(seeds) < 3:
+                raise TruncatedOutput("cut off mid-reasoning")
+            return "ANSWER: A"
+
+        candidates = generate_candidates("q", generate_fn, n=1, validity_fn=lambda t: "ANSWER:" in t)
+        self.assertEqual(candidates[0].text, "ANSWER: A")
+        self.assertEqual(len(set(seeds)), 3)  # every attempt used a fresh seed
+        self.assertEqual(candidates[0].metadata["seed"], 0)  # recorded seed is the caller's
+
+    def test_persistent_truncation_fails_after_three_attempts_and_is_flagged(self) -> None:
         calls: list[int] = []
 
         def generate_fn(query: str, seed: int) -> str:
@@ -56,16 +68,30 @@ class GenerateCandidatesValidityRetryTest(unittest.TestCase):
 
         with self.assertRaises(ValidityExhausted) as ctx:
             generate_candidates("q", generate_fn, n=1, validity_fn=lambda t: "ANSWER:" in t)
-        self.assertEqual(len(calls), 1)
+        self.assertEqual(len(calls), 3)
         self.assertTrue(ctx.exception.truncated)
         self.assertEqual(ctx.exception.last_response, "cut off mid-reasoning")
         self.assertIn("truncated", str(ctx.exception))
 
+    def test_a_truncation_among_unparseable_attempts_still_flags_the_row_truncated(self) -> None:
+        outcomes = iter([TruncatedOutput("cut"), "garbage", "garbage"])
+
+        def generate_fn(query: str, seed: int) -> str:
+            outcome = next(outcomes)
+            if isinstance(outcome, Exception):
+                raise outcome
+            return outcome
+
+        with self.assertRaises(ValidityExhausted) as ctx:
+            generate_candidates("q", generate_fn, n=1, validity_fn=lambda t: "ANSWER:" in t)
+        self.assertTrue(ctx.exception.truncated)
+        self.assertEqual(ctx.exception.last_response, "garbage")
+
     def test_a_truncated_row_is_settled_only_after_repeated_truncation_at_this_cap(self) -> None:
         row = {"truncated": True, "truncated_at_tokens": 8192}
-        # One truncation (also how rows flagged before counting appear): reprocess it once more.
-        self.assertFalse(is_settled_truncation(row, 8192))
-        self.assertFalse(is_settled_truncation({**row, "truncation_attempts": 1}, 8192))
+        # Each failed row-attempt already spent 3 fresh-seeded draws at the cap.
+        self.assertTrue(is_settled_truncation(row, 8192))
+        self.assertTrue(is_settled_truncation({**row, "truncation_attempts": 1}, 8192))
         self.assertTrue(is_settled_truncation({**row, "truncation_attempts": 2}, 8192))
         self.assertTrue(is_settled_truncation({**row, "truncation_attempts": 3, "truncated_at_tokens": 16384}, 8192))
         # Truncated at a smaller cap earlier: deserves a retry with more room.
