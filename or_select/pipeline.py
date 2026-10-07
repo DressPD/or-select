@@ -92,6 +92,40 @@ def _resolve_backends(provider: str):
     raise ValueError(f"unknown provider: {provider!r} (choose from {PROVIDERS})")
 
 
+def resolve_score_judge(provider: str):
+    """(score_fn, judge_fn) a provider's pipeline uses; mixed-model generation
+    keeps the judge on the single default OpenRouter model."""
+    from . import providers
+
+    if provider == "both":
+        return providers.openai_score, providers.openai_judge
+    if provider == "openrouter_mixed":
+        return providers.openrouter_score, providers.openrouter_judge
+    _, score_fn, judge_fn = _resolve_backends(provider)
+    return score_fn, judge_fn
+
+
+def select_from_candidates(query: str, candidates, score_fn, judge_fn, validity_fn=None) -> SelectionResult:
+    """Everything after generation: confidence scoring, pairwise judging and
+    the gated selection MIP. Shared by the live pipeline and by re-judging
+    stored candidates, so both paths pick winners identically."""
+    candidates = score_candidates(query, candidates, score_fn)
+    pairwise = build_pairwise_matrix(query, candidates, judge_fn)
+    quality = aggregate_quality(candidates, pairwise)
+    consistency = compute_consistency(candidates)
+    valid = {c.id: validity_fn(c.text) for c in candidates} if validity_fn is not None else None
+    winner_id, scores = select_best(candidates, quality, consistency, valid=valid)
+    winner = next(c for c in candidates if c.id == winner_id)
+    return SelectionResult(
+        query=query,
+        winner_id=winner_id,
+        winner_text=winner.text,
+        scores=scores,
+        candidates=candidates,
+        pairwise=pairwise,
+    )
+
+
 def run_pipeline(
     query: str,
     n: int = 10,
@@ -126,21 +160,7 @@ def run_pipeline(
         judge_fn = judge_fn or default_judge
         candidates = generate_candidates(query, generate_fn, n=n, source_model=provider, validity_fn=validity_fn)
 
-    candidates = score_candidates(query, candidates, score_fn)
-    pairwise = build_pairwise_matrix(query, candidates, judge_fn)
-    quality = aggregate_quality(candidates, pairwise)
-    consistency = compute_consistency(candidates)
-    valid = {c.id: validity_fn(c.text) for c in candidates} if validity_fn is not None else None
-    winner_id, scores = select_best(candidates, quality, consistency, valid=valid)
-    winner = next(c for c in candidates if c.id == winner_id)
-    return SelectionResult(
-        query=query,
-        winner_id=winner_id,
-        winner_text=winner.text,
-        scores=scores,
-        candidates=candidates,
-        pairwise=pairwise,
-    )
+    return select_from_candidates(query, candidates, score_fn, judge_fn, validity_fn)
 
 
 def _query_id(query: str) -> str:

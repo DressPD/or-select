@@ -38,6 +38,7 @@ from or_select.kemeny import solve_kemeny_ranking  # noqa: E402
 from or_select.generate import is_settled_truncation, truncation_attempts_so_far  # noqa: E402
 from or_select.math_eval import MATH_SUFFIX, extract_boxed, is_correct  # noqa: E402
 from or_select.providers import MAX_OUTPUT_TOKENS  # noqa: E402
+from or_select.rejudge import JUDGE_VERSION, needs_rejudge, rejudge_row  # noqa: E402
 from or_select.pipeline import PROVIDERS, run_pipeline  # noqa: E402
 
 METHODS = ("or_select", "self_consistency", "greedy", "kemeny_young")
@@ -72,6 +73,7 @@ def _grade_one(problem: dict, n: int, provider: str) -> dict:
     return {
         "query": problem["query"],
         "ground_truth": ground_truth,
+        "judge_version": JUDGE_VERSION,
         "subject": problem.get("subject"),
         "or_select": {"answer": or_select_answer, "correct": is_correct(or_select_answer, ground_truth)},
         "self_consistency": {
@@ -144,6 +146,7 @@ def _accuracy_summary(results: list[dict]) -> dict:
         "n_total": len(results),
         "n_valid": len(valid),
         "n_failed": len(failed),
+        "n_valid_current_judge": sum(1 for r in valid if r.get("judge_version") == JUDGE_VERSION),
         "accuracy_of_valid": accuracy,
     }
 
@@ -211,7 +214,13 @@ def _write_output(output: Path, results: list[dict], n: int, provider: str) -> N
 
 
 def run_benchmark(
-    problems: list[dict], n: int, provider: str, output: Path, resume: bool, retry_failures: bool = False
+    problems: list[dict],
+    n: int,
+    provider: str,
+    output: Path,
+    resume: bool,
+    retry_failures: bool = False,
+    rejudge: bool = True,
 ) -> list[dict]:
     results: list[dict] = []
     previous: list[dict] = []
@@ -226,7 +235,27 @@ def run_benchmark(
 
     for i, problem in enumerate(problems, start=1):
         if problem["query"] in done_queries:
-            print(f"[{i}/{len(problems)}] skipped (already graded): {problem['query'][:60]!r}", flush=True)
+            idx = next(j for j, r in enumerate(results) if r["query"] == problem["query"])
+            existing = results[idx]
+            if rejudge and needs_rejudge(existing):
+                print(f"[{i}/{len(problems)}] re-judging stored candidates: {problem['query'][:60]!r}", flush=True)
+                try:
+                    results[idx] = rejudge_row(
+                        existing,
+                        problem["query"] + MATH_SUFFIX,
+                        provider,
+                        extract_boxed,
+                        is_correct,
+                        lambda text: extract_boxed(text) is not None,
+                    )
+                except Exception as exc:  # noqa: BLE001 -- keep the old row, flag it, move on
+                    existing["rejudge_error"] = f"{type(exc).__name__}: {exc}"[:300]
+                    print(f"    REJUDGE FAILED: {existing['rejudge_error']}", flush=True)
+                else:
+                    print(f"    judge {existing.get('judge_version', 'v1-reasoning-on')} -> {JUDGE_VERSION}", flush=True)
+                _write_output(output, results, n, provider)
+            else:
+                print(f"[{i}/{len(problems)}] skipped (already graded): {problem['query'][:60]!r}", flush=True)
             continue
         print(f"[{i}/{len(problems)}] {problem['query'][:70]!r}...", flush=True)
         try:
@@ -263,12 +292,19 @@ def main() -> None:
         action="store_true",
         help="With --resume, re-attempt problems that previously failed to grade instead of skipping them.",
     )
+    parser.add_argument(
+        "--no-rejudge",
+        action="store_true",
+        help="With --resume, do not re-judge stored candidates graded by an outdated judge.",
+    )
     args = parser.parse_args()
 
     problems = _load_problems(args.input)
     if args.limit is not None:
         problems = problems[: args.limit]
-    results = run_benchmark(problems, args.n, args.provider, args.output, args.resume, args.retry_failures)
+    results = run_benchmark(
+        problems, args.n, args.provider, args.output, args.resume, args.retry_failures, not args.no_rejudge
+    )
     _write_output(args.output, results, args.n, args.provider)
 
     summary = _accuracy_summary(results)
