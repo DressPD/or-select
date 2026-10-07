@@ -34,6 +34,7 @@ from or_select.core import Candidate  # noqa: E402
 from or_select.pairwise import build_pairwise_matrix  # noqa: E402
 from or_select.pipeline import PROVIDERS  # noqa: E402
 from or_select.reward_bench import score_summary  # noqa: E402
+from or_select.rejudge import JUDGE_VERSION  # noqa: E402
 
 
 def _judge_fn_for(provider: str, model: str | None = None):
@@ -67,6 +68,7 @@ def _grade_one(row: dict, judge_fn, judge_model: str | None = None) -> dict:
         "weight_chosen": weight_chosen,
         "correct": weight_chosen > 0.5,
         "tied": weight_chosen == 0.5,
+        "judge_version": JUDGE_VERSION,
     }
     if judge_model is not None:
         result["judge_model"] = judge_model

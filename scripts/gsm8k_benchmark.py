@@ -30,7 +30,10 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from or_select.baselines import greedy_single_sample, self_consistency_winner  # noqa: E402
+from or_select.generate import is_settled_truncation, truncation_attempts_so_far  # noqa: E402
 from or_select.gsm8k import GSM8K_SUFFIX, extract_answer, is_correct  # noqa: E402
+from or_select.providers import MAX_OUTPUT_TOKENS  # noqa: E402
+from or_select.rejudge import JUDGE_VERSION  # noqa: E402
 from or_select.pipeline import PROVIDERS, run_pipeline  # noqa: E402
 
 METHODS = ("or_select", "self_consistency", "greedy")
@@ -68,6 +71,13 @@ def _grade_one(problem: dict, n: int, provider: str) -> dict:
             "had_majority": had_majority,
         },
         "greedy": {"answer": greedy_answer, "correct": is_correct(greedy_answer, ground_truth)},
+        "judge_version": JUDGE_VERSION,
+        # Full candidate pool so the judge-dependent fields can be replayed
+        # later without regenerating (see scripts/math_benchmark.py).
+        "candidates": [
+            {"seed": c.metadata.get("seed"), "source_model": c.source_model, "text": c.text}
+            for c in result.candidates
+        ],
     }
 
 
@@ -75,7 +85,7 @@ def _failed_row(problem: dict, exc: Exception) -> dict:
     """Explicit failure record: one problem's persistent API failure must not
     silently drop it or kill the rest of the batch (README's design boundary:
     failed candidates remain explicit failures, never silently dropped)."""
-    return {
+    row = {
         "query": problem["query"],
         "ground_truth": problem["ground_truth"],
         "error": f"{type(exc).__name__}: {exc}"[:300],
@@ -83,6 +93,13 @@ def _failed_row(problem: dict, exc: Exception) -> dict:
         "self_consistency": {"answer": None, "correct": False, "had_majority": False},
         "greedy": {"answer": None, "correct": False},
     }
+    last_response = getattr(exc, "last_response", None)
+    if last_response is not None:
+        row["failed_last_response"] = last_response[:4000]
+    if getattr(exc, "truncated", False):
+        row["truncated"] = True
+        row["truncated_at_tokens"] = MAX_OUTPUT_TOKENS
+    return row
 
 
 def _accuracy_summary(results: list[dict]) -> dict:
@@ -98,6 +115,7 @@ def _accuracy_summary(results: list[dict]) -> dict:
         "n_total": len(results),
         "n_valid": len(valid),
         "n_failed": len(failed),
+        "n_valid_current_judge": sum(1 for r in valid if r.get("judge_version") == JUDGE_VERSION),
         "accuracy_of_valid": accuracy,
     }
 
@@ -117,14 +135,16 @@ def run_benchmark(
     problems: list[dict], n: int, provider: str, output: Path, resume: bool, retry_failures: bool = False
 ) -> list[dict]:
     results: list[dict] = []
+    previous: list[dict] = []
     done_queries: set[str] = set()
     if resume and output.exists():
         existing = json.loads(output.read_text())
         results = existing.get("results", [])
+        previous = list(results)
         if retry_failures:
             # Drop failed rows entirely so they're re-attempted below, rather
             # than being treated as "done" forever just because a row exists.
-            results = [r for r in results if "error" not in r]
+            results = [r for r in results if "error" not in r or is_settled_truncation(r, MAX_OUTPUT_TOKENS)]
         done_queries = {r["query"] for r in results}
 
     for i, problem in enumerate(problems, start=1):
@@ -136,6 +156,8 @@ def run_benchmark(
             row = _grade_one(problem, n, provider)
         except Exception as exc:  # noqa: BLE001 -- one problem's failure must not kill the batch
             row = _failed_row(problem, exc)
+            if row.get("truncated"):
+                row["truncation_attempts"] = truncation_attempts_so_far(previous, problem["query"]) + 1
             print(f"    FAILED: {row['error']}", flush=True)
         else:
             marks = {m: ("OK" if row[m]["correct"] else "X") for m in METHODS}
