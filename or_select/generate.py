@@ -62,11 +62,29 @@ class ValidityExhausted(RuntimeError):
             )
 
 
-def is_settled_truncation(row: dict, current_cap: int) -> bool:
-    """A failed row that already hit the output-token cap at `current_cap` or
-    higher. Retrying it with the same budget just spends a full-length call
-    to truncate again, so resume logic keeps it as a failure instead."""
-    return bool(row.get("truncated")) and row.get("truncated_at_tokens", 0) >= current_cap
+MAX_TRUNCATION_ATTEMPTS = 2
+
+
+def is_settled_truncation(row: dict, current_cap: int, max_attempts: int = MAX_TRUNCATION_ATTEMPTS) -> bool:
+    """A failed row that hit the output-token cap at `current_cap` or higher
+    on `max_attempts` separate attempts. Truncation is partly random (a
+    32768-token test finished 1 of 6 previously-truncated rows on a fresh
+    sample), so a truncated row is reprocessed on resume until it has been
+    truncated that many times; rows flagged before attempts were counted
+    count as one attempt."""
+    return (
+        bool(row.get("truncated"))
+        and row.get("truncated_at_tokens", 0) >= current_cap
+        and row.get("truncation_attempts", 1) >= max_attempts
+    )
+
+
+def truncation_attempts_so_far(previous_rows: list[dict], query: str) -> int:
+    """How many times `query` has already failed by truncation (0 if never)."""
+    for r in previous_rows:
+        if r.get("query") == query and "error" in r and r.get("truncated"):
+            return r.get("truncation_attempts", 1)
+    return 0
 
 
 def _generate_valid(generate_fn: GenerateFn, query: str, seed: int, validity_fn: ValidityFn | None) -> str:

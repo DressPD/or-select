@@ -6,6 +6,7 @@ from or_select.generate import (
     TruncatedOutput,
     ValidityExhausted,
     is_settled_truncation,
+    truncation_attempts_so_far,
     generate_candidates,
     generate_candidates_heterogeneous,
 )
@@ -60,14 +61,30 @@ class GenerateCandidatesValidityRetryTest(unittest.TestCase):
         self.assertEqual(ctx.exception.last_response, "cut off mid-reasoning")
         self.assertIn("truncated", str(ctx.exception))
 
-    def test_settled_truncation_is_only_a_row_truncated_at_this_cap_or_higher(self) -> None:
-        self.assertTrue(is_settled_truncation({"truncated": True, "truncated_at_tokens": 8192}, 8192))
-        self.assertTrue(is_settled_truncation({"truncated": True, "truncated_at_tokens": 16384}, 8192))
+    def test_a_truncated_row_is_settled_only_after_repeated_truncation_at_this_cap(self) -> None:
+        row = {"truncated": True, "truncated_at_tokens": 8192}
+        # One truncation (also how rows flagged before counting appear): reprocess it once more.
+        self.assertFalse(is_settled_truncation(row, 8192))
+        self.assertFalse(is_settled_truncation({**row, "truncation_attempts": 1}, 8192))
+        self.assertTrue(is_settled_truncation({**row, "truncation_attempts": 2}, 8192))
+        self.assertTrue(is_settled_truncation({**row, "truncation_attempts": 3, "truncated_at_tokens": 16384}, 8192))
         # Truncated at a smaller cap earlier: deserves a retry with more room.
-        self.assertFalse(is_settled_truncation({"truncated": True, "truncated_at_tokens": 4096}, 8192))
-        # Old-style failure rows (no flag) and non-truncation failures retry.
-        self.assertFalse(is_settled_truncation({"error": "ValidityExhausted: x"}, 8192))
-        self.assertFalse(is_settled_truncation({"truncated": True}, 8192))
+        self.assertFalse(is_settled_truncation({"truncated": True, "truncated_at_tokens": 4096, "truncation_attempts": 5}, 8192))
+        # Non-truncation failures always retry.
+        self.assertFalse(is_settled_truncation({"error": "ValidityExhausted: x", "truncation_attempts": 5}, 8192))
+
+    def test_truncation_attempts_are_counted_from_the_previous_failed_row(self) -> None:
+        previous = [
+            {"query": "a", "error": "x", "truncated": True, "truncation_attempts": 2},
+            {"query": "b", "error": "x", "truncated": True},
+            {"query": "c", "error": "y"},
+            {"query": "d", "or_select": {}},
+        ]
+        self.assertEqual(truncation_attempts_so_far(previous, "a"), 2)
+        self.assertEqual(truncation_attempts_so_far(previous, "b"), 1)
+        self.assertEqual(truncation_attempts_so_far(previous, "c"), 0)
+        self.assertEqual(truncation_attempts_so_far(previous, "d"), 0)
+        self.assertEqual(truncation_attempts_so_far(previous, "zzz"), 0)
 
     def test_ordinary_invalid_text_is_not_flagged_truncated(self) -> None:
         with self.assertRaises(ValidityExhausted) as ctx:

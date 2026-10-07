@@ -9,6 +9,7 @@ from unittest import mock
 from or_select.generate import TruncatedOutput
 from or_select.providers import (
     MAX_OUTPUT_TOKENS,
+    MAX_SHORT_ANSWER_TOKENS,
     StallTimeout,
     _call_with_stall_timeout,
     _is_retryable_error,
@@ -20,6 +21,8 @@ from or_select.providers import (
     _stable_seed,
     openrouter_generate,
     openrouter_heterogeneous_backends,
+    openrouter_judge,
+    openrouter_score,
 )
 
 
@@ -274,6 +277,72 @@ class TruncationTest(unittest.TestCase):
         self.assertEqual(
             client.chat.completions.create.call_args.kwargs["extra_body"], {"reasoning": {"effort": "low"}}
         )
+
+    def _client_returning_choice(self, content: str, finish: str):
+        response = _fake_response(content)
+        response.choices[0].finish_reason = finish
+        client = mock.Mock()
+        client.chat.completions.create.return_value = response
+        return client
+
+    def test_judge_turns_reasoning_off_and_uses_the_small_cap(self) -> None:
+        # Measured: with reasoning on, 6/10 real judge calls were cut off at
+        # 8192 tokens "thinking" and the score was read from that fragment.
+        client = self._client_returning_choice("0.8", "stop")
+        with mock.patch("or_select.providers._openrouter_client", return_value=client):
+            self.assertEqual(openrouter_judge("q", "a", "b"), 0.8)
+        kwargs = client.chat.completions.create.call_args.kwargs
+        self.assertEqual(kwargs["extra_body"], {"reasoning": {"enabled": False}})
+        self.assertEqual(kwargs["max_tokens"], MAX_SHORT_ANSWER_TOKENS)
+
+    def test_score_also_uses_short_answer_mode(self) -> None:
+        client = self._client_returning_choice("0.6", "stop")
+        with mock.patch("or_select.providers._openrouter_client", return_value=client):
+            self.assertEqual(openrouter_score("q", "text"), 0.6)
+        kwargs = client.chat.completions.create.call_args.kwargs
+        self.assertEqual(kwargs["extra_body"], {"reasoning": {"enabled": False}})
+
+    def test_truncated_judge_reply_raises_instead_of_parsing_the_fragment(self) -> None:
+        # A cut-off reply that happens to contain a number must not become a score.
+        client = self._client_returning_choice("thinking... maybe 0.9 or 0.1 but", "length")
+        with mock.patch("or_select.providers._openrouter_client", return_value=client):
+            with self.assertRaises(TruncatedOutput):
+                openrouter_judge("q", "a", "b")
+        self.assertEqual(client.chat.completions.create.call_count, 1)
+
+    def test_judge_falls_back_when_the_model_makes_reasoning_mandatory(self) -> None:
+        ok = _fake_response("0.7")
+        ok.choices[0].finish_reason = "stop"
+        client = mock.Mock()
+        client.chat.completions.create.side_effect = [
+            Exception("Error code: 400 - Reasoning is mandatory for this endpoint"),
+            ok,
+        ]
+        with mock.patch("or_select.providers._openrouter_client", return_value=client):
+            self.assertEqual(openrouter_judge("q", "a", "b", model="liquid/lfm-2.5-2.6b:free"), 0.7)
+        first, second = client.chat.completions.create.call_args_list
+        self.assertIn("extra_body", first.kwargs)
+        self.assertNotIn("extra_body", second.kwargs)
+        self.assertEqual(second.kwargs["max_tokens"], MAX_OUTPUT_TOKENS)
+
+    def test_other_errors_are_not_swallowed_by_the_fallback(self) -> None:
+        client = mock.Mock()
+        client.chat.completions.create.side_effect = ValueError("something else")
+        with mock.patch("or_select.providers._openrouter_client", return_value=client):
+            with self.assertRaises(ValueError):
+                openrouter_judge("q", "a", "b")
+        self.assertEqual(client.chat.completions.create.call_count, 1)
+
+    def test_generation_keeps_reasoning_on_and_the_large_cap(self) -> None:
+        client = self._client_returning_choice("ANSWER: A", "stop")
+        with mock.patch("or_select.providers._openrouter_client", return_value=client), mock.patch.dict(
+            "os.environ", {}, clear=False
+        ):
+            os.environ.pop("OPENROUTER_REASONING_EFFORT", None)
+            openrouter_generate("query", 0)
+        kwargs = client.chat.completions.create.call_args.kwargs
+        self.assertNotIn("extra_body", kwargs)
+        self.assertEqual(kwargs["max_tokens"], MAX_OUTPUT_TOKENS)
 
     def test_normal_stop_is_not_truncation(self) -> None:
         response = _fake_response("ANSWER: A")

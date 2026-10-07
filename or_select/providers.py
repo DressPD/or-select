@@ -65,6 +65,9 @@ _PERMANENT_ERROR_MARKERS = (
 )
 
 
+MAX_SHORT_ANSWER_TOKENS = 256
+# Cap for judge/score calls (one number out); see _openrouter_complete.
+
 MAX_OUTPUT_TOKENS = 8192
 # Raised 4096 -> 8192 after a full 4096-cap pass over the remaining hard
 # GPQA/AIME/MATH rows: ~92 rows failed, all with 11-16K-char responses cut
@@ -393,8 +396,16 @@ def _gemini_complete(prompt: str) -> str:
 
 
 def _openrouter_complete(
-    prompt: str, *, seed: int | None = None, model: str | None = None, raise_on_truncation: bool = False
+    prompt: str,
+    *,
+    seed: int | None = None,
+    model: str | None = None,
+    raise_on_truncation: bool = False,
+    short_answer: bool = False,
 ) -> str:
+    """short_answer is for judge/score calls whose whole answer is one number:
+    reasoning is switched off and the output cap is small, and a cut-off
+    reply raises TruncatedOutput instead of being parsed for a number."""
     resolved_seed = seed if seed is not None else _stable_seed(prompt)
     resolved_model = model or OPENROUTER_MODEL
 
@@ -402,15 +413,28 @@ def _openrouter_complete(
     # it is only sent when OPENROUTER_REASONING_EFFORT (low/medium/high) is set.
     effort = os.environ.get("OPENROUTER_REASONING_EFFORT")
     extra = {"extra_body": {"reasoning": {"effort": effort}}} if effort else {}
+    if short_answer:
+        # Measured on real judge calls: with reasoning on, 6 of 10 hit the
+        # 8192-token cap while "thinking" (median 205s) and the "score" was
+        # then read from the cut-off reasoning text; with reasoning off all
+        # 10 finished in ~4 tokens / ~2.5s with a clean number. Effort "low"
+        # and "exclude" did not help (10/10 still truncated at 1024).
+        extra = {"extra_body": {"reasoning": {"enabled": False}}}
+        raise_on_truncation = True
+    max_tokens = MAX_SHORT_ANSWER_TOKENS if short_answer else MAX_OUTPUT_TOKENS
 
     def call() -> str:
-        resp = _openrouter_client().chat.completions.create(
-            model=resolved_model,
-            messages=[{"role": "user", "content": prompt}],
-            seed=resolved_seed,
-            max_tokens=MAX_OUTPUT_TOKENS,
-            **extra,
-        )
+        create = _openrouter_client().chat.completions.create
+        messages = [{"role": "user", "content": prompt}]
+        try:
+            resp = create(model=resolved_model, messages=messages, seed=resolved_seed, max_tokens=max_tokens, **extra)
+        except Exception as exc:  # noqa: BLE001 -- narrowed by the message check below
+            # Some models (e.g. liquid/lfm-2.5-2.6b:free) reject the switch with
+            # a 400 "Reasoning is mandatory for this endpoint". Fall back to the
+            # full cap without it; a cut-off reply still raises TruncatedOutput.
+            if not (short_answer and "reasoning is mandatory" in str(exc).lower()):
+                raise
+            resp = create(model=resolved_model, messages=messages, seed=resolved_seed, max_tokens=MAX_OUTPUT_TOKENS)
         # OpenRouter returns HTTP 200 with no `choices` and an `error` field
         # when the upstream (free-tier) provider is saturated, instead of a
         # 429 the SDK would raise on its own.
@@ -478,7 +502,7 @@ def gemini_score(query: str, text: str) -> float:
 
 def openrouter_score(query: str, text: str) -> float:
     prompt = _CONFIDENCE_PROMPT.format(query=query, text=text)
-    return _parse_score(_openrouter_complete(prompt))
+    return _parse_score(_openrouter_complete(prompt, short_answer=True))
 
 
 # --- pairwise judging -----------------------------------------------------
@@ -498,4 +522,6 @@ def gemini_judge(query: str, text_a: str, text_b: str) -> float:
 
 
 def openrouter_judge(query: str, text_a: str, text_b: str, model: str | None = None) -> float:
-    return _parse_score(_openrouter_complete(_judge_prompt(query, text_a, text_b), model=model))
+    return _parse_score(
+        _openrouter_complete(_judge_prompt(query, text_a, text_b), model=model, short_answer=True)
+    )
