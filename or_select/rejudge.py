@@ -20,8 +20,8 @@ from .core import Candidate
 from .kemeny import solve_kemeny_ranking
 from .pipeline import resolve_score_judge, select_from_candidates
 
-JUDGE_VERSION = "v2-short-answer"
-LEGACY_JUDGE_VERSION = "v1-reasoning-on"
+JUDGE_VERSION = "short-answer"
+LEGACY_JUDGE_VERSION = "reasoning-on"
 
 
 def needs_rejudge(row: dict) -> bool:
@@ -56,11 +56,6 @@ def rejudge_row(
     kemeny_answer = answer_fn(kemeny_winner.text)
 
     new = dict(row)
-    new["prior_judge"] = {
-        "judge_version": row.get("judge_version", LEGACY_JUDGE_VERSION),
-        "or_select": row["or_select"],
-        "kemeny_young": row["kemeny_young"],
-    }
     new["or_select"] = {"answer": or_select_answer, "correct": correct_fn(or_select_answer, ground_truth)}
     new["kemeny_young"] = {
         "answer": kemeny_answer,

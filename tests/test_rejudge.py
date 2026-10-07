@@ -43,12 +43,11 @@ class RejudgeReplayTest(unittest.TestCase):
         self.assertEqual(new["candidates"], row["candidates"])
         self.assertEqual(row["or_select"]["answer"], "stale")  # input row not mutated
 
-    def test_old_result_is_preserved_and_version_bumped(self) -> None:
+    def test_version_is_bumped_and_no_stale_result_is_kept(self) -> None:
         _, row = self._live_and_row()
         new = rejudge_row(row, "q", "placeholder", _answer, lambda a, gt: a == gt, lambda t: "ANSWER:" in t)
         self.assertEqual(new["judge_version"], JUDGE_VERSION)
-        self.assertEqual(new["prior_judge"]["judge_version"], LEGACY_JUDGE_VERSION)
-        self.assertEqual(new["prior_judge"]["or_select"]["answer"], "stale")
+        self.assertNotIn("prior_judge", new)
 
     def test_failed_judge_call_raises_and_leaves_row_untouched(self) -> None:
         _, row = self._live_and_row()

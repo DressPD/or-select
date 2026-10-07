@@ -241,7 +241,7 @@ def run_benchmark(
                     existing["rejudge_error"] = f"{type(exc).__name__}: {exc}"[:300]
                     print(f"    REJUDGE FAILED: {existing['rejudge_error']}", flush=True)
                 else:
-                    print(f"    judge {existing.get('judge_version', 'v1-reasoning-on')} -> {JUDGE_VERSION}", flush=True)
+                    print(f"    judge {existing.get('judge_version', 'reasoning-on')} -> {JUDGE_VERSION}", flush=True)
                 _write_output(output, results, n, provider)
             else:
                 print(f"[{i}/{len(problems)}] skipped (already graded): {problem['query'][:60]!r}", flush=True)
