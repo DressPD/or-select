@@ -10,6 +10,7 @@ from or_select.generate import TruncatedOutput
 from or_select.providers import (
     MAX_OUTPUT_TOKENS,
     MAX_SHORT_ANSWER_TOKENS,
+    SHORT_ANSWER_ATTEMPTS,
     StallTimeout,
     _call_with_stall_timeout,
     _is_retryable_error,
@@ -308,7 +309,20 @@ class TruncationTest(unittest.TestCase):
         with mock.patch("or_select.providers._openrouter_client", return_value=client):
             with self.assertRaises(TruncatedOutput):
                 openrouter_judge("q", "a", "b")
-        self.assertEqual(client.chat.completions.create.call_count, 1)
+        # Re-sampled a bounded number of times first, never parsed.
+        self.assertEqual(client.chat.completions.create.call_count, SHORT_ANSWER_ATTEMPTS)
+
+    def test_truncated_judge_reply_is_resampled_with_a_different_seed_and_can_recover(self) -> None:
+        cut = _fake_response("0")
+        cut.choices[0].finish_reason = "length"
+        good = _fake_response("0.8")
+        good.choices[0].finish_reason = "stop"
+        client = mock.Mock()
+        client.chat.completions.create.side_effect = [cut, good]
+        with mock.patch("or_select.providers._openrouter_client", return_value=client):
+            self.assertEqual(openrouter_judge("q", "a", "b"), 0.8)
+        first, second = client.chat.completions.create.call_args_list
+        self.assertNotEqual(first.kwargs["seed"], second.kwargs["seed"])
 
     def test_judge_falls_back_when_the_model_makes_reasoning_mandatory(self) -> None:
         ok = _fake_response("0.7")

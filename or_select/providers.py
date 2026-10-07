@@ -500,9 +500,28 @@ def gemini_score(query: str, text: str) -> float:
     return _parse_score(_gemini_complete(prompt))
 
 
+SHORT_ANSWER_ATTEMPTS = 3
+
+
+def _short_answer_text(prompt: str, model: str | None = None) -> str:
+    """A judge/score reply, re-sampled with a different seed if it comes back
+    cut off. Observed live even with reasoning off: a reply truncated after
+    1 character (hidden reasoning tokens eating the 256-token cap). These
+    calls cost seconds, whereas one unretried truncation fails a hetero row
+    that has ~30 of them."""
+    base_seed = _stable_seed(prompt)
+    for attempt in range(SHORT_ANSWER_ATTEMPTS):
+        try:
+            return _openrouter_complete(prompt, seed=base_seed + attempt, model=model, short_answer=True)
+        except TruncatedOutput:
+            if attempt == SHORT_ANSWER_ATTEMPTS - 1:
+                raise
+    raise AssertionError("unreachable")
+
+
 def openrouter_score(query: str, text: str) -> float:
     prompt = _CONFIDENCE_PROMPT.format(query=query, text=text)
-    return _parse_score(_openrouter_complete(prompt, short_answer=True))
+    return _parse_score(_short_answer_text(prompt))
 
 
 # --- pairwise judging -----------------------------------------------------
@@ -522,6 +541,4 @@ def gemini_judge(query: str, text_a: str, text_b: str) -> float:
 
 
 def openrouter_judge(query: str, text_a: str, text_b: str, model: str | None = None) -> float:
-    return _parse_score(
-        _openrouter_complete(_judge_prompt(query, text_a, text_b), model=model, short_answer=True)
-    )
+    return _parse_score(_short_answer_text(_judge_prompt(query, text_a, text_b), model=model))
