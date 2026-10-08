@@ -87,6 +87,13 @@ class RetryableErrorTest(unittest.TestCase):
         )
         self.assertTrue(_is_retryable_error(exc))
 
+    def test_in_stream_upstream_errors_are_retryable(self) -> None:
+        for message in (
+            "Upstream error from Nvidia: Internal server error",
+            "Upstream idle timeout exceeded",
+        ):
+            self.assertTrue(_is_retryable_error(Exception(message)), message)
+
     def test_bare_model_not_found_404_is_not_retryable(self) -> None:
         self.assertFalse(_is_retryable_error(Exception("Error code: 404 - model not found")))
 

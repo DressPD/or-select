@@ -53,6 +53,14 @@ _RETRYABLE_MARKERS = (
     # bare "404" marker, since a real "model not found" 404 should fail fast,
     # not retry forever.
     "provider returned error",
+    # Errors delivered inside a streamed response (HTTP 200, then an SSE error
+    # event) surface as a bare openai.APIError with no status code, e.g.
+    # "Upstream error from Nvidia: Internal server error" or "Upstream idle
+    # timeout exceeded" -- transient provider failures, observed live in the
+    # first streamed free-tier run.
+    "upstream error from",
+    "upstream idle timeout",
+    "internal server error",
 )
 # Checked BEFORE _RETRYABLE_MARKERS and wins on conflict: these are 429s
 # that will never resolve by waiting (no credits, not "too many requests
