@@ -39,8 +39,8 @@ class TruncatedOutput(Exception):
 
 class ValidityExhausted(RuntimeError):
     """All VALIDITY_RETRY_ATTEMPTS attempts for one seed produced text that
-    failed validity_fn, or (truncated=True) the first attempt hit the output
-    token cap and was not re-sampled. Carries the last attempt's full text
+    failed validity_fn; truncated=True when at least one of those attempts was
+    cut off at the output token cap. Carries the last attempt's full text
     (not just its length) so a caller can log/persist it for diagnosis --
     previously this was discarded entirely along with the other successful
     candidates already generated for the same problem, leaving no way to
@@ -52,8 +52,9 @@ class ValidityExhausted(RuntimeError):
         self.truncated = truncated
         if truncated:
             super().__init__(
-                f"seed={seed} output truncated at the token cap "
-                f"({len(last_response)} chars); not re-sampled"
+                f"seed={seed} no valid answer in {VALIDITY_RETRY_ATTEMPTS} attempts, "
+                f"output truncated at the token cap in at least one "
+                f"(last response: {len(last_response)} chars)"
             )
         else:
             super().__init__(
