@@ -91,6 +91,7 @@ class RetryableErrorTest(unittest.TestCase):
         for message in (
             "Upstream error from Nvidia: Internal server error",
             "Upstream idle timeout exceeded",
+            "A Timeout Occurred",
         ):
             self.assertTrue(_is_retryable_error(Exception(message)), message)
 

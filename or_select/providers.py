@@ -61,6 +61,9 @@ _RETRYABLE_MARKERS = (
     "upstream error from",
     "upstream idle timeout",
     "internal server error",
+    # Another in-stream upstream timeout wording ("A Timeout Occurred"); it
+    # failed rows in the last free-tier runs.
+    "a timeout occurred",
 )
 # Checked BEFORE _RETRYABLE_MARKERS and wins on conflict: these are 429s
 # that will never resolve by waiting (no credits, not "too many requests
@@ -76,17 +79,19 @@ _PERMANENT_ERROR_MARKERS = (
 MAX_SHORT_ANSWER_TOKENS = 256
 # Cap for judge/score calls (one number out); see _openrouter_complete.
 
-MAX_OUTPUT_TOKENS = 16384
+MAX_OUTPUT_TOKENS = 32768
 # Per-model ceilings below the global cap: the free liquid/lfm endpoint rejects
 # anything above 8192 completion tokens (poolside/laguna-s-2.1:free allows
 # 32768, nvidia/nemotron-3.5-lightning:free 65536), checked against the live
 # /models listing.
 MODEL_OUTPUT_LIMITS = {"liquid/lfm-2.5-2.6b:free": 8192}
 # Generation is streamed. At the free tier's measured 17-30 tokens/s a
-# 16384-token completion takes up to ~16 min, longer than the ~600s a
+# 32768-token completion takes up to ~32 min, longer than the ~600s a
 # non-streamed call survives; OpenRouter's SSE keep-alive comments hold the
 # connection open, and this deadline bounds the whole stream.
-STREAM_TIMEOUT_SECONDS = 2400.0
+STREAM_TIMEOUT_SECONDS = 3600.0
+# Raised again 16384 -> 32768 because the rows still cut off at 16384 were
+# reasoning-heavy problems whose draws used the whole cap before an answer.
 # Raised 8192 -> 16384 after a paid-slug test (30 samples of 5 AIME rows that
 # were cut off at 8192): 14 finished within 16384 tokens versus 9 within 8192,
 # and 13 of those 14 were correct. A cut-off draw is also re-sampled (see
