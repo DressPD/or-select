@@ -21,6 +21,7 @@ production code exercises, including its byte-identical-text short-circuit.
 from __future__ import annotations
 
 import argparse
+import atexit
 import json
 import random
 import sys
@@ -33,6 +34,7 @@ if str(ROOT) not in sys.path:
 from or_select.core import Candidate  # noqa: E402
 from or_select.pairwise import build_pairwise_matrix  # noqa: E402
 from or_select.pipeline import PROVIDERS  # noqa: E402
+from or_select.providers import SCORE_PARSE_STATS, score_parse_summary  # noqa: E402
 from or_select.reward_bench import score_summary  # noqa: E402
 from or_select.rejudge import JUDGE_VERSION  # noqa: E402
 
@@ -98,7 +100,7 @@ def run_benchmark(rows: list[dict], provider: str, output: Path, resume: bool, r
     judge_models: list[str] = []
     run_offset = 0
     if heterogeneous:
-        from or_select.pipeline import OPENROUTER_MIXED_MODELS
+        from or_select.pipeline import OPENROUTER_MIXED_MODELS, RETIRED_MIXED_MODELS
 
         judge_models = OPENROUTER_MIXED_MODELS
         # Offset the round-robin by a fresh random amount each process
@@ -119,11 +121,20 @@ def run_benchmark(rows: list[dict], provider: str, output: Path, resume: bool, r
 
     results: list[dict] = []
     done_ids: set[int] = set()
+    replacement: dict[int, str | None] = {}  # row id -> pool model that re-judges it
     if resume and output.exists():
         existing = json.loads(output.read_text())
         results = existing.get("results", [])
         if retry_failures:
             results = [r for r in results if "error" not in r]
+        if heterogeneous:
+            # Rows judged by a model that has left the pool are dropped and
+            # re-judged by the model that took over its slot; the other
+            # judges' rows are kept as they are.
+            for r in results:
+                if r.get("judge_model") is not None and r["judge_model"] not in judge_models:
+                    replacement[r["id"]] = RETIRED_MIXED_MODELS.get(r["judge_model"])
+            results = [r for r in results if r["id"] not in replacement]
         done_ids = {r["id"] for r in results}
 
     for i, row in enumerate(rows, start=1):
@@ -131,6 +142,8 @@ def run_benchmark(rows: list[dict], provider: str, output: Path, resume: bool, r
             print(f"[{i}/{len(rows)}] skipped (already graded): id={row['id']}", flush=True)
             continue
         judge_model = judge_models[(i - 1 + run_offset) % len(judge_models)] if heterogeneous else None
+        if heterogeneous and replacement.get(row["id"]):
+            judge_model = replacement[row["id"]]
         if heterogeneous:
             judge_fn = _judge_fn_for(provider, model=judge_model)
         print(
@@ -158,13 +171,21 @@ def _write_output(output: Path, results: list[dict]) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(
         json.dumps(
-            {"n_total": len(results), "n_valid": len(valid), "n_failed": len(failed), **summary, "results": results},
+            {
+                "n_total": len(results),
+                "n_valid": len(valid),
+                "n_failed": len(failed),
+                **summary,
+                "score_parse_this_run": dict(SCORE_PARSE_STATS),
+                "results": results,
+            },
             indent=2,
         )
     )
 
 
 def main() -> None:
+    atexit.register(lambda: print(score_parse_summary(), flush=True))
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", type=Path, default=ROOT / "data" / "reward_bench_sample.jsonl")
     parser.add_argument("--provider", choices=PROVIDERS, default="placeholder")

@@ -29,8 +29,24 @@ PROVIDERS = ("placeholder", "openai", "gemini", "openrouter", "both", "openroute
 OPENROUTER_MIXED_MODELS = [
     "nvidia/nemotron-3.5-lightning-20260807:free",
     "poolside/laguna-s-2.1:free",
-    "liquid/lfm-2.5-2.6b:free",
+    "cohere/north-mini-code:free",
 ]
+# liquid/lfm-2.5-2.6b:free (the third slot until 2026-10-16) was retired: its
+# endpoint caps output at 8192 tokens and the 2.6B model loops to that cap with
+# an empty answer, which caused ~33 of the 39 truncation failures in the
+# heterogeneous GPQA/AIME/MATH runs. Free replacements were tried live on
+# prompts that lfm failed: google/gemma-4-31b-it and gemma-4-26b-a4b-it were
+# rate-limited upstream (429 on every call), thinkingmachines/inkling{,-small}
+# :free answer 403 ("only available on agentic harnesses"), dots-studio/dots-3-
+# note-preview:free finished only 2 of 4. cohere/north-mini-code:free finished
+# 3 of 4 with no errors (the fourth hit the 32768-token cap), parsed correctly
+# on GPQA, GSM8K and MATH, and orders RewardBench-style judge pairs correctly.
+# Models that used to sit in the pool, mapped to the pool model that took over
+# their round-robin slot. A stored heterogeneous row that still holds a retired
+# model's output is repaired in place by regenerating only that model's slots
+# (or_select.rejudge.reslot_row); RewardBench hetero hands a retired judge's rows
+# to its replacement. Pool slot 2 is the one the liquid/lfm model occupied.
+RETIRED_MIXED_MODELS = {"liquid/lfm-2.5-2.6b:free": OPENROUTER_MIXED_MODELS[2]}
 # nvidia/nemotron-3-ultra-550b-a55b:free was delisted from OpenRouter's live
 # /models endpoint (confirmed 2026-09-17, surfaced as 404 "Function id ...
 # not found" on every call) and replaced with nvidia/nemotron-3.5-lightning

@@ -7,12 +7,15 @@ import unittest
 from unittest import mock
 
 from or_select.generate import TruncatedOutput
+from or_select.pipeline import OPENROUTER_MIXED_MODELS
 from or_select.providers import (
     MAX_OUTPUT_TOKENS,
     MAX_SHORT_ANSWER_TOKENS,
     MODEL_OUTPUT_LIMITS,
+    SCORE_PARSE_STATS,
     SHORT_ANSWER_ATTEMPTS,
     StallTimeout,
+    UnparseableScore,
     _call_with_stall_timeout,
     _is_retryable_error,
     _openai_client,
@@ -26,6 +29,7 @@ from or_select.providers import (
     openrouter_heterogeneous_backends,
     openrouter_judge,
     openrouter_score,
+    score_parse_summary,
 )
 
 
@@ -59,8 +63,31 @@ class ParseScoreTest(unittest.TestCase):
         self.assertEqual(_parse_score("42"), 1.0)
         self.assertEqual(_parse_score("-3"), 0.0)
 
-    def test_no_number_falls_back_to_midpoint(self) -> None:
-        self.assertEqual(_parse_score("no numeric answer here"), 0.5)
+    def test_no_number_raises_instead_of_inventing_a_midpoint(self) -> None:
+        with self.assertRaises(UnparseableScore) as ctx:
+            _parse_score("no numeric answer here")
+        self.assertIn("no numeric answer here", ctx.exception.text)
+
+    def test_parse_outcomes_are_counted(self) -> None:
+        before = dict(SCORE_PARSE_STATS)
+        _parse_score("0.4")
+        with self.assertRaises(UnparseableScore):
+            _parse_score("prose only")
+        self.assertEqual(SCORE_PARSE_STATS["parsed"], before["parsed"] + 1)
+        self.assertEqual(SCORE_PARSE_STATS["missing"], before["missing"] + 1)
+        self.assertIn("without a number", score_parse_summary())
+
+    def test_openrouter_judge_resamples_a_reply_without_a_number(self) -> None:
+        replies = iter(["I cannot tell", "0.8"])
+        with mock.patch("or_select.providers._short_answer_text", side_effect=lambda *a, **k: next(replies)):
+            self.assertAlmostEqual(openrouter_judge("q", "a", "b"), 0.8)
+
+    def test_openrouter_judge_fails_the_call_when_every_resample_lacks_a_number(self) -> None:
+        before = SCORE_PARSE_STATS["exhausted"]
+        with mock.patch("or_select.providers._short_answer_text", return_value="no idea"):
+            with self.assertRaises(UnparseableScore):
+                openrouter_judge("q", "a", "b")
+        self.assertEqual(SCORE_PARSE_STATS["exhausted"], before + 1)
 
 
 class RetryableErrorTest(unittest.TestCase):
@@ -357,12 +384,14 @@ class TruncationTest(unittest.TestCase):
             Exception("Error code: 400 - Reasoning is mandatory for this endpoint"),
             ok,
         ]
-        with mock.patch("or_select.providers._openrouter_client", return_value=client):
-            self.assertEqual(openrouter_judge("q", "a", "b", model="liquid/lfm-2.5-2.6b:free"), 0.7)
+        with mock.patch("or_select.providers._openrouter_client", return_value=client), mock.patch.dict(
+            MODEL_OUTPUT_LIMITS, {"small/reasoning-only:free": 8192}
+        ):
+            self.assertEqual(openrouter_judge("q", "a", "b", model="small/reasoning-only:free"), 0.7)
         first, second = client.chat.completions.create.call_args_list
         self.assertIn("extra_body", first.kwargs)
         self.assertNotIn("extra_body", second.kwargs)
-        self.assertEqual(second.kwargs["max_tokens"], MODEL_OUTPUT_LIMITS["liquid/lfm-2.5-2.6b:free"])
+        self.assertEqual(second.kwargs["max_tokens"], 8192)
 
     def test_other_errors_are_not_swallowed_by_the_fallback(self) -> None:
         client = mock.Mock()
@@ -454,16 +483,19 @@ class StreamingGenerationTest(unittest.TestCase):
 
 
 class OutputCapTest(unittest.TestCase):
-    def test_lfm_is_clamped_to_its_endpoint_limit_others_get_the_global_cap(self) -> None:
-        self.assertEqual(_output_cap("liquid/lfm-2.5-2.6b:free"), 8192)
-        self.assertEqual(_output_cap("poolside/laguna-s-2.1:free"), MAX_OUTPUT_TOKENS)
-        self.assertEqual(_output_cap("nvidia/nemotron-3.5-lightning-20260807:free"), MAX_OUTPUT_TOKENS)
+    def test_a_limited_model_is_clamped_and_every_pool_model_gets_the_global_cap(self) -> None:
+        with mock.patch.dict(MODEL_OUTPUT_LIMITS, {"small/limited:free": 8192}):
+            self.assertEqual(_output_cap("small/limited:free"), 8192)
+        for model in OPENROUTER_MIXED_MODELS:
+            self.assertEqual(_output_cap(model), MAX_OUTPUT_TOKENS, model)
 
-    def test_call_for_lfm_requests_the_clamped_cap(self) -> None:
+    def test_call_for_a_limited_model_requests_the_clamped_cap(self) -> None:
         client = mock.Mock()
         client.chat.completions.create.return_value = _fake_response("ANSWER: A")
-        with mock.patch("or_select.providers._openrouter_client", return_value=client):
-            _openrouter_complete("q", seed=0, model="liquid/lfm-2.5-2.6b:free")
+        with mock.patch("or_select.providers._openrouter_client", return_value=client), mock.patch.dict(
+            MODEL_OUTPUT_LIMITS, {"small/limited:free": 8192}
+        ):
+            _openrouter_complete("q", seed=0, model="small/limited:free")
         self.assertEqual(client.chat.completions.create.call_args.kwargs["max_tokens"], 8192)
 
     def test_non_streamed_cut_off_reply_with_empty_text_is_truncation_not_a_stall(self) -> None:

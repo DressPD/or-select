@@ -25,6 +25,7 @@ module's docstring for its known limitations).
 from __future__ import annotations
 
 import argparse
+import atexit
 import json
 import sys
 from pathlib import Path
@@ -37,9 +38,10 @@ from or_select.baselines import greedy_single_sample, self_consistency_winner  #
 from or_select.kemeny import solve_kemeny_ranking  # noqa: E402
 from or_select.generate import is_settled_truncation, truncation_attempts_so_far  # noqa: E402
 from or_select.math_eval import MATH_SUFFIX, extract_boxed, is_correct  # noqa: E402
-from or_select.providers import MAX_OUTPUT_TOKENS  # noqa: E402
-from or_select.rejudge import JUDGE_VERSION, needs_rejudge, rejudge_row  # noqa: E402
-from or_select.pipeline import PROVIDERS, run_pipeline  # noqa: E402
+from or_select.providers import MAX_OUTPUT_TOKENS, SCORE_PARSE_STATS, score_parse_summary  # noqa: E402
+from or_select.rejudge import JUDGE_VERSION, judgments_of, needs_rejudge, needs_reslot, rejudge_row, reslot_row  # noqa: E402
+from or_select.pipeline import OPENROUTER_MIXED_MODELS, PROVIDERS, run_pipeline  # noqa: E402
+from or_select import extended as _extended, providers as _providers  # noqa: E402
 
 METHODS = ("or_select", "self_consistency", "greedy", "kemeny_young")
 
@@ -74,6 +76,7 @@ def _grade_one(problem: dict, n: int, provider: str) -> dict:
         "query": problem["query"],
         "ground_truth": ground_truth,
         "judge_version": JUDGE_VERSION,
+        "judgments": judgments_of(result),
         "subject": problem.get("subject"),
         "or_select": {"answer": or_select_answer, "correct": is_correct(or_select_answer, ground_truth)},
         "self_consistency": {
@@ -132,7 +135,9 @@ def _failed_row(problem: dict, exc: Exception) -> dict:
         row["failed_last_response"] = last_response[:4000]
     if getattr(exc, "truncated", False):
         row["truncated"] = True
-        row["truncated_at_tokens"] = MAX_OUTPUT_TOKENS
+        # The cap the failing call actually ran with (a model's own limit can
+        # sit below the global one in the extended pass).
+        row["truncated_at_tokens"] = getattr(exc, "cap", None) or _providers.MAX_OUTPUT_TOKENS
     return row
 
 
@@ -142,12 +147,20 @@ def _accuracy_summary(results: list[dict]) -> dict:
     valid = [r for r in results if "error" not in r]
     failed = [r for r in results if "error" in r]
     accuracy = {m: (sum(1 for r in valid if r[m]["correct"]) / len(valid)) for m in METHODS} if valid else {}
+    # Rows rescued by the opt-in extended-cap second pass (or_select/extended.py)
+    # are flagged; the main-protocol accuracy leaves them out.
+    main_valid = [r for r in valid if not r.get("extended_cap_pass")]
+    accuracy_main = (
+        {m: (sum(1 for r in main_valid if r[m]["correct"]) / len(main_valid)) for m in METHODS} if main_valid else {}
+    )
     return {
         "n_total": len(results),
         "n_valid": len(valid),
         "n_failed": len(failed),
         "n_valid_current_judge": sum(1 for r in valid if r.get("judge_version") == JUDGE_VERSION),
         "accuracy_of_valid": accuracy,
+        "n_extended_rescued": len(valid) - len(main_valid),
+        "accuracy_of_valid_main_protocol": accuracy_main,
     }
 
 
@@ -204,6 +217,7 @@ def _write_output(output: Path, results: list[dict], n: int, provider: str) -> N
                 "n_samples": n,
                 "provider": provider,
                 **summary,
+                "score_parse_this_run": dict(SCORE_PARSE_STATS),
                 "disagreement": disagreement,
                 "copeland_vs_kemeny": copeland_vs_kemeny,
                 "results": results,
@@ -237,7 +251,25 @@ def run_benchmark(
         if problem["query"] in done_queries:
             idx = next(j for j, r in enumerate(results) if r["query"] == problem["query"])
             existing = results[idx]
-            if rejudge and needs_rejudge(existing):
+            if rejudge and provider == "openrouter_mixed" and needs_reslot(existing, OPENROUTER_MIXED_MODELS):
+                print(f"[{i}/{len(problems)}] replacing retired-model candidates: {problem['query'][:60]!r}", flush=True)
+                try:
+                    results[idx] = reslot_row(
+                        existing,
+                        problem["query"] + MATH_SUFFIX,
+                        provider,
+                        extract_boxed,
+                        is_correct,
+                        lambda text: extract_boxed(text) is not None,
+                        OPENROUTER_MIXED_MODELS,
+                    )
+                except Exception as exc:  # noqa: BLE001 -- keep the old row, flag it, move on
+                    existing["rejudge_error"] = f"{type(exc).__name__}: {exc}"[:300]
+                    print(f"    RESLOT FAILED: {existing['rejudge_error']}", flush=True)
+                else:
+                    print("    retired-model candidates replaced, selection replayed", flush=True)
+                _write_output(output, results, n, provider)
+            elif rejudge and needs_rejudge(existing):
                 print(f"[{i}/{len(problems)}] re-judging stored candidates: {problem['query'][:60]!r}", flush=True)
                 try:
                     results[idx] = rejudge_row(
@@ -279,7 +311,29 @@ def run_benchmark(
     return results
 
 
+def run_extended_benchmark(problems: list[dict], n: int, provider: str, output: Path, cap: int) -> list[dict]:
+    """Second pass at a higher output cap over the rows the main pass stored as
+    truncated (see or_select/extended.py). Never touches any other row."""
+    if not output.exists():
+        raise SystemExit(f"--extended-cap needs an existing --output to extend: {output}")
+    results = json.loads(output.read_text()).get("results", [])
+    try:
+        return _extended.run_extended_pass(
+            results,
+            problems,
+            provider,
+            OPENROUTER_MIXED_MODELS,
+            cap,
+            grade_one=lambda problem: _grade_one(problem, n, provider),
+            failed_row=_failed_row,
+            persist=lambda rows: _write_output(output, rows, n, provider),
+        )
+    except RuntimeError as exc:
+        raise SystemExit(str(exc)) from exc
+
+
 def main() -> None:
+    atexit.register(lambda: print(score_parse_summary(), flush=True))
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", type=Path, default=ROOT / "data" / "math_level5_sample.jsonl")
     parser.add_argument("--n", type=int, default=5)
@@ -297,14 +351,26 @@ def main() -> None:
         action="store_true",
         help="With --resume, do not re-judge stored candidates graded by an outdated judge.",
     )
+    parser.add_argument(
+        "--extended-cap",
+        type=int,
+        default=None,
+        metavar="TOKENS",
+        help="Second pass: re-run ONLY rows stored as truncated at the main cap, with this higher output cap "
+        "(clamped per model), and flag them. Needs an existing --output with no untried problems; "
+        "ignores --resume/--retry-failures.",
+    )
     args = parser.parse_args()
 
     problems = _load_problems(args.input)
     if args.limit is not None:
         problems = problems[: args.limit]
-    results = run_benchmark(
-        problems, args.n, args.provider, args.output, args.resume, args.retry_failures, not args.no_rejudge
-    )
+    if args.extended_cap:
+        results = run_extended_benchmark(problems, args.n, args.provider, args.output, args.extended_cap)
+    else:
+        results = run_benchmark(
+            problems, args.n, args.provider, args.output, args.resume, args.retry_failures, not args.no_rejudge
+        )
     _write_output(args.output, results, args.n, args.provider)
 
     summary = _accuracy_summary(results)

@@ -21,6 +21,7 @@ methods' answers are graded against ground truth.
 from __future__ import annotations
 
 import argparse
+import atexit
 import json
 import sys
 from pathlib import Path
@@ -32,9 +33,9 @@ if str(ROOT) not in sys.path:
 from or_select.baselines import greedy_single_sample, self_consistency_winner  # noqa: E402
 from or_select.generate import is_settled_truncation, truncation_attempts_so_far  # noqa: E402
 from or_select.gsm8k import GSM8K_SUFFIX, extract_answer, is_correct  # noqa: E402
-from or_select.providers import MAX_OUTPUT_TOKENS  # noqa: E402
-from or_select.rejudge import JUDGE_VERSION  # noqa: E402
-from or_select.pipeline import PROVIDERS, run_pipeline  # noqa: E402
+from or_select.providers import MAX_OUTPUT_TOKENS, SCORE_PARSE_STATS, score_parse_summary  # noqa: E402
+from or_select.rejudge import JUDGE_VERSION, judgments_of, needs_reslot, reslot_row  # noqa: E402
+from or_select.pipeline import OPENROUTER_MIXED_MODELS, PROVIDERS, run_pipeline  # noqa: E402
 
 METHODS = ("or_select", "self_consistency", "greedy")
 
@@ -72,6 +73,7 @@ def _grade_one(problem: dict, n: int, provider: str) -> dict:
         },
         "greedy": {"answer": greedy_answer, "correct": is_correct(greedy_answer, ground_truth)},
         "judge_version": JUDGE_VERSION,
+        "judgments": judgments_of(result),
         # Full candidate pool so the judge-dependent fields can be replayed
         # later without regenerating (see scripts/math_benchmark.py).
         "candidates": [
@@ -125,7 +127,13 @@ def _write_output(output: Path, results: list[dict], n: int, provider: str) -> N
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(
         json.dumps(
-            {"n_samples": n, "provider": provider, **summary, "results": results},
+            {
+                "n_samples": n,
+                "provider": provider,
+                **summary,
+                "score_parse_this_run": dict(SCORE_PARSE_STATS),
+                "results": results,
+            },
             indent=2,
         )
     )
@@ -149,7 +157,28 @@ def run_benchmark(
 
     for i, problem in enumerate(problems, start=1):
         if problem["query"] in done_queries:
-            print(f"[{i}/{len(problems)}] skipped (already graded): {problem['query'][:60]!r}", flush=True)
+            idx = next(j for j, r in enumerate(results) if r["query"] == problem["query"])
+            existing = results[idx]
+            if provider == "openrouter_mixed" and needs_reslot(existing, OPENROUTER_MIXED_MODELS):
+                print(f"[{i}/{len(problems)}] replacing retired-model candidates: {problem['query'][:60]!r}", flush=True)
+                try:
+                    results[idx] = reslot_row(
+                        existing,
+                        problem["query"] + GSM8K_SUFFIX,
+                        provider,
+                        extract_answer,
+                        is_correct,
+                        lambda text: extract_answer(text) is not None,
+                        OPENROUTER_MIXED_MODELS,
+                    )
+                except Exception as exc:  # noqa: BLE001 -- keep the old row, flag it, move on
+                    existing["rejudge_error"] = f"{type(exc).__name__}: {exc}"[:300]
+                    print(f"    RESLOT FAILED: {existing['rejudge_error']}", flush=True)
+                else:
+                    print("    retired-model candidates replaced, selection replayed", flush=True)
+                _write_output(output, results, n, provider)
+            else:
+                print(f"[{i}/{len(problems)}] skipped (already graded): {problem['query'][:60]!r}", flush=True)
             continue
         print(f"[{i}/{len(problems)}] {problem['query'][:70]!r}...", flush=True)
         try:
@@ -174,6 +203,7 @@ def run_benchmark(
 
 
 def main() -> None:
+    atexit.register(lambda: print(score_parse_summary(), flush=True))
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", type=Path, default=ROOT / "data" / "gsm8k_sample.jsonl")
     parser.add_argument("--n", type=int, default=5)

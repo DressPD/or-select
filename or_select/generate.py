@@ -32,8 +32,11 @@ class TruncatedOutput(Exception):
     """The backend stopped because it hit the output-token cap, so the text
     is a cut-off fragment, not an answer. Carries that fragment."""
 
-    def __init__(self, text: str):
+    def __init__(self, text: str, cap: int | None = None):
         self.text = text
+        # The max_tokens the call actually ran with (the model's effective
+        # cap), so a failed row can record the cap it was truncated at.
+        self.cap = cap
         super().__init__(f"output truncated at the token cap ({len(text)} chars)")
 
 
@@ -46,10 +49,12 @@ class ValidityExhausted(RuntimeError):
     candidates already generated for the same problem, leaving no way to
     tell why extraction kept failing."""
 
-    def __init__(self, seed: int, last_response: str, truncated: bool = False):
+    def __init__(self, seed: int, last_response: str, truncated: bool = False, cap: int | None = None):
         self.seed = seed
         self.last_response = last_response
         self.truncated = truncated
+        # Largest effective token cap a truncated attempt ran with, if known.
+        self.cap = cap
         if truncated:
             super().__init__(
                 f"seed={seed} no valid answer in {VALIDITY_RETRY_ATTEMPTS} attempts, "
@@ -93,6 +98,7 @@ def _generate_valid(generate_fn: GenerateFn, query: str, seed: int, validity_fn:
         return generate_fn(query, seed)
     text = ""
     truncated = False
+    trunc_cap: int | None = None
     for attempt in range(VALIDITY_RETRY_ATTEMPTS):
         # Vary the seed actually sent on each retry. Reusing the identical
         # seed on all 3 attempts meant a backend that honors `seed` for
@@ -114,10 +120,12 @@ def _generate_valid(generate_fn: GenerateFn, query: str, seed: int, validity_fn:
             # same budget instead of failing the slot on the first cut-off.
             truncated = True
             text = exc.text
+            if exc.cap is not None:
+                trunc_cap = max(trunc_cap or 0, exc.cap)
             continue
         if validity_fn(text):
             return text
-    raise ValidityExhausted(seed, text, truncated=truncated)
+    raise ValidityExhausted(seed, text, truncated=truncated, cap=trunc_cap)
 
 
 def generate_candidates(

@@ -80,11 +80,18 @@ MAX_SHORT_ANSWER_TOKENS = 256
 # Cap for judge/score calls (one number out); see _openrouter_complete.
 
 MAX_OUTPUT_TOKENS = 32768
-# Per-model ceilings below the global cap: the free liquid/lfm endpoint rejects
-# anything above 8192 completion tokens (poolside/laguna-s-2.1:free allows
-# 32768, nvidia/nemotron-3.5-lightning:free 65536), checked against the live
-# /models listing.
-MODEL_OUTPUT_LIMITS = {"liquid/lfm-2.5-2.6b:free": 8192}
+# Per-model ceilings below the global cap, for an endpoint that rejects more
+# than its own limit (the retired liquid/lfm endpoint took only 8192). At the
+# default global cap (32768) every model in the mixed pool takes it, so these
+# limits change nothing; they only bite when the global cap is raised for the
+# opt-in extended-cap second pass (or_select/extended.py): poolside/laguna-s-2.1:free
+# 32768, nvidia/nemotron-3.5-lightning:free 65536, cohere/north-mini-code:free
+# 64000, checked against the live /models listing.
+MODEL_OUTPUT_LIMITS: dict[str, int] = {
+    "poolside/laguna-s-2.1:free": 32768,
+    "nvidia/nemotron-3.5-lightning-20260807:free": 65536,
+    "cohere/north-mini-code:free": 64000,
+}
 # Generation is streamed. At the free tier's measured 17-30 tokens/s a
 # 32768-token completion takes up to ~32 min, longer than the ~600s a
 # non-streamed call survives; OpenRouter's SSE keep-alive comments hold the
@@ -337,13 +344,49 @@ def _with_rate_limit_retry(fn, *, max_attempts: int = 9, base_delay: float = 20.
     raise last_exc  # type: ignore[misc]
 
 
+class UnparseableScore(ValueError):
+    """A judge/score reply that contains no number at all.
+
+    Used to be silently scored 0.5, which is indistinguishable from a real
+    "can't tell" verdict and made a model that sometimes answers in prose look
+    like a coin-flip judge. It is an error now; the OpenRouter score/judge
+    calls re-sample it, and a call that still has no number fails its row.
+    """
+
+    def __init__(self, text: str):
+        self.text = text
+        super().__init__(f"no number in judge/score reply: {text[:120]!r}")
+
+
+# How many judge/score replies had a number, how many did not (each re-sampled
+# reply counts), and how many calls gave up after every re-sample. Per process;
+# the benchmark scripts print it at the end of a run.
+SCORE_PARSE_STATS = {"parsed": 0, "missing": 0, "exhausted": 0}
+_PARSE_STATS_LOCK = threading.Lock()
+
+
+def score_parse_summary() -> str:
+    with _PARSE_STATS_LOCK:
+        parsed, missing, exhausted = (SCORE_PARSE_STATS[k] for k in ("parsed", "missing", "exhausted"))
+    total = parsed + missing
+    share = f" ({100 * missing / total:.1f}%)" if total else ""
+    return (
+        f"judge/score replies: {total} total, {missing} without a number{share}, "
+        f"{exhausted} calls failed after every re-sample"
+    )
+
+
 def _parse_score(text: str) -> float:
     # Take the LAST number in the response, not the first: prompts ask for
     # "only the number," but reasoning-tuned models often explain themselves
     # anyway (e.g. restating a year from the query before giving the actual
     # confidence), and the first number in that case is the wrong one.
     matches = _NUMBER_RE.findall(text)
-    return max(0.0, min(1.0, float(matches[-1]))) if matches else 0.5
+    with _PARSE_STATS_LOCK:
+        SCORE_PARSE_STATS["parsed" if matches else "missing"] += 1
+    if not matches:
+        raise UnparseableScore(text)
+    return max(0.0, min(1.0, float(matches[-1])))
 
 
 def _load_prompt(name: str) -> str:
@@ -488,14 +531,14 @@ def _openrouter_complete(
             # A cut-off draw may carry no answer text at all (the budget was
             # spent on reasoning), so truncation is checked before emptiness.
             if raise_on_truncation and finish == "length":
-                raise TruncatedOutput(text)
+                raise TruncatedOutput(text, cap=max_tokens)
             if not text:
                 raise StallTimeout("empty completion, retrying")
             return text
         try:
             resp = create(model=resolved_model, messages=messages, seed=resolved_seed, max_tokens=max_tokens, **extra)
         except Exception as exc:  # noqa: BLE001 -- narrowed by the message check below
-            # Some models (e.g. liquid/lfm-2.5-2.6b:free) reject the switch with
+            # Some models (e.g. the retired liquid/lfm-2.5-2.6b:free) reject the switch with
             # a 400 "Reasoning is mandatory for this endpoint". Fall back to the
             # full cap without it; a cut-off reply still raises TruncatedOutput.
             if not (short_answer and "reasoning is mandatory" in str(exc).lower()):
@@ -510,7 +553,7 @@ def _openrouter_complete(
             raise RuntimeError(f"OpenRouter error (treated as rate limit): {resp.error}")
         text = (resp.choices[0].message.content or "").strip()
         if raise_on_truncation and resp.choices[0].finish_reason == "length":
-            raise TruncatedOutput(text)
+            raise TruncatedOutput(text, cap=max_tokens)
         if not text:
             raise StallTimeout("empty completion, retrying")
         return text
@@ -572,13 +615,13 @@ def gemini_score(query: str, text: str) -> float:
 SHORT_ANSWER_ATTEMPTS = 3
 
 
-def _short_answer_text(prompt: str, model: str | None = None) -> str:
+def _short_answer_text(prompt: str, model: str | None = None, seed_offset: int = 0) -> str:
     """A judge/score reply, re-sampled with a different seed if it comes back
     cut off. Observed live even with reasoning off: a reply truncated after
     1 character (hidden reasoning tokens eating the 256-token cap). These
     calls cost seconds, whereas one unretried truncation fails a hetero row
     that has ~30 of them."""
-    base_seed = _stable_seed(prompt)
+    base_seed = _stable_seed(prompt) + seed_offset
     for attempt in range(SHORT_ANSWER_ATTEMPTS):
         try:
             return _openrouter_complete(prompt, seed=base_seed + attempt, model=model, short_answer=True)
@@ -588,9 +631,25 @@ def _short_answer_text(prompt: str, model: str | None = None) -> str:
     raise AssertionError("unreachable")
 
 
+def _short_answer_score(prompt: str, model: str | None = None) -> float:
+    """A parsed judge/score number. A reply with no number is re-sampled with
+    a fresh seed, up to SHORT_ANSWER_ATTEMPTS times; if none has a number the
+    call raises UnparseableScore instead of inventing a 0.5."""
+    for attempt in range(SHORT_ANSWER_ATTEMPTS):
+        text = _short_answer_text(prompt, model=model, seed_offset=attempt * SHORT_ANSWER_ATTEMPTS)
+        try:
+            return _parse_score(text)
+        except UnparseableScore:
+            if attempt == SHORT_ANSWER_ATTEMPTS - 1:
+                with _PARSE_STATS_LOCK:
+                    SCORE_PARSE_STATS["exhausted"] += 1
+                raise
+    raise AssertionError("unreachable")
+
+
 def openrouter_score(query: str, text: str) -> float:
     prompt = _CONFIDENCE_PROMPT.format(query=query, text=text)
-    return _parse_score(_short_answer_text(prompt))
+    return _short_answer_score(prompt)
 
 
 # --- pairwise judging -----------------------------------------------------
@@ -610,4 +669,4 @@ def gemini_judge(query: str, text_a: str, text_b: str) -> float:
 
 
 def openrouter_judge(query: str, text_a: str, text_b: str, model: str | None = None) -> float:
-    return _parse_score(_short_answer_text(_judge_prompt(query, text_a, text_b), model=model))
+    return _short_answer_score(_judge_prompt(query, text_a, text_b), model=model)

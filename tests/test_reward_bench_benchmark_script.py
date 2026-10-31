@@ -89,5 +89,34 @@ class HeterogeneousRoundRobinTest(unittest.TestCase):
         self.assertEqual([r["judge_model"] for r in second], ["model-a", "model-b"])
 
 
+    def test_rows_judged_by_a_retired_model_are_redone_by_its_replacement_only(self) -> None:
+        def stored(i, judge_model):
+            return {
+                "id": i, "subset": "alpacaeval-easy", "weight_chosen": 1.0, "correct": True,
+                "tied": False, "judge_version": "short-answer", "judge_model": judge_model,
+            }
+
+        existing = [stored(0, "model-a"), stored(1, "retired"), stored(2, "model-b"), stored(3, "retired")]
+        self.output.write_text(json.dumps({"results": existing}))
+        calls = []
+
+        def judge(query, a, b, model=None):
+            calls.append(model)
+            return 0.0
+
+        with patch("or_select.pipeline.OPENROUTER_MIXED_MODELS", self.models), patch(
+            "or_select.pipeline.RETIRED_MIXED_MODELS", {"retired": "model-c"}
+        ), patch("or_select.providers.openrouter_judge", side_effect=judge), patch(
+            "scripts.reward_bench_benchmark.random.randrange", return_value=0
+        ):
+            results = run_benchmark(self.rows[:4], "openrouter_mixed", self.output, resume=True, retry_failures=False)
+        self.assertEqual(set(calls), {"model-c"})  # only the two retired rows were re-judged
+        self.assertEqual(len(calls) % 2, 0)
+        by_id = {r["id"]: r for r in results}
+        self.assertEqual({i: by_id[i]["judge_model"] for i in range(4)}, {0: "model-a", 1: "model-c", 2: "model-b", 3: "model-c"})
+        self.assertFalse(by_id[1]["correct"])  # recomputed, not the stale stored value
+        self.assertTrue(by_id[0]["correct"])  # kept as stored
+
+
 if __name__ == "__main__":
     unittest.main()
