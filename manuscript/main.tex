@@ -14,6 +14,7 @@
 \newtheorem{proposition}{Proposition}[section]
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{lemma}{Lemma}[section]
+\newtheorem{corollary}{Corollary}[section]
 
 \journal{European Journal of Operational Research}
 
@@ -23,12 +24,16 @@
 %   python3 scripts/ablation_weights_offline.py -> Ablation_data.tex
 %   python3 scripts/baselines_extra_offline.py -> Baselines_data.tex
 %   python3 scripts/judge_threshold_theory.py -> Theory_data.tex
+%   python3 scripts/judge_threshold_general.py -> ThresholdGeneral_data.tex
+%   python3 scripts/judge_threshold_empirical.py -> ThresholdEmpiricalGeneral_data.tex
 %   python3 scripts/create_manuscript_tables.py -> Figure_3_WorkedExample_data.tex
 \input{Results_data.tex}
 \input{Selection_data.tex}
 \input{Ablation_data.tex}
 \input{Baselines_data.tex}
 \input{Theory_data.tex}
+\input{ThresholdGeneral_data.tex}
+\input{ThresholdEmpiricalGeneral_data.tex}
 \input{Figure_3_WorkedExample_data.tex}
 
 \begin{document}
@@ -536,6 +541,108 @@ dominates the replayed rows (Section~\ref{sec:cost-diagnosis}), so the selector
 is in effect ``choose the shortest candidate'' and its accuracy equals that of
 the shortest-candidate rule (Table~\ref{tab:baselines}).
 
+\paragraph{Beyond $N=3$, independent errors and a uniform judge}
+Three relaxations matter in practice. (a) \emph{Any $N$.} Let the judge
+compare every pair once and select the Copeland winner of the $N$ candidates.
+There is no closed form, but the accuracy is a finite sum over the
+$2^{N(N-1)/2}$ comparison outcomes, which we enumerate exactly for $N\le6$.
+(b) \emph{A pair-dependent judge.} Let $q_{ij}$ be the probability that the
+judge prefers the correct candidate $i$ to the wrong candidate $j$.
+(c) \emph{Correlated wrong answers.} A wrong candidate takes one shared
+``attractor'' answer with probability $\rho$ and otherwise a distinct answer;
+$\rho=0$ is the model above and $\rho=1$ makes all wrong answers coincide, as in
+four-option multiple choice. The judge is unaffected by $\rho$; plurality is
+hurt by it.
+
+\begin{lemma}[Monotone coupling]
+\label{lem:monotone}
+For every $N$ and every $\rho$, the probability that the Copeland selector
+returns a correct candidate is nondecreasing in each $q_{ij}$.
+\end{lemma}
+
+\begin{corollary}[Pair-dependent judges]
+\label{cor:pairdep}
+Let $q^{*}(p,N,\rho)$ be the smallest uniform $q$ at which the selector ties
+voting. A judge with $q_{ij}\ge q^{*}$ for all mixed pairs is at least as accurate
+as voting; one with $q_{ij}\le q^{*}$ for all mixed pairs is at most as accurate.
+\end{corollary}
+
+Table~\ref{tab:threshold-n} gives $q^{*}$ computed exactly for $N=3,\dots,6$
+(the $N=3$, $\rho=0$ column reproduces Table~\ref{tab:threshold}). Two things stand
+out. With distinct wrong answers the threshold \emph{rises} with $N$: at
+$p=0.8$ it goes from $0.804$ to $0.935$, a pattern consistent with plurality needing only a few matching correct answers however many candidates there are, while every extra candidate adds comparisons that can err; we did not prove this explanation. With correlated wrong answers ($\rho=0.5$) voting is weaker
+and the threshold is lower, about $0.82$ at $p=0.8$ for $N\ge4$. The
+direction of the relaxation is therefore the one a reader would expect, but its
+size is large enough that the realistic threshold is far from $\tfrac12$.
+For GPQA Diamond, whose wrong answers are heavily correlated, this lowers the
+threshold from $0.788$ to $0.716$
+(Table~\ref{tab:threshold-emp-gen}); the measured $\hat q=0.536$ remains far below it.
+We checked the exact enumeration against an independent Monte Carlo
+simulation with common random numbers (Table~\ref{tab:threshold-valid}; all
+four configurations agree within sampling error) and checked
+Corollary~\ref{cor:pairdep} on random pair-dependent judges: in
+\PairDepInside{} of \PairDepTrials{} random $N=5$ instances the accuracy gap lies
+between the gaps at $q_{\min}$ and $q_{\max}$.
+
+\begin{table}[htbp]
+\centering
+\caption{Exact break-even pairwise accuracy $q^{*}(p,N,\rho)$ for the Copeland
+selector against plurality voting, with per-candidate accuracy $p$ and
+wrong-answer correlation $\rho$.}
+\label{tab:threshold-n}
+\small
+\begin{tabular}{rrrrr}
+\toprule
+ & \multicolumn{2}{c}{$\rho=0$} & \multicolumn{2}{c}{$\rho=0.5$} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+$N$ & $p=0.5$ & $p=0.8$ & $p=0.5$ & $p=0.8$ \\
+\midrule
+\ThresholdNRows
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Exact accuracy gap (Copeland minus plurality, percentage points) against a
+200{,}000-draw Monte Carlo estimate with its standard error.}
+\label{tab:threshold-valid}
+\small
+\begin{tabular}{rrrrrr}
+\toprule
+$N$ & $p$ & $\rho$ & $q$ & Exact & Monte Carlo \\
+\midrule
+\ThresholdValidationRows
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Large $N$: a regime split, not a threshold} For large $N$ the
+break-even accuracy is no longer informative, because both selectors approach
+perfect accuracy whenever correct answers form a plurality; the difference
+then lives in exponentially small error rates, which a threshold at fixed
+accuracy does not capture. What can be said rigorously is a consistency result.
+
+\begin{proposition}[Large-$N$ regimes]
+\label{prop:regimes}
+Let candidates be independent with correct-answer probability $p>0$, wrong answers taking finitely many values, and let $m$ be the largest probability of any single wrong answer. (i) Plurality voting
+is correct with probability tending to $1$ if $p>m$ and to $0$ if $p<m$. (ii) If
+$q_{ij}\ge q_{\min}>\tfrac12$ for all mixed pairs, the Copeland selector is
+correct with probability at least $1-(1-p)^N-2N^{2}e^{-(q_{\min}-1/2)^{2}N/2}\to1$,
+whatever $m$.
+\end{proposition}
+
+So a judge that is better than chance can rescue a generator pool in which the
+single most popular answer is wrong ($p<m$), where plurality voting fails with
+certainty, but it cannot be expected to improve a pool in which the right answer
+already leads. This is the pairwise-judge analogue of the dichotomy established
+for reward-model best-of-$N$ and majority voting by \citet{di2025bom}, and we
+claim consistency with it, not novelty: the contribution here is the exact
+finite-$N$ thresholds above and their confrontation with the measured $\hat q$.
+Our benchmark pools are in the right-majority regime (the shipped Nemotron
+generator is correct on 77--98\% of candidates, Table~\ref{tab:threshold-emp}),
+which is why the judge cannot help.
+
 \section{Experimental Protocol}
 \label{sec:experiments}
 
@@ -929,9 +1036,11 @@ compares $\hat q$ with the threshold $q^{*}(\hat p)$ of Theorem~\ref{thm:thresho
 for the homogeneous track with enough mixed pairs (GPQA Diamond; the other homogeneous tracks stored too few judgments with a mixed pair). The measured $\hat q$ is far
 below the threshold: for GPQA Diamond the judge prefers the correct candidate in
 only $53.6\%$ of mixed comparisons, against a required $78.8\%$. The table also
-gives the heterogeneous tracks, where the model with $N=3$ does not apply
-directly but $\hat q$ is still the quantity that matters: it is at or near
-chance ($0.48$--$0.55$) except on GSM8K, where only 24 mixed pairs exist.
+gives the heterogeneous tracks; Table~\ref{tab:threshold-emp-gen} computes the
+exact $N=6$ thresholds for them. There $\hat q$ is at or near chance
+($0.48$--$0.55$) except on GSM8K, where only 24 mixed pairs exist, and
+it is below the threshold on every track, including when the measured
+wrong-answer correlation is taken into account.
 This is the pairwise-level counterpart of the selection-level results above:
 the judge's signal about correctness is too weak for any selector built on it
 to beat voting. The model is stylized (independent candidates, distinct wrong
@@ -957,6 +1066,23 @@ Track & $\hat p$ & mixed pairs & $\hat q$ & $q^{*}(\hat p)$ \\
 Track & $\hat p$ & mixed pairs & $\hat q$ & \\
 \midrule
 \ThresholdHeteroRows
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Thresholds with measured wrong-answer correlation. $\hat\rho$: square root of
+the agreement rate between two wrong candidates of the same problem; $q^{*}_{0}$:
+exact threshold at $\rho=0$; $q^{*}_{\hat\rho}$: exact threshold at $\hat\rho$ (rightmost
+column). Suffix H: heterogeneous ($N=6$). $\hat q$ is below $q^{*}_{\hat\rho}$ on every track.}
+\label{tab:threshold-emp-gen}
+\small
+\begin{tabular}{lrrrrrr}
+\toprule
+Track & $N$ & $\hat p$ & $\hat\rho$ & $\hat q$ & $q^{*}_{0}$ & $q^{*}_{\hat\rho}$ \\
+\midrule
+\ThresholdEmpGenRows
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1198,6 +1324,31 @@ decreasing to 0), with $g(\tfrac12)=0$ and $g(q)\to\infty$ as $q\to1$. Therefore
 $p/(1-p)\in(0,\infty)$ there is a unique $q^{*}(p)\in(\tfrac12,1)$ with $g(q^{*})=p/(1-p)$;
 $q^{*}$ is strictly increasing in $p$ with $q^{*}\to\tfrac12$ as $p\to0$ and $q^{*}\to1$ as
 $p\to1$. \qed
+
+\section{Proofs of Lemma~\ref{lem:monotone} and Proposition~\ref{prop:regimes}}
+\label{app:proof2}
+
+\emph{Lemma~\ref{lem:monotone}.} Fix a mixed pair $(c,w)$ with $c$ correct and $w$ wrong and
+condition on all other comparison outcomes; the outcome of $(c,w)$ is a
+Bernoulli($q_{cw}$) variable that is the only one depending on $q_{cw}$, so it
+suffices to show that changing it from ``$w$ wins'' to ``$c$ wins'' cannot lower the
+probability that the selected candidate is correct. The change raises $c$'s score by one and lowers $w$'s by one.
+Let $T$ be the set of top scorers before and $T'$ after, and let the selected candidate be uniform on the top set, so the success
+probability is the share of correct candidates in it. If $c\in T$, then $T'=\{c\}$, which is correct. If
+$c\notin T$ and $w\notin T$, then $T'=T$ or $T'=T\cup\{c\}$; adding a correct candidate cannot lower a
+share that is at most one. If $w\in T$ and $|T|>1$, then $T'$ removes $w$ and possibly adds $c$, which
+cannot lower the share. If $w$ is the unique top scorer, the share before is $0$. In every case the share does not decrease.
+Averaging over the other outcomes gives the claim, and Corollary~\ref{cor:pairdep} follows by comparing with the uniform judges at $q_{\min}$
+and $q_{\max}$ (voting does not depend on the judge).
+
+\emph{Proposition~\ref{prop:regimes}.} (i) The count of the correct answer is Binomial$(N,p)$ and that of each wrong answer is Binomial$(N,\cdot)$ with success probability at most $m$, the largest attaining $m$; by Hoeffding's inequality and a union bound over the finitely many answers, the correct answer is the unique plurality with probability tending to one if $p>m$, and is beaten by the most popular wrong answer with probability tending to one if $p<m$. (ii) Condition on the set of correct candidates, of size $k_c\ge1$ (probability $1-(1-p)^N$), and let
+$k_w=N-k_c$. A correct candidate's score is a sum of $N-1$ independent comparisons with mean at least
+$q_{\min}k_w+\tfrac12(k_c-1)$; a wrong candidate's has mean at most $(1-q_{\min})k_c+\tfrac12(k_w-1)$; the
+difference is at least $(q_{\min}-\tfrac12)N$. By Hoeffding's inequality each score is within
+$t=(q_{\min}-\tfrac12)N/2$ of its mean with probability at least
+$1-2\exp(-2t^2/(N-1))\ge1-2\exp(-(q_{\min}-\tfrac12)^2N/2)$. A union bound over the $N$ candidates gives
+the stated probability that every correct candidate outscores every wrong one, in which case the selected
+candidate is correct. \qed
 
 \bibliographystyle{elsarticle-num-names}
 \bibliography{refs}
