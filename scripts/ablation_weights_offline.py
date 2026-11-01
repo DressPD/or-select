@@ -23,7 +23,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from or_select import gpqa, gsm8k, math_eval  # noqa: E402
+from or_select import gpqa, gsm8k, math_eval, mmlu_pro  # noqa: E402
 from or_select.consistency import compute_consistency  # noqa: E402
 from or_select.core import Candidate  # noqa: E402
 from or_select.selection import aggregate_quality, select_best  # noqa: E402
@@ -35,8 +35,9 @@ EXTRACT = {
     "gsm": lambda t: gsm8k.extract_answer(t),
     "math": lambda t: math_eval.extract_boxed(t),
     "gpqa": lambda t: gpqa.extract_choice(t),
+    "mmlu": lambda t: mmlu_pro.extract_choice(t),
 }
-CORRECT = {"gsm": gsm8k.is_correct, "math": math_eval.is_correct, "gpqa": gpqa.is_correct}
+CORRECT = {"gsm": gsm8k.is_correct, "math": math_eval.is_correct, "gpqa": gpqa.is_correct, "mmlu": mmlu_pro.is_correct}
 TRACKS = [
     ("GSMx", r"B$'$ GSM8K, heterog.", "gsm8k_benchmark_heterogeneous.json", "gsm", True),
     ("MATHh", "C MATH L5, homog.", "math_benchmark_full.json", "math", False),
@@ -45,6 +46,8 @@ TRACKS = [
     ("AIMEx", r"D$'$ AIME 2026, heterog.", "aime_2026_heterogeneous.json", "math", True),
     ("GPQAh", "E GPQA Diamond, homog.", "gpqa_benchmark.json", "gpqa", False),
     ("GPQAx", r"E$'$ GPQA Diamond, heterog.", "gpqa_heterogeneous.json", "gpqa", True),
+    ("AIME25h", "F AIME 2025, homog.", "aime_2025_benchmark.json", "math", False),
+    ("MMLUh", "G MMLU-Pro, homog.", "mmlu_pro_benchmark.json", "mmlu", False),
 ]
 VARIANTS = ("self_consistency", "default", "no_cost", "quality_only", "sc_quality")
 
@@ -104,6 +107,8 @@ def main() -> None:
     pooled = {True: {v: [] for v in VARIANTS}, False: {v: [] for v in VARIANTS}}
     fid_all = [0, 0]
     for key, label, fname, kind, het in TRACKS:
+        if not (OUT / fname).exists():
+            continue
         rows = [r for r in json.loads((OUT / fname).read_text())["results"] if "error" not in r]
         reps = [x for x in (replay(r, kind) for r in rows) if x is not None]
         n = len(reps)
@@ -141,6 +146,8 @@ def main() -> None:
 
     spreads = {"cost": [], "quality": []}
     for key, label, fname, kind, het in TRACKS:
+        if not (OUT / fname).exists():
+            continue
         for r in json.loads((OUT / fname).read_text())["results"]:
             if "error" in r:
                 continue

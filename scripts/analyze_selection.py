@@ -21,7 +21,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from or_select import gpqa, gsm8k, math_eval  # noqa: E402
+from or_select import gpqa, gsm8k, math_eval, mmlu_pro  # noqa: E402
 from or_select.pipeline import canonical_model  # noqa: E402
 
 OUT = ROOT / "outputs"
@@ -32,6 +32,7 @@ GRADERS = {
     "gsm": lambda t, gt: gsm8k.is_correct(gsm8k.extract_answer(t), gt),
     "math": lambda t, gt: math_eval.is_correct(math_eval.extract_boxed(t), gt),
     "gpqa": lambda t, gt: gpqa.is_correct(gpqa.extract_choice(t), gt),
+    "mmlu": lambda t, gt: mmlu_pro.is_correct(mmlu_pro.extract_choice(t), gt),
 }
 TRACKS = [
     ("GSMh", "B --- GSM8K, homog.", "gsm8k_benchmark_initial.json", "gsm"),
@@ -42,6 +43,8 @@ TRACKS = [
     ("AIMEx", r"D$'$ --- AIME 2026, heterog.", "aime_2026_heterogeneous.json", "math"),
     ("GPQAh", "E --- GPQA Diamond, homog.", "gpqa_benchmark.json", "gpqa"),
     ("GPQAx", r"E$'$ --- GPQA Diamond, heterog.", "gpqa_heterogeneous.json", "gpqa"),
+    ("AIME25h", r"F --- AIME 2025, homog.", "aime_2025_benchmark.json", "math"),
+    ("MMLUh", r"G --- MMLU-Pro, homog.", "mmlu_pro_benchmark.json", "mmlu"),
 ]
 SHORT = {
     "nvidia/nemotron-3.5-lightning:free": "Nemotron-3.5 (judge model)",
@@ -71,6 +74,8 @@ def main() -> None:
     pooled_rows = 0
     for key, label, fname, g in TRACKS:
         grade = GRADERS[g]
+        if not (OUT / fname).exists():
+            continue
         rows = [
             r
             for r in json.loads((OUT / fname).read_text())["results"]
@@ -142,7 +147,7 @@ def main() -> None:
         chance = 0.0
         words_won = words_all = 0.0
         for key, _label, fname, _g in TRACKS:
-            if key.endswith("x") != het:
+            if key.endswith("x") != het or not (OUT / fname).exists():
                 continue
             for r in json.loads((OUT / fname).read_text())["results"]:
                 if "error" in r or not r.get("winner_texts") or r.get("judge_version") != "short-answer":

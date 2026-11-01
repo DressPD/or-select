@@ -19,10 +19,12 @@
 %   python3 scripts/create_results_macros.py   -> Results_data.tex
 %   python3 scripts/analyze_selection.py       -> Selection_data.tex
 %   python3 scripts/ablation_weights_offline.py -> Ablation_data.tex
+%   python3 scripts/baselines_extra_offline.py -> Baselines_data.tex
 %   python3 scripts/create_manuscript_tables.py -> Figure_3_WorkedExample_data.tex
 \input{Results_data.tex}
 \input{Selection_data.tex}
 \input{Ablation_data.tex}
+\input{Baselines_data.tex}
 \input{Figure_3_WorkedExample_data.tex}
 
 \begin{document}
@@ -63,8 +65,9 @@ heterogeneous generation it is significantly worse (\HeteroPooledB{} versus
 term, measured in words, dominates the quality term in \CostDominatesK{} of
 \CostDominatesN{} replayed problems, and removing it does not help
 because the judge's signal concentrates picks on one generator
-(\PickShareCohere\%) that is no more accurate. Reproducible selection is
-not accurate selection; we release the protocol and replayable data.
+(\PickShareCohere\%) that is no more accurate. No other selector we tried that relies on the judge's output (pointwise
+confidence, knockout tournament, Bradley--Terry) beats plurality voting
+either. Reproducible selection is not accurate selection; we release the protocol and replayable data.
 \end{abstract}
 
 \begin{keyword}
@@ -78,7 +81,7 @@ answer selection \sep self-consistency \sep rank aggregation \sep benchmarking
 
 Large language models are sampled, not computed: even greedy decoding is
 not reproducible across runs or hardware because of GPU batch-invariance
-and floating-point non-associativity. The usual response is to draw $N$
+and floating-point non-associativity \citep{atil2024nondeterminism}. The usual response is to draw $N$
 candidate answers and pick one. Self-consistency
 \citep{wang2023selfconsistency} picks the majority final answer; it is
 well-defined only when candidates cluster, and on open-ended queries it
@@ -153,10 +156,28 @@ ones, and LLM-PeerReview \citep{llmpeerreview2025} has multiple LLM
 judges score candidates and aggregates with either averaging or a
 Dawid--Skene-style graphical truth-inference model. We aggregate instead
 with an integer program over a pairwise matrix plus a deterministic
-self-consistency term, and compare against an exact Kemeny--Young solution.
+self-consistency term, and compare against an exact Kemeny--Young solution. Heterogeneous ensembles
+are the subject of Mixture-of-Agents \citep{wang2024moa}, which lets later
+layers of models refine earlier outputs; we instead keep generation
+heterogeneous and the selection step explicit and auditable.
 
-\paragraph{Judge bias and aggregation.} Positional bias in LLM judging is
-documented by \citet{zheng2023judging} and \citet{wang2023notfair}.
+\paragraph{Test-time compute and the selection bottleneck.} Repeated
+sampling raises coverage, the fraction of problems with at least one
+correct sample, far faster than selectors can exploit it: without an
+automatic verifier, majority voting and reward models plateau, so the
+bottleneck is choosing the right sample, not producing it
+\citep{brown2024monkeys}; compute-optimal allocation across prompts
+changes the picture further \citep{snell2024scaling}. Verifier-based
+selection \citep{cobbe2021gsm8k,lightman2023letsverify} needs training
+data and a trained model; our setting is the training-free one, and our
+floor/oracle recovery metric (Section~\ref{sec:metrics}) is the
+coverage-versus-selection gap made explicit per problem.
+
+\paragraph{Judge bias and aggregation.} Surveys of LLM-as-a-judge \citep{gu2024survey} catalogue consistency and
+bias problems. Positional bias is documented by \citet{zheng2023judging}
+and \citet{wang2023notfair}; judges have also been reported to favour
+their own generations \citep{panickssery2024selfpref} and, more generally,
+text that is familiar to them \citep{wataoka2024selfpref}.
 Permutation self-consistency \citep{tang2024permutation} reduces it by
 averaging over shuffled orderings; we adopt its pairwise form.
 \citet{llmjudgethemselves2025} compare voting rules (including Borda,
@@ -419,7 +440,15 @@ seeds.
 \citep{wang2023selfconsistency}, with ties broken by candidate order.
 \textbf{Greedy single-sample}: the first of the $N$ candidates, i.e.\ no
 ensembling. \textbf{Exact Kemeny--Young}: the winner of the exact ranking of
-Section~\ref{sec:kemeny-exact}, computed on the same pairwise matrix.
+Section~\ref{sec:kemeny-exact}, computed on the same pairwise matrix. Section~\ref{sec:baselines} adds further
+selectors: shortest and longest candidate, minimum-Bayes-risk selection with
+token-set Jaccard similarity, pointwise confidence argmax, a
+confidence-weighted vote, a knockout tournament over the pairwise matrix, and
+a Bradley--Terry fit (Borda over the pairwise matrix coincides with the
+Copeland quality). Reward-model or process-reward best-of-$N$
+\citep{cobbe2021gsm8k,lightman2023letsverify} and universal
+self-consistency \citep{chen2023usc} need a trained model or further live
+calls and were not run (Section~\ref{sec:limitations}).
 
 \subsection{Judge validation: RewardBench}
 \label{sec:rewardbench-setup}
@@ -461,7 +490,9 @@ benchmark size, never the number of rows attempted; ungraded problems are
 not silently dropped (Table~\ref{tab:coverage}).
 \emph{Paired tests.} For two selectors on the same graded problems we count
 discordant problems and report the exact two-sided McNemar (binomial) test,
-the test we pre-registered; pooled tests sum discordant counts over tracks.
+the test we pre-registered (the statistical treatment of paired model
+comparisons follows \citealp{miller2024errorbars}); pooled tests sum
+discordant counts over tracks.
 \emph{Headroom and recovery.} For each problem we score every candidate.
 The \emph{floor} is the mean candidate accuracy (a random pick), the
 \emph{oracle} is the fraction of problems with at least one correct
@@ -630,7 +661,8 @@ With a uniform pool each model would be picked a third of the time. The
 judge picks the Cohere candidate in \PickShareCohere\% of problems although
 Cohere's candidates (\CandAccCohere\% correct) are as accurate as
 Nemotron's (\CandAccNemotron\%). It picks Nemotron, the judge's own model, in only
-\PickShareNemotron\% of problems, so self-preference is not the explanation.
+\PickShareNemotron\% of problems, so the self-preference reported in the literature
+\citep{panickssery2024selfpref,wataoka2024selfpref} is not the explanation here.
 The picked Cohere candidates are right \PickAccCohere\% of the time, below
 the \CandAccCohere\% of Cohere's candidates in general: the preference
 selects a style, not correctness. The weakest model, Laguna-S
@@ -707,6 +739,50 @@ self-consistency result on the same problems.}
 Track & Replayable & SC & Default & No cost & Quality only & SC+quality \\
 \midrule
 \AblationTableRows
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{Additional selectors}
+\label{sec:baselines}
+
+Table~\ref{tab:baselines} compares OR-Select's competitors beyond
+Section~\ref{sec:accuracy-results}. Judge-free selectors (shortest and
+longest candidate, and minimum-Bayes-risk selection with token-set Jaccard
+similarity) run on every graded problem; judge-based selectors are replayed on
+the problems whose judge outputs were stored (pointwise confidence argmax,
+a vote weighted by the scorer's confidence, a knockout tournament over the
+pairwise matrix, and a Bradley--Terry fit). Each is paired with
+self-consistency on the same problems; the parenthesis in each accuracy cell
+is the self-consistency accuracy on those problems.
+
+No selector beats plurality voting in either condition. The judge-free
+minimum-Bayes-risk selector, which only measures how much a candidate
+resembles the others, stays within a few problems of voting in both
+conditions, and so does the confidence-weighted vote, which is itself a
+variant of voting. The selectors that act on the judge's pairwise or pointwise
+output choose worse than voting in heterogeneous pools, as OR-Select does,
+and the trivial length rules (shortest, longest) are worse still. The
+common thread is the same as in Section~\ref{sec:cost-diagnosis}: whatever
+signal the judge adds is not about correctness.
+
+\begin{table}[htbp]
+\centering
+\caption{Additional selectors, paired with self-consistency (SC) on the same
+graded problems. For each condition: problems $n$, accuracy \% (SC accuracy
+\% on the same problems), problems where the selector is right and SC wrong
+over the reverse, and the exact McNemar $p$. $^\dagger$: needs the stored
+judge outputs, so $n$ is the replayable subset.}
+\label{tab:baselines}
+\small\setlength{\tabcolsep}{4pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrrr}
+\toprule
+ & \multicolumn{4}{c}{Homogeneous} & \multicolumn{4}{c}{Heterogeneous} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}
+Selector & $n$ & Acc. (SC) & W/L & $p$ & $n$ & Acc. (SC) & W/L & $p$ \\
+\midrule
+\BaselineTableRows
 \bottomrule
 \end{tabular}}
 \end{table}
@@ -821,8 +897,9 @@ In an earlier pilot run on a different provider and model, three candidates
 had byte-identical text. By construction every pairwise weight among
 identical text must be $0.5$, since the forward and backward judge calls
 are the same prompt and $(v+(1-v))/2=0.5$. The observed quality scores
-were $0.375$, $0.50$ and $0.625$, direct evidence that the provider's
-\texttt{seed} parameter was not reliably honored in that run. This is a
+were $0.375$, $0.50$ and $0.625$, direct evidence that the provider's \texttt{seed} parameter was not reliably honored in that run,
+in line with systematic run-to-run variation reported for nominally deterministic
+settings \citep{atil2024nondeterminism}. This is a
 single observation; the exact-match short-circuit
 (Section~\ref{sec:pipeline}) removes this failure mode for identical text
 but not for different texts that receive unstable scores, which remains
@@ -867,6 +944,12 @@ length analyses were not pre-registered. The default weights were fixed
 before the ground-truth runs and not tuned afterwards; we deliberately
 report the shipped objective as the primary result, and the cost-scale
 problem as a finding about it.
+
+\textbf{Baselines not run.} We did not run reward-model or
+process-reward best-of-$N$, which need a trained verifier, nor universal
+self-consistency, which needs further live calls; the judge-based selectors
+of Section~\ref{sec:baselines} are replayed only on the problems whose judge
+outputs were stored.
 
 \textbf{Benchmark scope.} Tracks are mathematics and science multiple
 choice or exact-match; open-ended quality, where self-consistency is
