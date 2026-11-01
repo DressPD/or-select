@@ -82,12 +82,12 @@ def main() -> None:
             if pairs < 30:  # too few wrong pairs to estimate rho: report the bounds over every possible rho instead
                 q_all = gen.q_star_exact(N, p, 1.0)
                 rows.append(
-                    f"{label}{'' if not het else '-H'} & {N} & {p:.3f} & {pairs} & n/a & {q:.3f} & {q0:.3f} & [{q_all:.3f}, {q0:.3f}]$^{{\\ddagger}}$ \\\\"
+                    f"{label}{'' if not het else '-H'} & {N} & {p:.3f} & {pairs} & n/a & {len(mixed)} & {q:.3f} & {q0:.3f} & [{q_all:.3f}, {q0:.3f}]$^{{\\ddagger}}$ \\\\"
                 )
                 print(rows[-1])
                 continue
             rows.append(
-                f"{label}{'' if not het else '-H'} & {N} & {p:.3f} & {pairs} & {rho:.2f} [{lo:.2f}, {hi:.2f}] & {q:.3f} & {q0:.3f} & {q1:.3f} [{q_hi:.3f}, {q_lo:.3f}] \\\\"
+                f"{label}{'' if not het else '-H'} & {N} & {p:.3f} & {pairs} & {rho:.2f} [{lo:.2f}, {hi:.2f}] & {len(mixed)} & {q:.3f} & {q0:.3f} & {q1:.3f} [{q_hi:.3f}, {q_lo:.3f}] \\\\"
             )
             print(rows[-1])
     DEST.write_text(

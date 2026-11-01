@@ -79,7 +79,7 @@ because the judge's signal concentrates picks on one generator
 (\PickShareCohere\%) that is no more accurate. No other selector we tried that relies on the judge's output (pointwise
 confidence, knockout tournament, Bradley--Terry) beats plurality voting
 either. A closed-form threshold shows why: with three candidates, a judge must prefer the correct
-answer in more than 80\% of mixed pairs once generators are 80\% accurate, and we measure 48--55\%. Reproducible selection is not accurate selection; we release the protocol and replayable data.
+answer in more than 80\% of mixed pairs once generators are 80\% accurate, and we measure 48--55\% on every track with at least 70 mixed pairs. Reproducible selection is not accurate selection; we release the protocol and replayable data.
 \end{abstract}
 
 \begin{keyword}
@@ -114,7 +114,7 @@ evaluate the selector against ground truth rather than assume that a
 principled aggregation rule translates into better answers
 \citep{landesberg2026bestofn}.
 
-\paragraph{Contributions.}
+\paragraph{Contributions}
 \begin{enumerate}
 \item \textbf{Formulation and replayability.} An integer-programming
   formulation of best-of-$N$ selection that treats self-consistency as one
@@ -136,11 +136,11 @@ principled aggregation rule translates into better answers
   validation on RewardBench; and offline weight ablations that cost no API
   calls because the judge outputs are stored (Sections~\ref{sec:experiments}
   and \ref{sec:results}).
-\item \textbf{A threshold theorem.} A closed-form, finite-$N$ condition
-  (Theorem~\ref{thm:threshold}) for when a pairwise judge with Copeland
-  aggregation beats plurality voting, checked by exhaustive enumeration and
-  confronted with the measured pairwise accuracy of the judge
-  (Section~\ref{sec:threshold-results}).
+\item \textbf{Pairwise-accuracy thresholds.} A closed-form condition for $N=3$
+  (Theorem~\ref{thm:threshold}) for when a pairwise judge with Copeland aggregation beats
+  plurality voting; exact thresholds for $N\le7$, pair-dependent judges and correlated wrong
+  answers; a large-$N$ lower bound (Proposition~\ref{prop:lower}); all confronted with the measured
+  pairwise accuracy of the judge (Section~\ref{sec:threshold-results}).
 \item \textbf{Findings.} (a) The judge is only moderately reliable
   (\RBOverallAcc\% on RewardBench). (b) With homogeneous generation,
   judge-based selection does not beat majority vote. (c) With
@@ -161,7 +161,7 @@ reference and explains where it comes from.
 \section{Related Work}
 \label{sec:related}
 
-\paragraph{Selection among sampled answers.} Self-consistency
+\paragraph{Selection among sampled answers} Self-consistency
 \citep{wang2023selfconsistency} takes a majority vote over extracted
 answers; universal self-consistency \citep{chen2023usc} lets the model
 itself choose the most consistent free-form response. Pairwise approaches
@@ -178,7 +178,7 @@ are the subject of Mixture-of-Agents \citep{wang2024moa}, which lets later
 layers of models refine earlier outputs; we instead keep generation
 heterogeneous and the selection step explicit and auditable.
 
-\paragraph{Test-time compute and the selection bottleneck.} Repeated
+\paragraph{Test-time compute and the selection bottleneck} Repeated
 sampling raises coverage, the fraction of problems with at least one
 correct sample, far faster than selectors can exploit it: without an
 automatic verifier, majority voting and reward models plateau, so the
@@ -190,7 +190,7 @@ data and a trained model; our setting is the training-free one, and our
 floor/oracle recovery metric (Section~\ref{sec:metrics}) is the
 coverage-versus-selection gap made explicit per problem.
 
-\paragraph{Judge bias and aggregation.} Surveys of LLM-as-a-judge \citep{gu2024survey} catalogue consistency and
+\paragraph{Judge bias and aggregation} Surveys of LLM-as-a-judge \citep{gu2024survey} catalogue consistency and
 bias problems. Positional bias is documented by \citet{zheng2023judging}
 and \citet{wang2023notfair}; judges have also been reported to favour
 their own generations \citep{panickssery2024selfpref} and, more generally,
@@ -204,7 +204,7 @@ rankings; their setting is leaderboard construction, not answer selection,
 so we use it as motivation for the Kemeny reference, not as evidence about
 selection accuracy.
 
-\paragraph{Why more judges or agreement do not necessarily help.}
+\paragraph{Why more judges or agreement do not necessarily help}
 \citet{correlatederrors2026} show that a panel of nine judges carries
 about two effective votes because the models err on the same items, and
 that established aggregation methods close at most 11\% of the resulting
@@ -221,7 +221,7 @@ Our recovery metric (Section~\ref{sec:metrics}) follows their
 recommendation to report within-prompt selection quality rather than
 global agreement.
 
-\paragraph{Rank aggregation.} The Kemeny--Young rule
+\paragraph{Rank aggregation} The Kemeny--Young rule
 \citep{kemeny1959mathematics,young1978kemeny} is the unique neutral,
 consistent, Condorcet-consistent ranking rule \citep{young1978kemeny};
 computing it exactly is NP-hard \citep{bartholdi1989voting}, and the
@@ -230,7 +230,7 @@ surrogates. \citet{coppersmith2006ordering} prove that ordering by weighted
 number of wins is a 5-approximation for weighted tournaments, the result
 Proposition~\ref{prop:copeland-approx} uses.
 
-\paragraph{Operational-research precedents.} Three streams of this journal's
+\paragraph{Operational-research precedents} Three streams of this journal's
 literature meet in our problem. \emph{Exact and heuristic Kemeny aggregation}:
 exact and metaheuristic methods for the median ranking, including weak and
 partial rankings
@@ -256,7 +256,7 @@ Recent work in this journal also applies fused LLMs to prediction tasks
 \citep{maarouf2025fused}; in our search of this journal we found no paper that audits
 LLM answer selection against ground truth.
 
-\paragraph{Voting theory and jury theorems.} The accuracy of aggregating noisy
+\paragraph{Voting theory and jury theorems} The accuracy of aggregating noisy
 judgments has a long theory. Condorcet's jury theorem says majority accuracy tends to one if voters are
 independent and better than chance; it fails or weakens when votes are correlated
 \citep{ladha1992condorcet} or voters share evidence \citep{dietrich2004jury}, and has been applied to LLM
@@ -271,7 +271,7 @@ Our contribution relative to this literature is not the noise model but its use 
 criterion for LLM answer selection: an exact, checkable condition on the measurable pairwise
 accuracy $q$ under which the pairwise route beats plurality of answers, together with the measured values.
 
-\paragraph{Closest recent work and what is new.} The closest ML
+\paragraph{Closest recent work and what is new} The closest ML
 work falls into four groups. (i) \emph{Preference-graph aggregation with
 several judges}: PGED \citep{hu2024pged} combines several small evaluators
 into an acyclic preference graph and proves recovery of the ground-truth
@@ -281,9 +281,9 @@ judge, it sits at chance. (ii) \emph{Theory of voting versus a reward model}:
 Best-of-Majority \citep{di2025bom} and Best-of-$\infty$
 \citep{komiyama2025bestofinf} give asymptotic, minimax and weighted-ensemble
 (mixed-integer) analyses of majority voting and best-of-$N$ in the large-$N$ limit;
-our Theorem~\ref{thm:threshold} is a finite-$N$ ($N=3$) closed form that gives the
-exact judge accuracy at which a pairwise-Copeland selector overtakes
-plurality. (iii) \emph{Improving on majority voting by modelling the voters}:
+our Theorem~\ref{thm:threshold} is a finite-$N$ ($N=3$) closed form, extended here by exact
+computation to $N\le7$ and by a large-$N$ lower bound, that gives the judge accuracy at which a
+pairwise-Copeland selector overtakes plurality. (iii) \emph{Improving on majority voting by modelling the voters}:
 \citet{ai2025beyondmv} propose optimal-weight and inverse-surprising-popularity
 aggregation using second-order information; they do not use an LLM as a
 selector. (iv) \emph{Audits of ensemble gain}: \citet{kim2026diversity} show on
@@ -380,13 +380,13 @@ count, so $w_3=0.01$ charges one full quality unit per hundred words of
 difference between candidates. Section~\ref{sec:cost-diagnosis} shows what
 this does on reasoning-length outputs.
 
-\paragraph{Replay.} Each result row stores the candidate texts, the judge's
+\paragraph{Replay} Each result row stores the candidate texts, the judge's
 confidence scores and the full pairwise matrix. The selection step can
 therefore be re-run exactly under any weights without API calls
 (Section~\ref{sec:ablations}); the shipped objective reproduces
 \AblationFidelityK{} of \AblationFidelityN{} stored winners.
 
-\paragraph{Worked example.} Table~\ref{tab:worked-example} and
+\paragraph{Worked example} Table~\ref{tab:worked-example} and
 Figure~\ref{fig:worked-example} decompose Equation~\eqref{eq:selection-obj}
 for one real open-ended run ($N=5$, no exact-text duplicates).
 $\text{quality}_i$ is recovered by inverting the saved
@@ -485,7 +485,7 @@ CP-SAT with a single search worker returns the same optimum regardless of
 machine or call order. This is true by construction; what we measure is
 whether the \emph{inputs} to the solve are stable and informative.
 
-\subsection{When can a judge beat voting? A pairwise-accuracy threshold}
+\section{When can a judge beat voting? Pairwise-accuracy thresholds}
 \label{sec:theory}
 
 The approximation guarantee of Section~\ref{sec:approx-guarantee} controls the
@@ -494,7 +494,7 @@ whether the top-ranked candidate is correct. The relevant quantity is the
 accuracy of the pairwise signal itself. We give a threshold for the setting
 of our homogeneous tracks.
 
-\paragraph{Model.} Three candidates are each correct independently with
+\paragraph{Model} Three candidates are each correct independently with
 probability $p$; wrong answers are pairwise distinct, so plurality voting
 selects a correct answer exactly when at least two candidates are correct (and,
 with one correct candidate, breaks a three-way tie uniformly). A judge
@@ -523,7 +523,7 @@ generators already are, the more accurate the judge must be before it adds
 anything: at $p=0.8$ the judge must prefer the correct answer in more than
 $80\%$ of mixed pairs. A judge helps most where voting is weakest, on weak
 generators or when correct answers are rare, which is also where a judge is
-hardest to build. The proof is in Appendix~\ref{app:proof}; the closed form
+hardest to build. The proof is in \ref{app:proof}; the closed form
 is checked against exhaustive enumeration of the comparison outcomes
 (\texttt{scripts/judge\_threshold\_theory.py}).
 
@@ -750,8 +750,7 @@ already leads. This is the pairwise-judge analogue of the dichotomy established
 for reward-model best-of-$N$ and majority voting by \citet{di2025bom}, and we
 claim consistency with it, not novelty: the contribution here is the exact
 finite-$N$ thresholds above and their confrontation with the measured $\hat q$.
-Our benchmark pools are in the right-majority regime (the shipped Nemotron
-generator is correct on 77--98\% of candidates, Table~\ref{tab:threshold-emp}),
+Our benchmark pools are in the right-majority regime (the shipped Nemotron generator is correct on 77--99\% of candidates, floor column of Table~\ref{tab:recovery}),
 which is why the judge cannot help.
 
 \section{Experimental Protocol}
@@ -1137,64 +1136,45 @@ Selector & $n$ & Acc. (SC) & W/L & $p$ & $n$ & Acc. (SC) & W/L & $p$ \\
 \end{tabular}}
 \end{table}
 
-\subsection{Measured pairwise accuracy against the threshold}
+\subsection{Measured pairwise accuracy against the thresholds}
 \label{sec:threshold-results}
 
 We measure $\hat p$ (share of correct candidates) and $\hat q$ (the mean stored
 pairwise probability assigned to the correct candidate, over ordered pairs with
-exactly one correct candidate) on the stored judge outputs. Table~\ref{tab:threshold-emp}
-compares $\hat q$ with the threshold $q^{*}(\hat p)$ of Theorem~\ref{thm:threshold}
-for the homogeneous track with enough mixed pairs (GPQA Diamond; the other homogeneous tracks stored too few judgments with a mixed pair). The measured $\hat q$ is far
-below the threshold: for GPQA Diamond the judge prefers the correct candidate in
-only $53.6\%$ of mixed comparisons, against a required $78.8\%$. The table also
-gives the heterogeneous tracks; Table~\ref{tab:threshold-emp-gen} computes the
-exact $N=6$ thresholds for them. There $\hat q$ is at or near chance
-($0.48$--$0.55$) except on GSM8K, where only 24 mixed pairs exist, and
-it is below the threshold on every track, including when the measured
-wrong-answer correlation is taken into account.
-This is the pairwise-level counterpart of the selection-level results above:
-the judge's signal about correctness is too weak for any selector built on it
-to beat voting. The model is stylized (independent candidates, distinct wrong
-answers, symmetric judge); real wrong answers collide, so we use it for the
-threshold comparison, not to predict accuracies.
+exactly one correct candidate) on the stored judge outputs, and compare $\hat q$ with the
+exact threshold $q^{*}$ of Section~\ref{sec:theory}, first with distinct wrong answers
+($q^{*}_{0}$) and then with the measured wrong-answer correlation $\hat\rho$
+(Table~\ref{tab:threshold-emp-gen}). Only tracks with at least 20 mixed ordered pairs
+are shown: for homogeneous generation that is GPQA Diamond alone, because the other
+homogeneous tracks stored too few judgments containing a mixed pair.
 
-\begin{table}[htbp]
-\centering
-\caption{Measured per-candidate accuracy $\hat p$, number of mixed ordered
-pairs, measured pairwise judge accuracy $\hat q$, and (homogeneous only) the
-threshold $q^{*}(\hat p)$ of Theorem~\ref{thm:threshold}. Tracks with fewer
-than 20 mixed pairs are omitted.}
-\label{tab:threshold-emp}
-\small
-\begin{tabular}{lrrrr}
-\toprule
-\multicolumn{5}{l}{\textit{Homogeneous ($N=3$)}} \\
-Track & $\hat p$ & mixed pairs & $\hat q$ & $q^{*}(\hat p)$ \\
-\midrule
-\ThresholdEmpiricalRows
-\midrule
-\multicolumn{5}{l}{\textit{Heterogeneous ($N=6$; no threshold computed)}} \\
-Track & $\hat p$ & mixed pairs & $\hat q$ & \\
-\midrule
-\ThresholdHeteroRows
-\bottomrule
-\end{tabular}
-\end{table}
+The measured $\hat q$ is far below every threshold. For GPQA Diamond the judge prefers the
+correct candidate in only $53.6\%$ of mixed comparisons against a required $78.8\%$
+($71.6\%$ once the very high wrong-answer correlation, $\hat\rho=0.88$, is allowed for). On the
+heterogeneous tracks $\hat q$ lies between $0.48$ and $0.55$ on every track with at least 70 mixed
+pairs, which is at or near chance; GSM8K ($0.66$, 24 mixed pairs) and AIME ($0.55$) have too few wrong
+pairs for $\rho$ to be estimated, so their threshold intervals span every possible $\rho$, and $\hat q$ is
+still below the lower end. This is the pairwise-level counterpart of the selection-level results above:
+the judge's signal about correctness is too weak for any selector built on it to beat voting. The model
+is stylized (independent candidates, one wrong-answer structure, one accuracy for all pairs), so we use
+it for the threshold comparison, not to predict accuracies. The replayable rows are the ones that stored judge
+outputs, not a random sample of problems (Section~\ref{sec:limitations}).
+
 
 \begin{table}[htbp]
 \centering
 \caption{Thresholds with measured wrong-answer correlation. ``Wrong pairs'': pairs of wrong candidates
 of the same problem with extracted answers; $\hat\rho$: square root of their agreement rate, with a 95\%
 problem-level bootstrap interval; $q^{*}_{0}$: exact threshold at $\rho=0$; $q^{*}_{\hat\rho}$: exact threshold at
-$\hat\rho$, with the values at the ends of the $\hat\rho$ interval. $^\ddagger$: fewer than 30 wrong pairs, so $\rho$
+$\hat\rho$, with the values at the ends of the $\hat\rho$ interval; $\hat q$ is computed over the mixed ordered pairs. $^\ddagger$: fewer than 30 wrong pairs, so $\rho$
 is not estimated and the interval spans every possible value, from $\rho=1$ to $\rho=0$. Suffix H: heterogeneous
 ($N=6$). $\hat q$ is below the lower end of every threshold interval.}
 \label{tab:threshold-emp-gen}
 \small
 \resizebox{\textwidth}{!}{%
-\begin{tabular}{lrrrrrrr}
+\begin{tabular}{lrrrrrrrr}
 \toprule
-Track & $N$ & $\hat p$ & Wrong pairs & $\hat\rho$ [95\% CI] & $\hat q$ & $q^{*}_{0}$ & $q^{*}_{\hat\rho}$ \\
+Track & $N$ & $\hat p$ & Wrong pairs & $\hat\rho$ [95\% CI] & Mixed pairs & $\hat q$ & $q^{*}_{0}$ & $q^{*}_{\hat\rho}$ \\
 \midrule
 \ThresholdEmpGenRows
 \bottomrule
@@ -1299,6 +1279,12 @@ and on the weak link between judge metrics and selection accuracy
 \citep{landesberg2026bestofn}, and adds a within-pool, ground-truth
 measurement of the effect.
 
+\paragraph{Why the judge cannot help, quantitatively} The threshold analysis of Section~\ref{sec:theory} turns the
+first three factors into one number. When generators are already accurate ($\hat p\approx0.8$) a pairwise judge must prefer
+the correct answer in roughly $70$--$95\%$ of mixed pairs, depending on $N$ and on how strongly wrong answers collide,
+before Copeland aggregation can match plurality voting; the measured value is $0.48$--$0.55$. The same analysis says where a
+judge can pay off: pools in which the most popular answer is wrong (Proposition~\ref{prop:regimes}), which none of our benchmark pools is.
+
 Reproducibility is not accuracy. A selector can be bit-for-bit
 reproducible and systematically wrong; the replay machinery is what made
 the diagnoses above cheap, and we regard it as a transferable practice for
@@ -1359,6 +1345,13 @@ before the ground-truth runs and not tuned afterwards; we deliberately
 report the shipped objective as the primary result, and the cost-scale
 problem as a finding about it.
 
+\textbf{Theory scope.} The thresholds assume independent candidates, a symmetric judge whose accuracy on mixed
+pairs is $q$ (or at least $q_{\min}$), and either one shared wrong answer or wrong answers uniform over $D$
+values; real wrong answers have a skewed, problem-specific distribution. Exact values stop at $N=7$, the
+large-$N$ result is a lower bound, and the quality-only model ignores the cost term (treated only by simulation).
+The measured $\hat q$ comes from the rows that stored judge outputs, which are not a random sample of problems and
+contain few mixed pairs on the homogeneous tracks.
+
 \textbf{Baselines not run.} We did not run reward-model or
 process-reward best-of-$N$, which need a trained verifier, nor universal
 self-consistency, which needs further live calls; the judge-based selectors
@@ -1380,9 +1373,8 @@ Kemeny--Young reference, paired exact tests, headroom and recovery,
 coverage accounting, and replayable judge outputs. On four ground-truth
 benchmarks the audit finds no accuracy benefit of judge-based selection over
 majority vote with a single homogeneous generator, and a significant harm
-with heterogeneous generators, traced to a length-scale mismatch in the
-objective and a generator-specific judge preference rather than to
-nondeterminism. The practical lessons are to validate the judge on the
+with heterogeneous generators, traced to a length-scale mismatch in the objective and a generator-specific judge preference rather than to nondeterminism,
+and a threshold analysis shows why: the measured pairwise accuracy of the judge sits far below the accuracy the aggregation would need. The practical lessons are to validate the judge on the
 configuration actually shipped, to report recovery against a floor and an
 oracle rather than accuracy alone, and to keep judge outputs so that a
 selector can be audited without new API calls. Whether a stronger or more
