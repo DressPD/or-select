@@ -2,4 +2,4 @@
 - Exact Kemeny-Young reference; Copeland aggregate is a 5-approximation
 - Ground-truth audit on GSM8K, MATH-5, AIME 2026 and GPQA with paired exact tests
 - Judge selection ties majority vote when homogeneous and is worse when mixed
-- Objective scale and judge bias diagnosed offline from stored judge outputs
+- Exact threshold: a pairwise judge needs >80% accuracy to beat voting (p=0.8, N=3)

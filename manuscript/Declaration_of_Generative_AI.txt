@@ -1,0 +1,7 @@
+Declaration of generative AI and AI-assisted technologies in the writing process
+
+Manuscript title: OR-Select: Reproducible Best-of-N Answer Selection over LLM Ensembles, with an Exact Kemeny Reference and a Ground-Truth Audit
+
+During the preparation of this work the author used Claude (Anthropic; Claude Code with Claude Sonnet 5.5) to write and refactor analysis code, to draft and edit manuscript text, to check bibliographic records against Crossref and arXiv, and to derive and numerically verify the results in Section 3.5 and the appendices. The language models named in the experiments (served through OpenRouter) are the objects of study, not writing tools. After using these tools the author reviewed and edited the content as needed and takes full responsibility for the content of the publication.
+
+[AUTHOR: confirm this statement is accurate before submission; Elsevier requires it to be accurate and to appear in the manuscript.]

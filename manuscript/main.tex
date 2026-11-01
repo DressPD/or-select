@@ -26,6 +26,7 @@
 %   python3 scripts/judge_threshold_theory.py -> Theory_data.tex
 %   python3 scripts/judge_threshold_general.py -> ThresholdGeneral_data.tex
 %   python3 scripts/judge_threshold_empirical.py -> ThresholdEmpiricalGeneral_data.tex
+%   python3 scripts/judge_threshold_extensions.py -> ThresholdExt_data.tex
 %   python3 scripts/create_manuscript_tables.py -> Figure_3_WorkedExample_data.tex
 \input{Results_data.tex}
 \input{Selection_data.tex}
@@ -34,6 +35,7 @@
 \input{Theory_data.tex}
 \input{ThresholdGeneral_data.tex}
 \input{ThresholdEmpiricalGeneral_data.tex}
+\input{ThresholdExt_data.tex}
 \input{Figure_3_WorkedExample_data.tex}
 
 \begin{document}
@@ -253,6 +255,21 @@ of study.
 Recent work in this journal also applies fused LLMs to prediction tasks
 \citep{maarouf2025fused}; in our search of this journal we found no paper that audits
 LLM answer selection against ground truth.
+
+\paragraph{Voting theory and jury theorems.} The accuracy of aggregating noisy
+judgments has a long theory. Condorcet's jury theorem says majority accuracy tends to one if voters are
+independent and better than chance; it fails or weakens when votes are correlated
+\citep{ladha1992condorcet} or voters share evidence \citep{dietrich2004jury}, and has been applied to LLM
+ensembles with the conclusion that adding models helps little when their errors are not independent
+\citep{lefort2024condorcet,correlatederrors2026}. For rankings, the Kemeny--Young rule is the
+maximum-likelihood estimate under a Condorcet-style noise model in which each pairwise comparison is
+independently correct with the same probability above one half \citep{young1988condorcet}, which is
+exactly the judge model of Theorem~\ref{thm:threshold}; other rules, including plurality, are
+maximum-likelihood under other noise models \citep{conitzer2005common}, and the sample complexity of
+recovering the truth from noisy votes depends on the rule and the noise model \citep{caragiannis2016noisy}.
+Our contribution relative to this literature is not the noise model but its use as a decision
+criterion for LLM answer selection: an exact, checkable condition on the measurable pairwise
+accuracy $q$ under which the pairwise route beats plurality of answers, together with the measured values.
 
 \paragraph{Closest recent work and what is new.} The closest ML
 work falls into four groups. (i) \emph{Preference-graph aggregation with
@@ -545,7 +562,7 @@ the shortest-candidate rule (Table~\ref{tab:baselines}).
 Three relaxations matter in practice. (a) \emph{Any $N$.} Let the judge
 compare every pair once and select the Copeland winner of the $N$ candidates.
 There is no closed form, but the accuracy is a finite sum over the
-$2^{N(N-1)/2}$ comparison outcomes, which we enumerate exactly for $N\le6$.
+$2^{N(N-1)/2}$ comparison outcomes, which we enumerate exactly for $N\le7$.
 (b) \emph{A pair-dependent judge.} Let $q_{ij}$ be the probability that the
 judge prefers the correct candidate $i$ to the wrong candidate $j$.
 (c) \emph{Correlated wrong answers.} A wrong candidate takes one shared
@@ -567,10 +584,10 @@ voting. A judge with $q_{ij}\ge q^{*}$ for all mixed pairs is at least as accura
 as voting; one with $q_{ij}\le q^{*}$ for all mixed pairs is at most as accurate.
 \end{corollary}
 
-Table~\ref{tab:threshold-n} gives $q^{*}$ computed exactly for $N=3,\dots,6$
+Table~\ref{tab:threshold-n} gives $q^{*}$ computed exactly for $N=3,\dots,7$
 (the $N=3$, $\rho=0$ column reproduces Table~\ref{tab:threshold}). Two things stand
 out. With distinct wrong answers the threshold \emph{rises} with $N$: at
-$p=0.8$ it goes from $0.804$ to $0.935$, a pattern consistent with plurality needing only a few matching correct answers however many candidates there are, while every extra candidate adds comparisons that can err; we did not prove this explanation. With correlated wrong answers ($\rho=0.5$) voting is weaker
+$p=0.8$ it goes from $0.804$ to $0.935$, and Proposition~\ref{prop:lower} below shows that this is not an artefact of small $N$: the threshold cannot fall back towards chance as $N$ grows. With correlated wrong answers ($\rho=0.5$) voting is weaker
 and the threshold is lower, about $0.82$ at $p=0.8$ for $N\ge4$. The
 direction of the relaxation is therefore the one a reader would expect, but its
 size is large enough that the realistic threshold is far from $\tfrac12$.
@@ -598,6 +615,7 @@ wrong-answer correlation $\rho$.}
 $N$ & $p=0.5$ & $p=0.8$ & $p=0.5$ & $p=0.8$ \\
 \midrule
 \ThresholdNRows
+\ThresholdNSevenRow
 \bottomrule
 \end{tabular}
 \end{table}
@@ -613,6 +631,99 @@ $N$ & $p=0.5$ & $p=0.8$ & $p=0.5$ & $p=0.8$ \\
 $N$ & $p$ & $\rho$ & $q$ & Exact & Monte Carlo \\
 \midrule
 \ThresholdValidationRows
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Why the threshold keeps rising: a large-$N$ lower bound}
+With distinct wrong answers plurality's error has a closed form. It is correct
+whenever at least two candidates are correct, and when exactly one is correct all $N$ answers
+differ and it is chosen with probability $1/N$, so
+\begin{equation}
+\mathrm{err}_{V}(N)=(1-p)^{N}+(N-1)\,p\,(1-p)^{N-1},
+\label{eq:vote-err}
+\end{equation}
+which decays at rate $-\ln(1-p)$ per candidate. A pairwise-Copeland selector
+that errs on the event ``a wrong candidate beats a sizeable block of correct ones''
+decays more slowly unless $q$ is large. Write
+$\mathrm{KL}(\eta\Vert p)=\eta\ln\frac{\eta}{p}+(1-\eta)\ln\frac{1-\eta}{1-p}$ and
+\[
+\Lambda(p,q)\;=\;\inf_{\eta>1-\frac{1}{2q}}\Bigl[\mathrm{KL}(\eta\Vert p)+\eta\ln\tfrac{1}{1-q}\Bigr].
+\]
+
+\begin{proposition}[Large-$N$ lower bound]
+\label{prop:lower}
+Let wrong answers be distinct ($\rho=0$) and the judge uniform with $q>\tfrac12$. If
+$\Lambda(p,q)<-\ln(1-p)$, there is $N_0$ such that for all $N\ge N_0$ the Copeland selector is strictly
+less accurate than plurality. Consequently $\liminf_{N\to\infty}q^{*}(p,N)\ge q_{\Lambda}(p)$, where
+$q_{\Lambda}(p)$ is the unique root of $\Lambda(p,q)=-\ln(1-p)$.
+\end{proposition}
+
+Table~\ref{tab:threshold-lambda} lists $q_{\Lambda}(p)$ next to the exact $N=6$ thresholds:
+the exact values sit just below the limiting lower bound for $p\ge0.6$ and just above it at $p=0.5$,
+as a sequence rising to (at least) $q_{\Lambda}$ would. We do not prove that the limit equals $q_{\Lambda}$; the
+proposition is a lower bound, obtained by exhibiting one specific way in which Copeland errs.
+
+\begin{table}[htbp]
+\centering
+\caption{Plurality's error decay rate $-\ln(1-p)$, the large-$N$ lower bound $q_{\Lambda}(p)$ on
+$\liminf_N q^{*}(p,N)$ (Proposition~\ref{prop:lower}), and the exact $q^{*}(p,6)$ ($\rho=0$).}
+\label{tab:threshold-lambda}
+\small
+\begin{tabular}{rrrr}
+\toprule
+$p$ & $-\ln(1-p)$ & $q_{\Lambda}(p)$ & $q^{*}(p,6)$ \\
+\midrule
+\ThresholdLambdaRows
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Structure of the wrong answers beyond a single attractor}
+The attractor model with parameter $\rho$ is one way to correlate wrong answers. We also
+drew each wrong answer uniformly from $D$ wrong values ($D=1$: all wrong answers coincide;
+$D=3$: the three distractors of a four-option question; $D=\infty$: all distinct).
+Table~\ref{tab:threshold-D} shows that the threshold is monotone in the structure: the fewer distinct wrong values, the
+weaker plurality and the lower the threshold, down to $q^{*}=\tfrac12$ when all wrong answers coincide and the
+pool is small ($N=4$, $p=0.5$). For the four-option GPQA questions ($D=3$) the threshold is $0.64$--$0.80$ at
+$N=4,5$, consistent with the attractor-model estimate for GPQA in Table~\ref{tab:threshold-emp-gen}.
+
+\begin{table}[htbp]
+\centering
+\caption{Exact $q^{*}$ when each wrong answer is uniform over $D$ wrong values.}
+\label{tab:threshold-D}
+\small
+\begin{tabular}{rrrrr}
+\toprule
+ & \multicolumn{2}{c}{$N=4$} & \multicolumn{2}{c}{$N=5$} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+$D$ & $p=0.5$ & $p=0.8$ & $p=0.5$ & $p=0.8$ \\
+\midrule
+\ThresholdDRows
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{The cost term} The results above use the quality term alone, the case most
+favourable to the judge. If the cost (length) of a candidate is independent of its
+correctness, adding it can only move the selector towards the shortest-candidate rule, whose accuracy is
+exactly $p$, the accuracy of a random pick; Table~\ref{tab:threshold-cost} shows by simulation how accuracy
+falls from the judge-only value to $p$ as the cost weight $\lambda$ (relative to the Copeland score
+scaled to $[0,1]$) grows. In our data lengths are not independent of correctness (shortest-candidate accuracy
+differs from the random-pick accuracy, Table~\ref{tab:baselines}), so the empirical effect of the cost term is a
+property of the data, which Section~\ref{sec:cost-diagnosis} measures directly.
+
+\begin{table}[htbp]
+\centering
+\caption{Simulated accuracy (\%) of selection by Copeland score minus $\lambda\times$ an independent random
+length, $N=3$, $p=0.8$ (plurality voting: 92.8\%; random pick: 80.0\%), 100{,}000 draws.}
+\label{tab:threshold-cost}
+\small
+\begin{tabular}{lrr}
+\toprule
+$\lambda$ & $q=0.6$ & $q=0.9$ \\
+\midrule
+\ThresholdCostRows
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1072,19 +1183,22 @@ Track & $\hat p$ & mixed pairs & $\hat q$ & \\
 
 \begin{table}[htbp]
 \centering
-\caption{Thresholds with measured wrong-answer correlation. $\hat\rho$: square root of
-the agreement rate between two wrong candidates of the same problem; $q^{*}_{0}$:
-exact threshold at $\rho=0$; $q^{*}_{\hat\rho}$: exact threshold at $\hat\rho$ (rightmost
-column). Suffix H: heterogeneous ($N=6$). $\hat q$ is below $q^{*}_{\hat\rho}$ on every track.}
+\caption{Thresholds with measured wrong-answer correlation. ``Wrong pairs'': pairs of wrong candidates
+of the same problem with extracted answers; $\hat\rho$: square root of their agreement rate, with a 95\%
+problem-level bootstrap interval; $q^{*}_{0}$: exact threshold at $\rho=0$; $q^{*}_{\hat\rho}$: exact threshold at
+$\hat\rho$, with the values at the ends of the $\hat\rho$ interval. $^\ddagger$: fewer than 30 wrong pairs, so $\rho$
+is not estimated and the interval spans every possible value, from $\rho=1$ to $\rho=0$. Suffix H: heterogeneous
+($N=6$). $\hat q$ is below the lower end of every threshold interval.}
 \label{tab:threshold-emp-gen}
 \small
-\begin{tabular}{lrrrrrr}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrr}
 \toprule
-Track & $N$ & $\hat p$ & $\hat\rho$ & $\hat q$ & $q^{*}_{0}$ & $q^{*}_{\hat\rho}$ \\
+Track & $N$ & $\hat p$ & Wrong pairs & $\hat\rho$ [95\% CI] & $\hat q$ & $q^{*}_{0}$ & $q^{*}_{\hat\rho}$ \\
 \midrule
 \ThresholdEmpGenRows
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table}
 
 \subsection{Exact Kemeny--Young reference}
@@ -1282,9 +1396,9 @@ numbers in Section~\ref{sec:results} are regenerated from the stored
 outputs by the scripts named at the top of the source.
 
 % AUTHOR TODO before submission (not for the reader):
-%  - Elsevier requires a declaration of generative-AI use in manuscript preparation.
+%  - Confirm Declaration_of_Generative_AI.txt and paste it into the manuscript as Elsevier requires.
 %  - Archive the repository (e.g. Zenodo) and cite the DOI instead of the bare GitHub URL.
-%  - Re-run the three scripts once the heterogeneous passes finish and re-read Sections 5.2--5.5.
+%  - Re-run the six manuscript scripts once the heterogeneous passes finish and re-read Sections 5.2--5.8.
 
 \appendix
 \section{Proof of Theorem~\ref{thm:threshold}}
@@ -1349,6 +1463,26 @@ $t=(q_{\min}-\tfrac12)N/2$ of its mean with probability at least
 $1-2\exp(-2t^2/(N-1))\ge1-2\exp(-(q_{\min}-\tfrac12)^2N/2)$. A union bound over the $N$ candidates gives
 the stated probability that every correct candidate outscores every wrong one, in which case the selected
 candidate is correct. \qed
+
+\emph{Equation~\eqref{eq:vote-err}.} With distinct wrong answers the plurality is the correct answer exactly when
+at least two candidates are correct (its count then exceeds every wrong count, which is one); with one correct candidate
+all $N$ answers are tied and the correct one is chosen with probability $1/N$; with none it cannot be chosen. Hence
+$\mathrm{err}_V=(1-p)^N+Np(1-p)^{N-1}(1-1/N)$.
+
+\emph{Proposition~\ref{prop:lower}.} Fix $q>\tfrac12$ and $\eta\in(1-\tfrac1{2q},1)$ and let $K=\lceil\eta N\rceil$. Consider the event $E$ that
+exactly $K$ candidates are correct and a designated wrong candidate $w$ beats all of them (probability
+$\binom NK p^K(1-p)^{N-K}(1-q)^K\ge \frac{1}{N+1}e^{-N\,\mathrm{KL}(K/N\Vert p)}(1-q)^K$). Conditionally on $E$, $w$'s score is $K+\mathrm{Bin}(N-K-1,\tfrac12)$,
+with mean $(N+K-1)/2$; a correct candidate's score has mean at most $q(N-K-1)+(K-1)/2+0$ (it has already lost to $w$), and another wrong
+candidate's has mean $(1-q)K+(N-K-1)/2$. The gaps are $N(\tfrac12-q(1-\eta))+O(1)$ and $qK$, linear in $N$ and positive because
+$\eta>1-\tfrac1{2q}$. By Hoeffding's inequality and a union bound over the $N$ candidates, $w$ is the unique top scorer with conditional probability
+$1-O(N e^{-cN})$, so the Copeland selector errs on $E$ with probability at least $\tfrac12$ for large $N$. Therefore
+$\mathrm{err}_C\ge\frac{1}{2(N+1)}e^{-N[\mathrm{KL}(\eta\Vert p)+\eta\ln\frac1{1-q}+o(1)]}$. If $\Lambda(p,q)<-\ln(1-p)$ choose $\eta$
+with bracket below $-\ln(1-p)$; since $\mathrm{err}_V\le N(1-p)^{N-1}$ by Equation~\eqref{eq:vote-err}, $\mathrm{err}_C>\mathrm{err}_V$ for all large $N$.
+For the consequence: $\Lambda(p,q)$ is continuous and strictly increasing in $q$ (it equals an infimum of functions
+increasing in $q$ over a set that shrinks with $q$), lies below $-\ln(1-p)$ for $q$ slightly above $\tfrac12$ (the derivative of $\mathrm{KL}(\eta\Vert p)$ is $-\infty$ at $\eta=0$) and
+diverges as $q\uparrow1$ (it is at least $\tfrac12\ln\frac1{1-q}$), so $q_\Lambda(p)$ exists and is unique. For any $\epsilon>0$ the accuracy gap at $q_\Lambda-\epsilon$ is negative for large
+$N$, and by Lemma~\ref{lem:monotone} it is nonincreasing as $q$ decreases, so it is negative for every $q\le q_\Lambda-\epsilon$. Hence
+$q^{*}(p,N)>q_\Lambda-\epsilon$ for large $N$. \qed
 
 \bibliographystyle{elsarticle-num-names}
 \bibliography{refs}

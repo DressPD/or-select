@@ -50,5 +50,35 @@ class ThresholdTest(unittest.TestCase):
         self.assertIsInstance(np.float64(mc), float)
 
 
+
+class ExtensionsTest(unittest.TestCase):
+    def test_plurality_error_closed_form(self) -> None:
+        import judge_threshold_extensions as ext
+
+        for N in (3, 6, 12):
+            exact = 1 - sum(
+                gen.math.comb(N, k) * 0.7**k * 0.3 ** (N - k) * gen.vote_acc_given_k(N, k, 0.0) for k in range(N + 1)
+            )
+            self.assertAlmostEqual(exact, ext.vote_err_closed(N, 0.7), places=12)
+
+    def test_uniform_d_matches_attractor_extremes(self) -> None:
+        import judge_threshold_extensions as ext
+
+        self.assertAlmostEqual(ext.vote_acc_given_k_uniform(4, 2, 1), gen.vote_acc_given_k(4, 2, 1.0))
+        self.assertAlmostEqual(ext.vote_acc_given_k_uniform(3, 1, 8), gen.vote_acc_given_k(3, 1, 0.0), delta=0.08)
+
+    def test_lambda_bound_is_between_chance_and_one(self) -> None:
+        import judge_threshold_extensions as ext
+
+        q = ext.q_lambda(0.8)
+        self.assertTrue(0.9 < q < 0.97)
+        self.assertLess(ext.Lambda(0.8, q - 0.01), -gen.math.log(0.2))
+
+    def test_cost_limit_is_random_pick(self) -> None:
+        import judge_threshold_extensions as ext
+
+        self.assertAlmostEqual(ext.cost_accuracy(3, 0.8, 0.9, 1e6, n=60000), 0.8, delta=0.01)
+
+
 if __name__ == "__main__":
     unittest.main()
