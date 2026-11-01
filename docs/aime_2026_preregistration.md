@@ -13,7 +13,8 @@ N=105 graded problems, it wasn't: 91.4% accuracy, all four methods tied,
 only 2 disagreements total and both notational, zero correctness-changing
 splits. RewardBench (`docs/reward_bench_preregistration.md`) then ruled out
 "the judge just isn't good at math" as the explanation -- it scored a
-perfect 49/49 on Reasoning-category preference pairs. So the bottleneck
+perfect 49/49 on Reasoning-category preference pairs (earlier
+Nemotron-3-Ultra configuration; superseded, see `docs/reward_bench_preregistration.md`). So the bottleneck
 isn't judge competence; it's that MATH Level 5 doesn't reliably produce the
 "wrong majority, right minority" structure sub-claim 5 needs, even on
 problems chosen for difficulty.

@@ -1,6 +1,6 @@
 CRediT Author Statement
 
-Manuscript title: OR-Select: Deterministic Best-Answer Selection over Stochastic LLM Ensembles via Integer Programming
+Manuscript title: OR-Select: Reproducible Best-of-N Answer Selection over LLM Ensembles, with an Exact Kemeny Reference and a Ground-Truth Audit
 
 Aris Dressino: Conceptualization, Methodology, Software, Validation, Formal analysis,
 Investigation, Data curation, Writing - original draft, Writing - review & editing,

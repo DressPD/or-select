@@ -5,7 +5,7 @@ import unittest
 from or_select import extended, providers
 from or_select.generate import TruncatedOutput, ValidityExhausted, generate_candidates
 
-NEMOTRON = "nvidia/nemotron-3.5-lightning-20260807:free"
+NEMOTRON = "nvidia/nemotron-3.5-lightning:free"
 LAGUNA = "poolside/laguna-s-2.1:free"
 COHERE = "cohere/north-mini-code:free"
 POOL = [NEMOTRON, LAGUNA, COHERE]

@@ -1,5 +1,5 @@
-- Formulates best-of-N LLM answer selection as an integer program with an exact Kemeny-Young baseline.
-- Proves the Copeland aggregate used is a 5-approximation to Kemeny-Young.
-- Validates the LLM judge against RewardBench: 90.1% accuracy, N=161.
-- Evaluates on five tracks and 353 ground-truth rows across four benchmarks.
-- Finds and closes a concrete provider-side judge non-determinism bug.
+- Best-of-N answer selection as a reproducible, exactly replayable integer program
+- Exact Kemeny-Young reference; Copeland aggregate is a 5-approximation
+- Ground-truth audit on GSM8K, MATH-5, AIME 2026 and GPQA with paired exact tests
+- Judge selection ties majority vote when homogeneous and is worse when mixed
+- Objective scale and judge bias diagnosed offline from stored judge outputs

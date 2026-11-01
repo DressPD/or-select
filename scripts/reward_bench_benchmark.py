@@ -100,7 +100,7 @@ def run_benchmark(rows: list[dict], provider: str, output: Path, resume: bool, r
     judge_models: list[str] = []
     run_offset = 0
     if heterogeneous:
-        from or_select.pipeline import OPENROUTER_MIXED_MODELS, RETIRED_MIXED_MODELS
+        from or_select.pipeline import OPENROUTER_MIXED_MODELS, RETIRED_MIXED_MODELS, canonical_model
 
         judge_models = OPENROUTER_MIXED_MODELS
         # Offset the round-robin by a fresh random amount each process
@@ -132,7 +132,7 @@ def run_benchmark(rows: list[dict], provider: str, output: Path, resume: bool, r
             # re-judged by the model that took over its slot; the other
             # judges' rows are kept as they are.
             for r in results:
-                if r.get("judge_model") is not None and r["judge_model"] not in judge_models:
+                if r.get("judge_model") is not None and canonical_model(r["judge_model"]) not in judge_models:
                     replacement[r["id"]] = RETIRED_MIXED_MODELS.get(r["judge_model"])
             results = [r for r in results if r["id"] not in replacement]
         done_ids = {r["id"] for r in results}

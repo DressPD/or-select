@@ -24,7 +24,7 @@ from typing import Any
 from .baselines import greedy_single_sample, self_consistency_winner
 from .core import Candidate
 from .kemeny import solve_kemeny_ranking
-from .pipeline import resolve_score_judge, select_from_candidates
+from .pipeline import canonical_model, resolve_score_judge, select_from_candidates
 
 JUDGE_VERSION = "short-answer"
 LEGACY_JUDGE_VERSION = "reasoning-on"
@@ -52,7 +52,7 @@ def needs_rejudge(row: dict) -> bool:
 
 def stale_slots(row: dict, pool: list[str]) -> list[int]:
     """Indices of stored candidates whose model is no longer in `pool`."""
-    return [i for i, c in enumerate(row.get("candidates") or []) if c["source_model"] not in pool]
+    return [i for i, c in enumerate(row.get("candidates") or []) if canonical_model(c["source_model"]) not in pool]
 
 
 def needs_reslot(row: dict, pool: list[str]) -> bool:
@@ -162,9 +162,11 @@ def reslot_row(
     backends = providers.openrouter_heterogeneous_backends(pool)
     candidates = []
     for i, c in enumerate(row["candidates"]):
-        if c["source_model"] in pool:
+        if canonical_model(c["source_model"]) in pool:
             candidates.append(
-                Candidate(id=f"c{i}", text=c["text"], source_model=c["source_model"], metadata={"seed": c["seed"]})
+                Candidate(
+                    id=f"c{i}", text=c["text"], source_model=canonical_model(c["source_model"]), metadata={"seed": c["seed"]}
+                )
             )
         else:
             name, fn = backends[i % len(backends)]

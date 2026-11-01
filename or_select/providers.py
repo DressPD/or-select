@@ -31,7 +31,7 @@ load_dotenv()
 PROMPTS_DIR = Path(__file__).resolve().parents[1] / "prompts"
 OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-5.6-terra")
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
-OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "nvidia/nemotron-3.5-lightning-20260807:free")
+OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "nvidia/nemotron-3.5-lightning:free")
 
 _NUMBER_RE = re.compile(r"[-+]?\d*\.?\d+")
 # Lowercase, no-underscore markers: matches "RESOURCE_EXHAUSTED" (Gemini),
@@ -88,8 +88,9 @@ MAX_OUTPUT_TOKENS = 32768
 # 32768, nvidia/nemotron-3.5-lightning:free 65536, cohere/north-mini-code:free
 # 64000, checked against the live /models listing.
 MODEL_OUTPUT_LIMITS: dict[str, int] = {
-    "poolside/laguna-s-2.1:free": 32768,
-    "nvidia/nemotron-3.5-lightning-20260807:free": 65536,
+    "poolside/laguna-s-2.1:free": 32768,  # retired 2026-11-01; kept for stored legacy rows
+    "xingchen-agi/xing4.0-29b-a4b:free": 235929,
+    "nvidia/nemotron-3.5-lightning:free": 65536,
     "cohere/north-mini-code:free": 64000,
 }
 # Generation is streamed. At the free tier's measured 17-30 tokens/s a

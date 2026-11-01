@@ -27,10 +27,16 @@ PROVIDERS = ("placeholder", "openai", "gemini", "openrouter", "both", "openroute
 # same-model benchmark run so far (Tracks A-C) saw almost no disagreement.
 # Confirmed to exist via the live OpenRouter /models endpoint, not assumed.
 OPENROUTER_MIXED_MODELS = [
-    "nvidia/nemotron-3.5-lightning-20260807:free",
-    "poolside/laguna-s-2.1:free",
+    "nvidia/nemotron-3.5-lightning:free",
+    "xingchen-agi/xing4.0-29b-a4b:free",
     "cohere/north-mini-code:free",
 ]
+# poolside/laguna-s-2.1:free (slot 1 until 2026-11-01) left OpenRouter's /models
+# listing and answers 404 "no provider serves this model anymore". Chosen
+# replacement: xingchen-agi/xing4.0-29b-a4b:free, the only listed free text
+# model from a vendor outside the pool that answered a live probe correctly
+# and supports a seed (gemma-4 429, inkling 403, flint 503, dots-3 has no seed;
+# the other working free models are Nvidia's, i.e. the slot-0 vendor).
 # liquid/lfm-2.5-2.6b:free (the third slot until 2026-10-16) was retired: its
 # endpoint caps output at 8192 tokens and the 2.6B model loops to that cap with
 # an empty answer, which caused ~33 of the 39 truncation failures in the
@@ -46,11 +52,23 @@ OPENROUTER_MIXED_MODELS = [
 # model's output is repaired in place by regenerating only that model's slots
 # (or_select.rejudge.reslot_row); RewardBench hetero hands a retired judge's rows
 # to its replacement. Pool slot 2 is the one the liquid/lfm model occupied.
-RETIRED_MIXED_MODELS = {"liquid/lfm-2.5-2.6b:free": OPENROUTER_MIXED_MODELS[2]}
+RETIRED_MIXED_MODELS = {
+    "liquid/lfm-2.5-2.6b:free": OPENROUTER_MIXED_MODELS[2],
+    "poolside/laguna-s-2.1:free": OPENROUTER_MIXED_MODELS[1],
+}
+# Names under which a stored candidate came from a pool model that is still the
+# same pool model: the dated nemotron slug was the same endpoint as the listed
+# undated id, so those rows are current, not stale.
+MODEL_ALIASES = {"nvidia/nemotron-3.5-lightning-20260807:free": "nvidia/nemotron-3.5-lightning:free"}
+
+
+def canonical_model(name: str) -> str:
+    return MODEL_ALIASES.get(name, name)
 # nvidia/nemotron-3-ultra-550b-a55b:free was delisted from OpenRouter's live
 # /models endpoint (confirmed 2026-09-17, surfaced as 404 "Function id ...
-# not found" on every call) and replaced with nvidia/nemotron-3.5-lightning
-# -20260807:free above, its current free-tier successor.
+# not found" on every call) and replaced with nvidia/nemotron-3.5-lightning:free
+# above, its current free-tier successor. The dated slug (-20260807) used until
+# 2026-11-01 left OpenRouter's /models listing; the undated one is the listed id.
 # google/gemma-4-31b-it:free was tried first but dropped: live testing (Track
 # D-heterogeneous, docs/aime_2026_preregistration.md) showed it failing with
 # "temporarily rate-limited upstream" on ~4 of 6 consecutive attempts, badly

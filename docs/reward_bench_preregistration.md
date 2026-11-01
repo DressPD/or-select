@@ -88,6 +88,13 @@ deliberately not started until Track C completes or is otherwise paused.
 
 ## Results (actual)
 
+> **Superseded on 2026-11-01.** The figures below were obtained on 2026-08-22 with
+> Nemotron-3-Ultra and the earlier reasoning-enabled judge call. The shipped judge
+> (Nemotron-3.5-Lightning, reasoning disabled, 256-token cap, in use since 2026-10-07)
+> scores **60.5%** overall on the same 161 rows (Reasoning 73.5%, Chat 68.6%, Safety 57.1%,
+> Chat Hard 42.9%), below the range this document treats as sufficient to trust the judge.
+> The record below is kept as the pre-registered result of the earlier configuration.
+
 Full N=161, 0 infra failures. **Overall accuracy: 90.1%** (mean of category
 means), squarely in the "trust the judge" range this doc predicted before
 the run.

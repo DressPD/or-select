@@ -125,6 +125,24 @@ class ReslotTest(unittest.TestCase):
         self.assertFalse(needs_reslot({**row, "candidates": [{"source_model": "a", "seed": 0, "text": "t"}]}, POOL))
         self.assertFalse(needs_reslot({"candidates": None}, POOL))
 
+    def test_dated_nemotron_slug_is_current_but_laguna_is_retired(self) -> None:
+        from or_select.pipeline import OPENROUTER_MIXED_MODELS, RETIRED_MIXED_MODELS, canonical_model
+
+        dated = "nvidia/nemotron-3.5-lightning-20260807:free"
+        laguna = "poolside/laguna-s-2.1:free"
+        self.assertEqual(canonical_model(dated), OPENROUTER_MIXED_MODELS[0])
+        self.assertEqual(canonical_model("x/y:free"), "x/y:free")
+        self.assertNotIn(laguna, OPENROUTER_MIXED_MODELS)
+        self.assertEqual(RETIRED_MIXED_MODELS[laguna], OPENROUTER_MIXED_MODELS[1])
+        row = {
+            "candidates": [
+                {"source_model": dated, "seed": 0, "text": "t"},
+                {"source_model": laguna, "seed": 1, "text": "t"},
+                {"source_model": OPENROUTER_MIXED_MODELS[2], "seed": 2, "text": "t"},
+            ]
+        }
+        self.assertEqual(stale_slots(row, OPENROUTER_MIXED_MODELS), [1])
+
     def test_only_the_retired_slots_are_regenerated_by_the_slot_owner(self) -> None:
         row = _stale_row()
         new = self._reslot(row)

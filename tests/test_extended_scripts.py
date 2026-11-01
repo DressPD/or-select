@@ -12,7 +12,7 @@ from scripts import gpqa_benchmark, math_benchmark
 
 SCRIPTS = [gpqa_benchmark, math_benchmark]
 POOL = [
-    "nvidia/nemotron-3.5-lightning-20260807:free",
+    "nvidia/nemotron-3.5-lightning:free",
     "poolside/laguna-s-2.1:free",
     "cohere/north-mini-code:free",
 ]
@@ -112,7 +112,11 @@ class RunExtendedBenchmarkTest(unittest.TestCase):
         for script in SCRIPTS:
             with self.subTest(script=script.__name__):
                 self._store(script, [_valid("ok", True), _truncated("t", 0), _truncated("lag", 1)])
-                with patch.object(script, "_grade_one", side_effect=lambda p, n, prov: _valid(p["query"], True)) as grade:
+                # legacy pool: slot 1 is laguna, whose 32768 ceiling cannot be raised
+                with (
+                    patch.object(script, "OPENROUTER_MIXED_MODELS", POOL),
+                    patch.object(script, "_grade_one", side_effect=lambda p, n, prov: _valid(p["query"], True)) as grade,
+                ):
                     script.run_extended_benchmark(problems, 3, "openrouter_mixed", self.output, 65536)
                 self.assertEqual([c.args[0]["query"] for c in grade.call_args_list], ["t"])
                 saved = json.loads(self.output.read_text())
