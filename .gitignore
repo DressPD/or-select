@@ -12,9 +12,10 @@ __pycache__/
 *.fdb_latexmk
 *.fls
 *.synctex.gz
-outputs/runs/
 .venv/
-outputs/
+# Run files are tracked so selections can be replayed; GPQA files embed the (password-gated) question text.
+outputs/gpqa_*.json
+outputs/*.bak*
 .DS_Store
 # GPQA is deliberately password-gated upstream to deter contamination;
 # don't re-publish the plaintext questions in this repo's git history.

@@ -184,7 +184,7 @@ class StallTimeout(Exception):
 
     Observed live under severe OpenRouter free-tier saturation as hangs
     lasting 30+ minutes to multiple hours with no exception ever raised
-    (docs/benchmark_results.md, Track C) -- plausibly a trickle of
+    (seen on the MATH Level 5 track) -- plausibly a trickle of
     keep-alive bytes resetting the HTTP client's own read-timeout on every
     partial receive, so a per-read timeout never fires even though the
     request is never actually progressing. _call_with_stall_timeout enforces

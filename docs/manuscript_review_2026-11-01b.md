@@ -34,7 +34,7 @@ theory that is checkable and checked (enumeration, Monte Carlo, unit tests).
 2. "Appendix Appendix A" in cross-references: fixed.
 3. "Nemotron correct on 77-98%" corrected to 77-99% and pointed at Table 11's floor column.
 4. Contributions item and Related Work (ii) now describe the generalized theory, not only N=3.
-5. `judge2026_submission.tex` is a legacy file with a stale title; left untouched, not part of the submission.
+5. `judge2026_submission.tex` (legacy workshop draft with a stale title) was a dead file: deleted in the repository tidy-up.
 6. Declaration of generative-AI use is drafted (`Declaration_of_Generative_AI.txt`) and must be confirmed by the author and inserted.
 7. Zenodo DOI still to be created and cited in place of the bare GitHub URL.
 8. Two overfull boxes (3.4 pt and 1.9 pt) remain; cosmetic.

@@ -6,7 +6,7 @@
 Uses data/math_level5_sample.jsonl, the full Level-5 subset (134 problems)
 of MATH-500 (Lightman et al. 2023), fetched via the Hugging Face
 datasets-server API. Unlike data/gsm8k_sample.jsonl -- saturated for the
-model used in this repo, see docs/hypothesis_validation.md sub-claim 5 --
+model used in this repo, see the manuscript's headroom analysis --
 Level-5 MATH problems are harder competition-style problems, chosen
 specifically because the literature (Ding 2026; Wang et al. 2023's own
 MATH-vs-GSM8K comparison) predicts weaker candidate agreement here, which
@@ -101,8 +101,8 @@ def _grade_one(problem: dict, n: int, provider: str) -> dict:
         },
         # Full candidate pool, not just the 4 winners: previously it was
         # impossible to tell whether a differently-formatted-but-correct
-        # candidate existed among the ones no method selected (see
-        # docs/hypothesis_validation.md's explicit regret about this gap).
+        # candidate existed among the ones no method selected (this
+        # makes grader false negatives checkable offline).
         "candidates": [
             {"seed": c.metadata.get("seed"), "source_model": c.source_model, "text": c.text}
             for c in result.candidates

@@ -1,5 +1,7 @@
 # AIME 2026 (Track D) — preregistered analysis plan
 
+> **Historical record.** Written before the run's results were seen and kept unchanged apart from errata notes (where present). Final results and interpretation: `manuscript/main.tex`, Results section. Sub-claim numbering refers to the project's earlier hypothesis document, now superseded by the manuscript.
+
 Written before this run's results were seen (same discipline as
 `docs/math_level5_preregistration.md` and `docs/reward_bench_preregistration.md`).
 

@@ -1,178 +1,110 @@
-# OR-Select: Deterministic Best-Answer Selection over Stochastic LLM Ensembles via Integer Programming
+# OR-Select: Reproducible Best-of-N Answer Selection over LLM Ensembles
 
-Run folder for a no-fine-tuning prototype that turns a distribution of N stochastic LLM
-answers into one deterministic, auditable choice.
+A no-fine-tuning pipeline that turns N stochastic LLM answers into one auditable choice, plus the audit protocol and
+theory used to test whether the choice is *accurate*. Selection is cast as an integer program over a judge-derived
+pairwise matrix and a deterministic self-consistency term; given the stored judge outputs the winner is exactly
+reproducible. The paper (`manuscript/main.tex`) reports a ground-truth audit against self-consistency and an exact
+Kemeny-Young reference, and a closed-form analysis of when a pairwise judge can beat plurality voting.
 
-The LLM generation step stays probabilistic (temperature, sampling, seeds). Everything
-downstream — scoring, pairwise comparison, aggregation, final pick — is a deterministic OR
-pipeline: same N candidates in, same winner out, every time.
+Generation stays probabilistic. Everything after it (pairwise comparison, aggregation, final pick) is deterministic
+given the candidates and the judge's outputs.
 
-## Core Idea
+## Pipeline
 
-1. Generate N candidate answers to the same query (same model/different seeds, or
-   heterogeneous models).
-2. Score each candidate (calibrated confidence).
-3. Build a pairwise comparison matrix via an LLM judge, using permutation
-   self-consistency (judge each pair both orders, average) to cancel position bias.
-   Byte-identical candidates skip the judge entirely (see "A concrete finding" in
-   `docs/methodology.md` for why).
-4. Compute a deterministic self-consistency signal from the candidate texts alone
-   (zero API cost) — the classic self-consistency-voting baseline, expressed as one
-   objective term rather than the whole decision rule.
-5. Solve a multi-objective integer program that selects exactly one winner:
+1. **Generate** N candidates (one model with distinct seeds, or round-robin over several models).
+2. **Score** each candidate (confidence in [0, 1], cost = word count).
+3. **Compare** every pair with an LLM judge in both orders and average (permutation self-consistency); byte-identical
+   candidates skip the judge and get 0.5.
+4. **Self-consistency** from the candidate texts alone (zero API cost).
+5. **Select** exactly one winner by solving, with CP-SAT:
 
 ```text
 maximize   sum_i x_i * (w1*quality_i + w2*confidence_i + w4*consistency_i - w3*cost_i)
-subject to sum_i x_i = 1
-           x_i in {0,1}
-           quality_i >= min_quality   (optional gate)
+subject to sum_i x_i = 1,  x_i in {0,1},  quality_i >= min_quality (optional)
 ```
 
-6. Output = deterministic best answer, plus the scores that justify it.
+`quality_i = mean_j W[i, j]` is the Copeland-style aggregate of the pairwise matrix; the exact Kemeny-Young ranking
+(`or_select/kemeny.py`) is computed as a reference. See `docs/methodology.md`.
 
-Full formulation, including the pairwise Kemeny-style extension, is in
-`docs/methodology.md`. Ablations (does the self-consistency term matter? does
-bidirectional judging matter?) are in `docs/ablations.md`. Full benchmark
-results (open-ended queries vs. baselines, GSM8K ground-truth accuracy) are in
-`docs/benchmark_results.md`. GPQA Diamond results and preregistration are
-included alongside the earlier GSM8K, MATH Level 5, and AIME tracks.
-
-## Folder Map
+## Layout
 
 ```text
-data/              example queries + a GSM8K ground-truth sample
-prompts/           generation and judge prompts
-or_select/         active Python package (pipeline, providers, selection, baselines)
-scripts/           benchmark and ablation entry points (see below)
-manuscript/        paper sources: main.tex (full technical report, elsarticle)
-                   and judge2026_submission.tex (condensed, anonymized short
-                   paper for JUDGe 2026 / NeurIPS workshop submission)
-docs/              methodology, ablation results, benchmark results
-outputs/           generated run artifacts; safe to delete before a new run
-                   (gitignored)
-tests/             unittest suite; offline tests run with zero API calls,
-                   tests/test_providers.py auto-skips without live keys
+or_select/    pipeline, providers, selection, Kemeny reference, benchmark graders, rejudge/extended-cap helpers
+scripts/      benchmark runners, offline analyses that generate the manuscript numbers, data fetchers
+data/         benchmark samples (GPQA Diamond is fetched locally, never committed)
+prompts/      generation and judge prompts
+docs/         methodology, ablations, results index, pre-registrations (historical), review notes, target journals
+manuscript/   main.tex (elsarticle), figures, generated *_data.tex macro files, submission documents
+outputs/      stored run files (benchmark JSON); GPQA files are not published, see "Data" below
+tests/        unittest suite
 ```
 
-### `or_select/` package
+### `or_select/`
 
 | Module | Role |
 |---|---|
-| `pipeline.py` | Orchestrates one query end to end; CLI entry point |
-| `runner.py` | Batch pipeline over a JSONL file of queries; `--resume` skips already-completed ones |
-| `generate.py` / `scoring.py` / `pairwise.py` / `consistency.py` / `selection.py` | The five pipeline stages |
-| `providers.py` | Real backends: OpenAI, Gemini, OpenRouter — retry/backoff, stable seeding, fail-fast on permanent errors |
-| `baselines.py` | Non-OR comparisons: self-consistency-alone, greedy-single-sample |
-| `gsm8k.py` | Ground-truth benchmark support: answer extraction, grading |
+| `pipeline.py` | One query end to end; provider selection; CLI |
+| `generate.py`, `scoring.py`, `pairwise.py`, `consistency.py`, `selection.py` | The pipeline stages |
+| `kemeny.py` | Exact Kemeny-Young ranking (CP-SAT, deterministic conflict budget) |
+| `providers.py` | OpenAI, Gemini, OpenRouter backends with retry, stable seeds, stall timeouts, per-model output caps |
+| `baselines.py` | Self-consistency and greedy baselines |
+| `gsm8k.py`, `math_eval.py`, `gpqa.py`, `mmlu_pro.py`, `reward_bench.py` | Answer extraction and grading per benchmark |
+| `rejudge.py`, `extended.py` | Re-judging stale rows; the flagged higher-token-cap second pass |
+| `runner.py`, `core.py` | Batch runner; shared types |
 
 ### `scripts/`
 
-| Script | What it does |
+| Script | Role |
 |---|---|
-| `gsm8k_benchmark.py` | Grades OR-Select vs. baselines against GSM8K ground truth; `--resume` supported |
-| `compare_baselines.py` | Compares OR-Select's winner against baselines on an existing `selection.json` |
-| `ablation_consistency.py` | Offline: does the self-consistency term ever change the winner? |
-| `ablation_permutation.py` | Live: does bidirectional (vs. forward-only) judging change the winner? |
+| `gsm8k_benchmark.py`, `math_benchmark.py` (MATH Level 5, AIME), `gpqa_benchmark.py`, `mmlu_pro_benchmark.py`, `reward_bench_benchmark.py` | Run a track; `--resume`, `--retry-failures`, `--extended-cap`, `--no-rejudge` |
+| `fetch_*_sample.py` | Build `data/*.jsonl` (GSM8K sample is committed; GPQA is fetched locally) |
+| `create_results_macros.py`, `analyze_selection.py`, `ablation_weights_offline.py`, `baselines_extra_offline.py` | Offline analyses that write the manuscript's `*_data.tex` |
+| `judge_threshold_theory.py`, `judge_threshold_general.py`, `judge_threshold_extensions.py`, `judge_threshold_empirical.py` | Threshold theory: closed form, general N, large-N bound, measured accuracy |
+| `create_manuscript_tables.py`, `rewardbench_bias_check.py` | Worked example; RewardBench length diagnostic |
+| `ablation_consistency.py`, `ablation_permutation.py`, `compare_baselines.py` | Pilot-run ablations and baseline comparison on `outputs/runs/` |
 
-## Run Pipeline
-
-1. Put LLM API credentials in `.env` (copy `.env.example`; `.env` is gitignored).
-
-```bash
-OPENAI_API_KEY=...
-GOOGLE_API_KEY=...
-OPENROUTER_API_KEY=...
-```
-
-2. Install provider SDKs (not needed for the placeholder backend).
+## Run
 
 ```bash
+cp .env.example .env            # add OPENAI_API_KEY / GOOGLE_API_KEY / OPENROUTER_API_KEY as needed
 pip install -r requirements.txt
-```
 
-3. Run the toy example end-to-end with the deterministic placeholder backend
-   (no API keys required — validates the OR core in isolation).
-
-```bash
-python3 -m or_select.pipeline --query "What is the capital of France?" --n 10
-```
-
-4. Run against a real provider, or heterogeneously across both to validate
-   the research claim (deterministic selection holds regardless of which
-   models generated the candidates).
-
-```bash
-python3 -m or_select.pipeline --query "..." --n 10 --provider openai
-python3 -m or_select.pipeline --query "..." --n 10 --provider gemini
-python3 -m or_select.pipeline --query "..." --n 10 --provider openrouter
-python3 -m or_select.pipeline --query "..." --n 10 --provider both
-```
-
-5. Run a batch of queries (`--resume` skips queries that already have a saved result).
-
-```bash
-python3 -m or_select.runner --input data/example_queries.jsonl --workers 3 --provider openrouter --resume
-```
-
-6. Run the GSM8K ground-truth benchmark, or the ablations.
-
-```bash
+python3 -m or_select.pipeline --query "What is the capital of France?" --n 5     # placeholder backend, no keys
+python3 -m or_select.pipeline --query "..." --n 5 --provider openrouter          # real backend
 python3 scripts/gsm8k_benchmark.py --provider openrouter --n 3 --limit 8 --resume
-python3 scripts/ablation_consistency.py outputs/runs/*/selection.json
-python3 scripts/ablation_permutation.py outputs/runs/*/selection.json --provider openrouter
 ```
 
-7. Run the test suite (offline; live-provider tests auto-skip without keys set).
+Providers: `placeholder`, `openai`, `gemini`, `openrouter`, `both`, `openrouter_mixed` (three-vendor heterogeneous pool).
+Per-track commands are in `docs/benchmark_results.md`.
+
+## Reproduce the paper
 
 ```bash
-python3 -m unittest discover -s tests
+python3 scripts/create_results_macros.py && python3 scripts/analyze_selection.py \
+  && python3 scripts/ablation_weights_offline.py && python3 scripts/baselines_extra_offline.py \
+  && python3 scripts/judge_threshold_theory.py && python3 scripts/judge_threshold_general.py \
+  && python3 scripts/judge_threshold_extensions.py && python3 scripts/judge_threshold_empirical.py
+cd manuscript && latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex
 ```
 
-8. Compile a manuscript. Run from `manuscript/`.
+Zero API calls; tracks with a missing output file are skipped. Tests (offline): `python3 -m unittest tests.test_<name>`
+for each module except `tests/test_providers.py`, which needs live keys.
 
-```bash
-latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex                    # full technical report
-latexmk -pdf -interaction=nonstopmode -halt-on-error judge2026_submission.tex    # condensed workshop short paper
-```
+## Data
 
-`judge2026_submission.tex` needs the official `neurips_2026.sty` swapped in before
-actual submission — see the note at the top of the file.
+- `outputs/*.json` hold every candidate, the judge's confidences and pairwise matrices, and the graded results, so any
+  selection can be replayed exactly. All tracks except GPQA Diamond are tracked in this repository.
+- GPQA outputs embed the question text. GPQA is distributed password-gated to deter contamination, so those files are not
+  published here; regenerate them with `scripts/fetch_gpqa_sample.py` and `scripts/gpqa_benchmark.py`, or contact the author.
+  The GPQA rows of the manuscript tables need those local files.
+- Free-tier rate limits are real: runs checkpoint after every problem and `--resume` continues them.
 
-## Active Outputs
+## Design boundary
 
-- `outputs/runs/<query_id>/selection.json` — full candidate set, scores, and winner for one query
-- `outputs/gsm8k_benchmark*.json` — per-problem grading + accuracy for the GSM8K benchmark
-- `outputs/math_benchmark_full.json` — resumed MATH Level-5 benchmark results
-- `outputs/aime_2026*.json` — homogeneous and heterogeneous AIME results
-- `outputs/gpqa_*.json` — homogeneous and heterogeneous GPQA Diamond results
-- `outputs/ablation_*.json` — ablation results
-
-## Reproducibility notes
-
-- Live results in `docs/benchmark_results.md` and `docs/ablations.md` used a single
-  free-tier model (OpenRouter, `nvidia/nemotron-3-ultra-550b-a55b:free`) as generator,
-  scorer, and judge throughout — OpenAI and Gemini were configured but unavailable
-  during that work (no credits / daily quota exhausted respectively).
-- Free-tier rate limits are real and severe: observed upstream queue depths up to
-  3517 against a 32-request provider-side limit. `providers.py` retries with backoff;
-  `runner.py`/`gsm8k_benchmark.py` checkpoint incrementally so a killed run can
-  `--resume` without redoing completed work.
-- `docs/ablations.md` documents a data-hygiene bug we found and fixed mid-project:
-  two early smoke-test result files predated the exact-match short-circuit and the
-  self-consistency term, and including them in an ablation glob silently mixed
-  pre-fix and post-fix scoring semantics. Both ablations were corrected to use only
-  post-fix data; see that doc for the full account.
-
-## Design Boundary
-
-- No training, no fine-tuning.
-- Generation stays probabilistic; only selection is required to be deterministic.
-- Same candidate set + same judge outputs must always yield the same winner
-  (solver determinism, not just "usually agrees").
-- Judge position bias is treated as a first-class error source, not noise
-  (permutation self-consistency is mandatory, not optional).
-- Failed or malformed candidates remain explicit failures, never silently dropped.
+- No training or fine-tuning; generation is probabilistic, selection is deterministic given fixed judge outputs.
+- Judge position bias is a first-class error source (permutation self-consistency is mandatory).
+- Failed or malformed candidates remain explicit failures, never silently dropped; coverage is reported as graded/total.
 
 ## License
 
-MIT — see `LICENSE`.
+MIT, see `LICENSE`.

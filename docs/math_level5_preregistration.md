@@ -1,8 +1,10 @@
 # MATH Level 5 (Track C) — preregistered analysis plan
 
+> **Historical record.** Written before the run's results were seen and kept unchanged apart from errata notes (where present). Final results and interpretation: `manuscript/main.tex`, Results section. Sub-claim numbering refers to the project's earlier hypothesis document, now superseded by the manuscript.
+
 Written before this run's results were seen, so the analysis can't be
 adjusted after the fact. Follows the same honesty norm as
-`docs/hypothesis_validation.md`: report what the plan says even if the
+the manuscript (`manuscript/main.tex`): report what the plan says even if the
 answer is inconclusive or negative.
 
 ## Why this run exists

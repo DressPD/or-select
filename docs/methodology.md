@@ -144,7 +144,7 @@ provider.
 
 ### A concrete finding
 
-A live run against OpenRouter (`nvidia/nemotron-3-ultra-550b-a55b:free`)
+A live run against OpenRouter (`nvidia/nemotron-3-ultra-550b-a55b:free`, a model since withdrawn by the provider)
 produced 3 candidates with byte-identical text, which by construction
 should force every pairwise weight among them to exactly 0.5 (forward and
 backward calls are the literal same prompt, so `(v + (1-v))/2 = 0.5`
@@ -196,7 +196,7 @@ every time (exact reproducibility preserved under truncation, not just
 under full convergence). See `or_select/kemeny.py`'s module docstring for
 the numbers.
 
-## Extensions (not yet implemented in the scaffold)
+## Possible extensions (not implemented)
 
 - **Space reduction**: pre-solve pairs with near-unanimous votes
   (`W[i,j] > 0.95`) before running the IP, to scale beyond N=10-20
@@ -223,7 +223,7 @@ the numbers.
 - Full Kemeny-Young ranking without permutation self-consistency (tests
   whether position-bias correction matters).
 
-**Benchmarks with ground truth (`scripts/gsm8k_benchmark.py`):**
+**Benchmarks with ground truth (`scripts/*_benchmark.py`):**
 
 - **GSM8K** (Wang et al., ICLR 2023's evaluation protocol) — grade-school
   math word problems with a single correct numeric answer. This is the one
@@ -231,7 +231,13 @@ the numbers.
   not a subjective judgment call, directly addressing the Landesberg
   caution above. Small-N runs (5-10 problems, N=5) are cheap enough to run
   against a free-tier provider.
-- **RewardBench** (Allen Institute for AI, NAACL 2025 Findings) — proposed
-  but not yet run: human-labeled pairwise preferences, usable to validate
-  `judge_fn` in isolation against ground truth, independent of the full
-  selection pipeline.
+- **RewardBench** (Allen Institute for AI, NAACL 2025 Findings) — human-labeled
+  pairwise preferences used to validate `judge_fn` in isolation
+  (`scripts/reward_bench_benchmark.py`, pre-registration in
+  `docs/reward_bench_preregistration.md`).
+- **MATH Level 5, AIME 2026, AIME 2025, GPQA Diamond, MMLU-Pro** — the
+  remaining ground-truth tracks; see `docs/benchmark_results.md`.
+
+**Results, theory and audit** are in the manuscript (`manuscript/main.tex`): the
+threshold section gives the pairwise-accuracy conditions under which a judge-based selector can beat plurality voting,
+and the Results section the audit.

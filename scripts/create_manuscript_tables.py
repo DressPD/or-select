@@ -12,7 +12,7 @@ WORKED_EXAMPLE_SRC = os.path.join(
 )
 WORKED_EXAMPLE_DEST = os.path.join(REPO_ROOT, "manuscript", "Figure_3_WorkedExample_data.tex")
 
-# Must match the default weights stated in main.tex, Section 3.2 (Formal Model).
+# Must match the default weights stated in main.tex, subsection "Formal Model".
 W1_QUALITY, W2_CONFIDENCE, W3_COST, W4_CONSISTENCY = 1.0, 0.2, 0.01, 0.3
 
 

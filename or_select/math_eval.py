@@ -5,7 +5,7 @@ MATH-500 (Lightman et al., "Let's Verify Step by Step", 2023), a public,
 widely-used 500-problem sample of the Hendrycks MATH test set, fetched via
 the Hugging Face datasets-server API (HuggingFaceH4/MATH-500). Unlike
 GSM8K -- saturated for the model used in this repo, see
-docs/hypothesis_validation.md sub-claim 5 -- Level-5 MATH problems are
+the manuscript's headroom analysis -- Level-5 MATH problems are
 harder competition-style problems (algebra, number theory, geometry,
 combinatorics) chosen specifically because agreement/correctness is a
 weaker signal for strong models on this difficulty tier
@@ -17,7 +17,7 @@ intervals), not just numbers. This module implements a heuristic string
 normalizer, not a full computer-algebra equivalence checker -- it will
 mark some correct-but-differently-formatted answers as wrong (e.g. an
 un-simplified fraction). This is a known limitation, not an oversight;
-see docs/hypothesis_validation.md.
+see the manuscript (evaluation tracks; extraction fallbacks).
 """
 
 from __future__ import annotations

@@ -63,11 +63,9 @@ ablation shows it has not yet done so on any real data collected.
 
 **Honest interpretation for the paper:** as currently weighted
 (`w_consistency=0.3`), this term has been inert in every real test case so
-far — not wrong, just untested on the scenario it's built for. Scaling
-GSM8K to include harder problems (Task 4) is partly aimed at surfacing
-that middle case: a problem hard enough that candidates split into an
-uneven majority/minority, rather than uniformly agreeing or uniformly
-disagreeing.
+far — not wrong, just untested on the scenario it's built for. The ground-truth tracks later did produce uneven majorities; the term is
+included in the offline weight replay below (the `SC+quality` and `No cost`
+variants), where it is not inert.
 
 ## Permutation self-consistency (position-bias correction)
 
@@ -98,3 +96,16 @@ LLM-judge failure mode, not a marginal correction — but it is not a
 guarantee that bidirectional judging always changes the outcome, and
 this small sample can't say how often the "same" case (traffic
 congestion) generalizes versus the "changed" case.
+
+## Weight ablations on the ground-truth tracks (offline, `scripts/ablation_weights_offline.py`)
+
+**Question:** which term of the objective drives the winner, and does removing the cost term help?
+
+**Method:** every stored result row carries the candidate texts, the judge's confidences and the pairwise matrix, so
+`or_select.selection.select_best` is replayed under other weights with zero API calls. The shipped objective reproduces all
+480 stored winners (the replay is faithful). Variants: the default weights; no cost term; Copeland quality alone; plurality
+vote with Copeland quality as the tie-break.
+
+**Result and interpretation:** see the manuscript's Results subsection "Diagnosing the objective" and `manuscript/Ablation_data.tex`. In short, the cost term
+(word count) dominates the quality term in most replayed problems, and removing it does not make judge-based selection beat
+plurality voting in heterogeneous pools. These ablations are post hoc and exploratory.

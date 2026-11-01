@@ -8,7 +8,7 @@ Joins data/reward_bench_sample.jsonl (raw chosen/rejected text) with
 outputs/reward_bench_benchmark.json (the judge's verdict per row) by id --
 zero new API calls, since both files already exist from the RewardBench
 run. Backs the length-bias finding reported in the manuscript's judge
-validation section (Section 4.3).
+validation section (Results, "Judge validation: RewardBench").
 """
 
 from __future__ import annotations

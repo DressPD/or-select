@@ -1,0 +1,64 @@
+{
+  "candidates": [
+    {
+      "confidence": 0.98,
+      "cost": 73,
+      "id": "c0",
+      "metadata": {
+        "seed": 0
+      },
+      "source_model": "openrouter",
+      "text": "There is no universally \"better\" option; buying builds equity and offers stability but requires high upfront costs and maintenance responsibility, while renting provides flexibility and predictable expenses but builds no ownership. The best choice depends on your financial readiness, how long you plan to stay in one place, and local price-to-rent ratios. Generally, buying favors those staying 5+ years with stable income, whereas renting suits those prioritizing mobility or living in high-cost markets."
+    },
+    {
+      "confidence": 0.5,
+      "cost": 75,
+      "id": "c1",
+      "metadata": {
+        "seed": 1
+      },
+      "source_model": "openrouter",
+      "text": "There is no universally \"better\" option; buying builds equity and offers stability but requires high upfront costs and maintenance responsibility, while renting provides flexibility and predictable expenses but builds no ownership. The best choice depends on your financial readiness, how long you plan to stay in the area, and local price-to-rent ratios. Generally, buying makes more sense if you stay put for 5\u20137+ years, whereas renting is often superior for short-term living or volatile markets."
+    },
+    {
+      "confidence": 1.0,
+      "cost": 68,
+      "id": "c2",
+      "metadata": {
+        "seed": 2
+      },
+      "source_model": "openrouter",
+      "text": "There is no universally \"better\" option, as the right choice depends entirely on your financial stability, lifestyle, and local market conditions. Buying builds equity and offers stability but requires high upfront costs, maintenance responsibility, and a long-term horizon to offset transaction fees. Renting provides flexibility, predictable monthly costs, and zero maintenance burden, making it ideal for those with uncertain career paths or insufficient savings for a down payment."
+    },
+    {
+      "confidence": 0.98,
+      "cost": 76,
+      "id": "c3",
+      "metadata": {
+        "seed": 3
+      },
+      "source_model": "openrouter",
+      "text": "There is no universally \"better\" option; buying builds equity and offers stability but requires high upfront costs and maintenance responsibility, while renting provides flexibility and predictable expenses but builds no ownership. The best choice depends on your financial readiness, how long you plan to stay in one location, and local market conditions (price-to-rent ratios). Generally, buying favors those staying 5+ years with stable income, while renting suits those prioritizing mobility or lacking a sufficient down payment."
+    },
+    {
+      "confidence": 1.0,
+      "cost": 61,
+      "id": "c4",
+      "metadata": {
+        "seed": 4
+      },
+      "source_model": "openrouter",
+      "text": "There is no universally \"better\" option; buying builds equity and stability but requires high upfront costs and long-term commitment, while renting offers flexibility and lower maintenance responsibility but builds no ownership. The right choice depends on your financial health, how long you plan to stay in one place (generally 5+ years favors buying), and local market conditions like the price-to-rent ratio."
+    }
+  ],
+  "query": "Is it generally better to rent or buy a home? Answer in two or three sentences.",
+  "scores": {
+    "c0": 0.07600000000000007,
+    "c1": -0.03374999999999995,
+    "c2": -0.04500000000000004,
+    "c3": 0.08350000000000013,
+    "c4": 0.08125000000000016
+  },
+  "winner_id": "c3",
+  "winner_text": "There is no universally \"better\" option; buying builds equity and offers stability but requires high upfront costs and maintenance responsibility, while renting provides flexibility and predictable expenses but builds no ownership. The best choice depends on your financial readiness, how long you plan to stay in one location, and local market conditions (price-to-rent ratios). Generally, buying favors those staying 5+ years with stable income, while renting suits those prioritizing mobility or lacking a sufficient down payment."
+}

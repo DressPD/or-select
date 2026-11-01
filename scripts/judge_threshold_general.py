@@ -1,6 +1,6 @@
 """General-N, pair-dependent and correlated-wrong-answer version of the judge-accuracy threshold.
 
-    python3 scripts/judge_threshold_general.py            # exact N<=6, Monte Carlo above; writes manuscript/ThresholdGeneral_data.tex
+    python3 scripts/judge_threshold_general.py            # writes manuscript/ThresholdGeneral_data.tex (exact thresholds N=3..6, Monte Carlo validation)
 
 Zero API calls. Extends scripts/judge_threshold_theory.py (N = 3, closed form).
 
@@ -11,9 +11,9 @@ prefers the correct one with probability q_ij (a matrix; the uniform case is q_i
 Selection is the Copeland winner (most pairwise wins), ties broken uniformly over candidates. Plurality voting returns the most
 frequent answer, ties broken uniformly over the tied *answers*.
 
-  exact_gap(N, p, rho, Q)     exact acc(Copeland) - acc(plurality), enumerating all 2^(N(N-1)/2) comparison outcomes (N <= 6)
-  mc_gap(N, p, rho, q, ...)   the same by simulation with common random numbers (any N)
-  q_star_*(...)               smallest uniform q at which the gap is >= 0, by bisection (the gap is nondecreasing in q)
+  exact_gap(N, p, rho, Q)     exact acc(Copeland) - acc(plurality), enumerating all 2^(N(N-1)/2) comparison outcomes (N <= 7)
+  mc_gap(N, p, rho, q, ...)   the same by simulation with common random numbers (validation only)
+  q_star_exact(N, p, rho)     smallest uniform q at which the gap is >= 0, by bisection (the gap is nondecreasing in q)
 
 Lemma (coupling; checked numerically below): P(correct selected) is nondecreasing in every q_ij, so q_min >= q*(p, N, rho) is
 sufficient for a pair-dependent judge to match voting, and q_max < q* is sufficient for it to lose.
@@ -123,15 +123,6 @@ def mc_gap(N: int, p: float, rho: float, q: float, n: int = 40000, seed: int = 0
         diffs.append(or_ok.astype(float) - vote_ok.astype(float))
     d = np.concatenate(diffs)
     return float(d.mean()), float(d.std(ddof=1) / math.sqrt(len(d)))
-
-
-def q_star_mc(N: int, p: float, rho: float, n: int = 20000, seed: int = 0) -> float:
-    lo, hi = 0.5, 1.0
-    for _ in range(9):
-        mid = (lo + hi) / 2
-        g, _ = mc_gap(N, p, rho, mid, n=n, seed=seed)
-        lo, hi = (mid, hi) if g < 0 else (lo, mid)
-    return (lo + hi) / 2
 
 
 def check_monotone(N: int = 4, trials: int = 40, seed: int = 1) -> bool:

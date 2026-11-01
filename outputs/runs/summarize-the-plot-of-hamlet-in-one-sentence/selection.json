@@ -1,0 +1,64 @@
+{
+  "candidates": [
+    {
+      "confidence": 1.0,
+      "cost": 38,
+      "id": "c0",
+      "metadata": {
+        "seed": 0
+      },
+      "source_model": "openrouter",
+      "text": "Prince Hamlet seeks revenge against his uncle Claudius for murdering his father, marrying his mother, and seizing the Danish throne, a quest that spirals into madness, betrayal, and a final duel that leaves the entire royal family dead."
+    },
+    {
+      "confidence": 1.0,
+      "cost": 32,
+      "id": "c1",
+      "metadata": {
+        "seed": 1
+      },
+      "source_model": "openrouter",
+      "text": "Prince Hamlet seeks revenge against his uncle Claudius for murdering his father and marrying his mother, a quest that spirals into madness, betrayal, and the deaths of nearly the entire royal court."
+    },
+    {
+      "confidence": 1.0,
+      "cost": 33,
+      "id": "c2",
+      "metadata": {
+        "seed": 2
+      },
+      "source_model": "openrouter",
+      "text": "Prince Hamlet seeks revenge against his uncle Claudius for murdering his father and marrying his mother, but his philosophical hesitation and feigned madness lead to a tragic cascade of deaths, including his own."
+    },
+    {
+      "confidence": 1.0,
+      "cost": 38,
+      "id": "c3",
+      "metadata": {
+        "seed": 3
+      },
+      "source_model": "openrouter",
+      "text": "Prince Hamlet seeks to avenge his father's murder by killing his uncle Claudius, who has seized the throne and married Hamlet's mother, a quest that spirals into madness, betrayal, and the deaths of nearly the entire royal court."
+    },
+    {
+      "confidence": 1.0,
+      "cost": 33,
+      "id": "c4",
+      "metadata": {
+        "seed": 4
+      },
+      "source_model": "openrouter",
+      "text": "Prince Hamlet seeks revenge against his uncle Claudius for murdering his father and marrying his mother, triggering a tragic chain of events that results in the deaths of nearly the entire royal court."
+    }
+  ],
+  "query": "Summarize the plot of Hamlet in one sentence.",
+  "scores": {
+    "c0": 0.48624999999999996,
+    "c1": 0.32749999999999996,
+    "c2": 0.57375,
+    "c3": 0.45499999999999996,
+    "c4": 0.21750000000000008
+  },
+  "winner_id": "c2",
+  "winner_text": "Prince Hamlet seeks revenge against his uncle Claudius for murdering his father and marrying his mother, but his philosophical hesitation and feigned madness lead to a tragic cascade of deaths, including his own."
+}

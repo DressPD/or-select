@@ -12,7 +12,7 @@ problems whose judge outputs were stored (the same subset the offline weight abl
   tournament          sequential knockout over candidate order using the pairwise matrix (incumbent keeps ties)
   Bradley-Terry       strength fitted to the pairwise matrix (Zermelo MM iterations), argmax
 
-Borda over the pairwise matrix equals the Copeland-style quality already reported (Section 5.5), so it is
+Borda over the pairwise matrix equals the Copeland-style quality already reported (Results, "Diagnosing the objective"), so it is
 not repeated. Not run (needs a trained model or live calls): reward-model / process-reward best-of-N and
 universal self-consistency. Writes manuscript/Baselines_data.tex.
 """

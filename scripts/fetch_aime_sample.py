@@ -7,9 +7,7 @@ problems of AIME I and AIME II 2026 (15 each), the most recent American
 Invitational Mathematics Examination sittings as of this writing. Chosen as
 a harder, more "trap-prone" alternative to MATH Level 5 (see
 docs/aime_2026_preregistration.md): AIME problems are specifically
-constructed to have tempting-but-wrong shortcuts, which MATH Level 5 turned
-out not to reliably have (docs/hypothesis_validation.md sub-claim 5 stayed
-untested there despite 105 graded problems). Being from the current year,
+constructed to have tempting-but-wrong shortcuts, which MATH Level 5 did not reliably have: it left little headroom between the mean candidate and the oracle (manuscript, Results, "Headroom and recovery"). Being from the current year,
 these problems are also about as close to "guaranteed not in training data"
 as a competition-math benchmark can get.
 

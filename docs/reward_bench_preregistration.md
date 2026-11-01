@@ -1,12 +1,14 @@
 # RewardBench judge validation — preregistered analysis plan
 
+> **Historical record.** Written before the run's results were seen and kept unchanged apart from errata notes (where present). Final results and interpretation: `manuscript/main.tex`, Results section. Sub-claim numbering refers to the project's earlier hypothesis document, now superseded by the manuscript.
+
 Written before this run's results were seen (same discipline as
 `docs/math_level5_preregistration.md`).
 
 ## Why this run exists
 
 Every benchmark result so far (`docs/benchmark_results.md`,
-`docs/hypothesis_validation.md`) measures the *full pipeline* — OR-Select's
+the manuscript (`manuscript/main.tex`)) measures the *full pipeline* — OR-Select's
 selection vs. baselines, against either no ground truth (Track A) or
 ground-truth final answers (Tracks B, C). None of them isolate whether
 `judge_fn` itself — the pairwise LLM judge that `quality_i` is built from —
