@@ -12,6 +12,8 @@
 \usepackage{url}
 
 \newtheorem{proposition}{Proposition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}{Lemma}[section]
 
 \journal{European Journal of Operational Research}
 
@@ -20,11 +22,13 @@
 %   python3 scripts/analyze_selection.py       -> Selection_data.tex
 %   python3 scripts/ablation_weights_offline.py -> Ablation_data.tex
 %   python3 scripts/baselines_extra_offline.py -> Baselines_data.tex
+%   python3 scripts/judge_threshold_theory.py -> Theory_data.tex
 %   python3 scripts/create_manuscript_tables.py -> Figure_3_WorkedExample_data.tex
 \input{Results_data.tex}
 \input{Selection_data.tex}
 \input{Ablation_data.tex}
 \input{Baselines_data.tex}
+\input{Theory_data.tex}
 \input{Figure_3_WorkedExample_data.tex}
 
 \begin{document}
@@ -67,7 +71,8 @@ term, measured in words, dominates the quality term in \CostDominatesK{} of
 because the judge's signal concentrates picks on one generator
 (\PickShareCohere\%) that is no more accurate. No other selector we tried that relies on the judge's output (pointwise
 confidence, knockout tournament, Bradley--Terry) beats plurality voting
-either. Reproducible selection is not accurate selection; we release the protocol and replayable data.
+either. A closed-form threshold shows why: with three candidates, a judge must prefer the correct
+answer in more than 80\% of mixed pairs once generators are 80\% accurate, and we measure 48--55\%. Reproducible selection is not accurate selection; we release the protocol and replayable data.
 \end{abstract}
 
 \begin{keyword}
@@ -403,6 +408,79 @@ We therefore measure the top-1 agreement empirically
 CP-SAT with a single search worker returns the same optimum regardless of
 machine or call order. This is true by construction; what we measure is
 whether the \emph{inputs} to the solve are stable and informative.
+
+\subsection{When can a judge beat voting? A pairwise-accuracy threshold}
+\label{sec:theory}
+
+The approximation guarantee of Section~\ref{sec:approx-guarantee} controls the
+cost of the \emph{full ranking} given the pairwise matrix; it says nothing about
+whether the top-ranked candidate is correct. The relevant quantity is the
+accuracy of the pairwise signal itself. We give a threshold for the setting
+of our homogeneous tracks.
+
+\paragraph{Model.} Three candidates are each correct independently with
+probability $p$; wrong answers are pairwise distinct, so plurality voting
+selects a correct answer exactly when at least two candidates are correct (and,
+with one correct candidate, breaks a three-way tie uniformly). A judge
+compares each of the three pairs once. On a pair with exactly one correct
+candidate it prefers the correct one with probability $q$; on any other pair it
+chooses uniformly. Selection is the Copeland winner of the three comparisons
+with ties broken uniformly. This is the quality-only case ($w_2=w_3=w_4=0$) and
+therefore the most favourable to the judge.
+
+\begin{theorem}[Pairwise-accuracy threshold]
+\label{thm:threshold}
+Under the model above, the accuracy of the Copeland selector minus the accuracy of plurality
+voting is
+\[
+\Delta(p,q)\;=\;p(1-p)\Bigl[(1-p)(2q-1)(q+1)\;-\;p\,(3-2q)(1-q)\Bigr].
+\]
+Hence, for $p\in(0,1)$, the judge-based selector is strictly more accurate than voting
+if and only if $\frac{p}{1-p}<\frac{(2q-1)(q+1)}{(3-2q)(1-q)}$. In particular, (i) a judge at
+chance ($q=\tfrac12$) selects with accuracy exactly $p$ and loses to voting by
+$p^{2}(1-p)$; (ii) the smallest winning $q^{*}(p)$ increases strictly from $\tfrac12$
+(as $p\to0$) to $1$ (as $p\to1$).
+\end{theorem}
+
+Table~\ref{tab:threshold} lists $q^{*}(p)$. The message is that the better the
+generators already are, the more accurate the judge must be before it adds
+anything: at $p=0.8$ the judge must prefer the correct answer in more than
+$80\%$ of mixed pairs. A judge helps most where voting is weakest, on weak
+generators or when correct answers are rare, which is also where a judge is
+hardest to build. The proof is in Appendix~\ref{app:proof}; the closed form
+is checked against exhaustive enumeration of the comparison outcomes
+(\texttt{scripts/judge\_threshold\_theory.py}).
+
+\begin{table}[htbp]
+\centering
+\caption{Smallest pairwise judge accuracy $q^{*}$ at which the Copeland selector
+ties plurality voting, as a function of the per-candidate accuracy $p$
+(Theorem~\ref{thm:threshold}, $N=3$).}
+\label{tab:threshold}
+\small
+\begin{tabular}{rr}
+\toprule
+$p$ & $q^{*}(p)$ \\
+\midrule
+\ThresholdRows
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{lemma}[Cost dominance]
+\label{lem:cost}
+Let $S_i=w_1Q_i+w_2C_i+w_4K_i-w_3c_i$ be the selection score of candidate $i$.
+If candidate $i^{\circ}$ has the smallest cost and, for every $j$,
+$w_3(c_j-c_{i^{\circ}})>w_1(Q_j-Q_{i^{\circ}})^{+}+w_2(C_j-C_{i^{\circ}})^{+}+w_4(K_j-K_{i^{\circ}})^{+}$,
+then every optimum of the selection program contains $i^{\circ}$ for any judge outputs
+$Q,C,K$ satisfying those bounds; the judge cannot change the winner.
+\end{lemma}
+
+Lemma~\ref{lem:cost} is elementary (compare $S_{i^{\circ}}$ with $S_j$ term by
+term) but it explains an empirical fact: with the shipped weights the cost term
+dominates the replayed rows (Section~\ref{sec:cost-diagnosis}), so the selector
+is in effect ``choose the shortest candidate'' and its accuracy equals that of
+the shortest-candidate rule (Table~\ref{tab:baselines}).
 
 \section{Experimental Protocol}
 \label{sec:experiments}
@@ -787,6 +865,48 @@ Selector & $n$ & Acc. (SC) & W/L & $p$ & $n$ & Acc. (SC) & W/L & $p$ \\
 \end{tabular}}
 \end{table}
 
+\subsection{Measured pairwise accuracy against the threshold}
+\label{sec:threshold-results}
+
+We measure $\hat p$ (share of correct candidates) and $\hat q$ (the mean stored
+pairwise probability assigned to the correct candidate, over ordered pairs with
+exactly one correct candidate) on the stored judge outputs. Table~\ref{tab:threshold-emp}
+compares $\hat q$ with the threshold $q^{*}(\hat p)$ of Theorem~\ref{thm:threshold}
+for the homogeneous track with enough mixed pairs (GPQA Diamond; the other homogeneous tracks stored too few judgments with a mixed pair). The measured $\hat q$ is far
+below the threshold: for GPQA Diamond the judge prefers the correct candidate in
+only $53.6\%$ of mixed comparisons, against a required $78.8\%$. The table also
+gives the heterogeneous tracks, where the model with $N=3$ does not apply
+directly but $\hat q$ is still the quantity that matters: it is at or near
+chance ($0.48$--$0.55$) except on GSM8K, where only 24 mixed pairs exist.
+This is the pairwise-level counterpart of the selection-level results above:
+the judge's signal about correctness is too weak for any selector built on it
+to beat voting. The model is stylized (independent candidates, distinct wrong
+answers, symmetric judge); real wrong answers collide, so we use it for the
+threshold comparison, not to predict accuracies.
+
+\begin{table}[htbp]
+\centering
+\caption{Measured per-candidate accuracy $\hat p$, number of mixed ordered
+pairs, measured pairwise judge accuracy $\hat q$, and (homogeneous only) the
+threshold $q^{*}(\hat p)$ of Theorem~\ref{thm:threshold}. Tracks with fewer
+than 20 mixed pairs are omitted.}
+\label{tab:threshold-emp}
+\small
+\begin{tabular}{lrrrr}
+\toprule
+\multicolumn{5}{l}{\textit{Homogeneous ($N=3$)}} \\
+Track & $\hat p$ & mixed pairs & $\hat q$ & $q^{*}(\hat p)$ \\
+\midrule
+\ThresholdEmpiricalRows
+\midrule
+\multicolumn{5}{l}{\textit{Heterogeneous ($N=6$; no threshold computed)}} \\
+Track & $\hat p$ & mixed pairs & $\hat q$ & \\
+\midrule
+\ThresholdHeteroRows
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsection{Exact Kemeny--Young reference}
 \label{sec:kemeny-results}
 
@@ -985,6 +1105,45 @@ outputs by the scripts named at the top of the source.
 %  - Elsevier requires a declaration of generative-AI use in manuscript preparation.
 %  - Archive the repository (e.g. Zenodo) and cite the DOI instead of the bare GitHub URL.
 %  - Re-run the three scripts once the heterogeneous passes finish and re-read Sections 5.2--5.5.
+
+\appendix
+\section{Proof of Theorem~\ref{thm:threshold}}
+\label{app:proof}
+
+Let $a_k(q)$ be the probability that the Copeland selector returns a correct candidate
+given that exactly $k$ of the three candidates are correct. Trivially $a_0=0$ and $a_3=1$.
+
+\emph{One correct candidate $C$, two wrong $W_1,W_2$.} $C$ beats each $W_i$ with probability
+$q$ and $W_1$ vs.\ $W_2$ is a fair coin. If $C$ wins both (probability $q^2$) its score is 2
+and it is the unique winner. If $C$ wins exactly one (probability $2q(1-q)$), say it beats $W_1$
+and loses to $W_2$, then $W_2$ is the unique winner when it also beats $W_1$ (probability
+$\tfrac12$); otherwise all three scores equal 1 and $C$ is chosen with probability $\tfrac13$.
+If $C$ loses both, its score is 0 and it is never chosen. Hence
+$a_1(q)=q^2+2q(1-q)\cdot\tfrac12\cdot\tfrac13=q^2+\tfrac13 q(1-q)$.
+
+\emph{Two correct candidates $C_1,C_2$, one wrong $W$.} $C_1$ vs.\ $C_2$ is a fair coin and
+each $C_i$ beats $W$ with probability $q$. If $W$ beats both (probability $(1-q)^2$) it has
+score 2 and wins. If $W$ beats exactly one, say $C_i$ (probability $2q(1-q)$), then $W$ has
+score 1 and $C_j$ has score $1+[C_j\text{ beats }C_i]$: if $C_j$ beats $C_i$ it wins alone;
+otherwise all three scores are 1 and a correct candidate is chosen with probability $\tfrac23$,
+giving $\tfrac12+\tfrac12\cdot\tfrac23=\tfrac56$. If $W$ beats neither, its score is 0 and a
+correct candidate is chosen. Hence $a_2(q)=q^2+\tfrac53 q(1-q)$.
+
+Plurality voting with distinct wrong answers has $v_0=0$, $v_1=\tfrac13$, $v_2=v_3=1$. With
+$k\sim\mathrm{Bin}(3,p)$,
+\[
+\Delta=3p(1-p)^2\bigl(a_1-\tfrac13\bigr)+3p^2(1-p)\bigl(a_2-1\bigr).
+\]
+Now $a_1-\tfrac13=\tfrac13(2q-1)(q+1)$ and $a_2-1=-\tfrac13(3-2q)(1-q)$, which gives the
+stated $\Delta(p,q)$. Positivity of $\Delta$ is equivalent to the stated inequality because
+$p(1-p)>0$. (i) At $q=\tfrac12$ the first term vanishes and $\Delta=-p^2(1-p)$; a chance-level
+judge picks uniformly, so its accuracy is $p$ and voting has accuracy $p+p^2(1-p)$.
+(ii) The right-hand side of the inequality, $g(q)=\frac{(2q-1)(q+1)}{(3-2q)(1-q)}$, is
+continuous and strictly increasing on $(\tfrac12,1)$ (numerator increasing from 0, denominator
+decreasing to 0), with $g(\tfrac12)=0$ and $g(q)\to\infty$ as $q\to1$. Therefore for each
+$p/(1-p)\in(0,\infty)$ there is a unique $q^{*}(p)\in(\tfrac12,1)$ with $g(q^{*})=p/(1-p)$;
+$q^{*}$ is strictly increasing in $p$ with $q^{*}\to\tfrac12$ as $p\to0$ and $q^{*}\to1$ as
+$p\to1$. \qed
 
 \bibliographystyle{elsarticle-num-names}
 \bibliography{refs}
