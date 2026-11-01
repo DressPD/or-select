@@ -129,6 +129,11 @@ principled aggregation rule translates into better answers
   validation on RewardBench; and offline weight ablations that cost no API
   calls because the judge outputs are stored (Sections~\ref{sec:experiments}
   and \ref{sec:results}).
+\item \textbf{A threshold theorem.} A closed-form, finite-$N$ condition
+  (Theorem~\ref{thm:threshold}) for when a pairwise judge with Copeland
+  aggregation beats plurality voting, checked by exhaustive enumeration and
+  confronted with the measured pairwise accuracy of the judge
+  (Section~\ref{sec:threshold-results}).
 \item \textbf{Findings.} (a) The judge is only moderately reliable
   (\RBOverallAcc\% on RewardBench). (b) With homogeneous generation,
   judge-based selection does not beat majority vote. (c) With
@@ -139,7 +144,7 @@ principled aggregation rule translates into better answers
   \KYTopOneDiffers{} of \KYTopOneN{} problems but is not more accurate.
 \end{enumerate}
 
-The negative result is the point of contribution~4: judge-based aggregation
+The negative result is the point of contribution~5: judge-based aggregation
 is attractive in theory, and the literature on correlated judge errors
 \citep{correlatederrors2026,kim2025correlated} and on the weak link between
 judge metrics and selection accuracy \citep{landesberg2026bestofn}
@@ -217,6 +222,55 @@ rank-aggregation literature \citep{dwork2001rank} motivates tractable
 surrogates. \citet{coppersmith2006ordering} prove that ordering by weighted
 number of wins is a 5-approximation for weighted tournaments, the result
 Proposition~\ref{prop:copeland-approx} uses.
+
+\paragraph{Operational-research precedents.} Three streams of this journal's
+literature meet in our problem. \emph{Exact and heuristic Kemeny aggregation}:
+exact and metaheuristic methods for the median ranking, including weak and
+partial rankings
+\citep{amodio2016kemeny,aledo2018rankagg,azzini2020kemeny} and faster
+computation of the Kemeny ranking by exploiting a necessary condition for being
+a winner \citep{rico2023kemeny}. Our exact reference is a small integer program solved with CP-SAT at $N\le6$ and
+we do not claim a faster Kemeny solver; what we take from this literature is
+the separation of the \emph{winner} of a Kemeny aggregation from the full
+ranking, which Theorem~\ref{thm:threshold} and Section~\ref{sec:kemeny-results}
+make operational for LLM judges. \emph{Ensemble selection as optimization}:
+\citet{debock2020ensemble} select heterogeneous classifier ensembles under
+uncertain misclassification costs, and \citet{aktas2024clusterensemble} cast
+cluster-ensemble selection as multi-objective optimization. Both optimize
+\emph{which models to include}; we optimize \emph{which answer to return} for
+each problem, with a cost term that proves to be the decisive (and harmful)
+one. \emph{Judgment, crowds and voting}: crowd and judgment aggregation
+\citep{brown2019wisdom,jaspersen2022judgment}, a machine-learning approach to
+voting rules \citep{burka2022voting}, and the role of human judgment in
+selecting among forecasts \citep{debaets2020judgment} are the closest
+precedents for treating ``who or what picks among alternatives'' as an object
+of study.
+Recent work in this journal also applies fused LLMs to prediction tasks
+\citep{maarouf2025fused}; in our search of this journal we found no paper that audits
+LLM answer selection against ground truth.
+
+\paragraph{Closest recent work and what is new.} The closest ML
+work falls into four groups. (i) \emph{Preference-graph aggregation with
+several judges}: PGED \citep{hu2024pged} combines several small evaluators
+into an acyclic preference graph and proves recovery of the ground-truth
+preference structure \emph{if the evaluators are sufficiently accurate}; we
+instead measure pairwise accuracy directly and show that, for a single free-tier
+judge, it sits at chance. (ii) \emph{Theory of voting versus a reward model}:
+Best-of-Majority \citep{di2025bom} and Best-of-$\infty$
+\citep{komiyama2025bestofinf} give asymptotic, minimax and weighted-ensemble
+(mixed-integer) analyses of majority voting and best-of-$N$ in the large-$N$ limit;
+our Theorem~\ref{thm:threshold} is a finite-$N$ ($N=3$) closed form that gives the
+exact judge accuracy at which a pairwise-Copeland selector overtakes
+plurality. (iii) \emph{Improving on majority voting by modelling the voters}:
+\citet{ai2025beyondmv} propose optimal-weight and inverse-surprising-popularity
+aggregation using second-order information; they do not use an LLM as a
+selector. (iv) \emph{Audits of ensemble gain}: \citet{kim2026diversity} show on
+31,900 subsets of 30 LLMs that simple voting beats the strongest member in
+only about 10\% of size-3 subsets and that diversity measures mostly track
+capability. Our audit differs in that it holds the \emph{selector} to ground
+truth with an exact Kemeny reference, replayable judge outputs and a
+closed-form accuracy threshold. We make no claim that the individual
+ingredients (pairwise judging, Copeland aggregation, Kemeny--Young) are new.
 
 \section{Method}
 
