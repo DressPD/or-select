@@ -107,4 +107,11 @@ for each module except `tests/test_providers.py`, which needs live keys.
 
 ## License
 
-MIT, see `LICENSE`.
+MIT, see `LICENSE`, for the code.
+
+Data sources and licences: the small samples in `data/` are subsets of public benchmarks (GSM8K, MATH,
+MATH-500, AIME 2025 and 2026 via MathArena, MMLU-Pro, RewardBench). Each sample keeps the licence and terms of its
+original source, which govern its reuse; check them before redistributing. GPQA Diamond is not redistributed
+(password-gated upstream); `scripts/fetch_gpqa_sample.py` regenerates it locally.
+
+To cite the software and data, see `CITATION.cff`.
