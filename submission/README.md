@@ -1,7 +1,10 @@
 # EJOR upload files
 
-**Editable source ZIP:** [ejor-source-package.zip](ejor-source-package.zip).
-Select **`main.tex`** as the main entry point. Its included `BUILD_README.md`
+**Initial upload:** `main.pdf` as Manuscript. The portal does not require LaTeX
+sources until revision. Upload `supplement.pdf` initially for peer review.
+
+**Editable source ZIP for revision:** [ejor-source-package.zip](ejor-source-package.zip).
+When requested, select **`main.tex`** as the main entry point. Its included `BUILD_README.md`
 explains the full main/supplement build and cross-reference support files.
 `SOURCE_MANIFEST.json` lists included files and SHA-256 hashes.
 
@@ -11,16 +14,20 @@ explains the full main/supplement build and cross-reference support files.
 | `supplement.pdf` | Online supplement; 10 pages |
 | `Cover_Letter_EJOR.pdf` | Cover letter |
 | `Submission_Title_Page.pdf` | Title/author page |
-| `ejor-source-package.zip` | Editable sources, figures, macros, class and licensed bibliography style |
+| `ejor-source-package.zip` | Revision-stage editable sources, figures, macros, class and licensed bibliography style |
 
-Highlights and the three author/declaration text files are inside the ZIP and
-in `manuscript/` in the repository. Upload them in the portal's requested
-categories. Do not concatenate the title page or supplement into the main paper.
+Highlights and author/declaration text files are inside the ZIP and in
+`manuscript/`. Use them only where the portal accepts those formats. The required
+competing-interest step is a truthful no-interests confirmation or the declaration
+tool's **Word file**, not a `.txt` upload. Do not concatenate the title page or
+supplement into the main paper.
 
 Technical validation: `docs/source_package_audit.json` in the repository.
 Both isolated clean-source and extracted-ZIP builds pass, without access to the
-installed custom bibliography style. Reference lists and extracted PDF text
-match the published PDFs. The four PDFs here retain the published file bytes.
+installed custom bibliography style. Reference lists remain byte-identical.
+The main PDF moves Funding above the AI disclosure, placing that disclosure
+directly before References; no scientific content changes. The other three
+PDFs retain the published file bytes.
 
 No credentials, raw benchmark inputs or internal review documents are in the ZIP.
 This is a post-v1.1.0 **push-only** source fix, not a new release or replacement

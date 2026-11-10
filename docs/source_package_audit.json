@@ -11,7 +11,6 @@
     {
       "args": [
         "pdflatex",
-        "-recorder",
         "-interaction=nonstopmode",
         "-halt-on-error",
         "main.tex"
@@ -28,7 +27,6 @@
     {
       "args": [
         "pdflatex",
-        "-recorder",
         "-interaction=nonstopmode",
         "-halt-on-error",
         "supplement.tex"
@@ -45,7 +43,6 @@
     {
       "args": [
         "pdflatex",
-        "-recorder",
         "-interaction=nonstopmode",
         "-halt-on-error",
         "main.tex"
@@ -55,7 +52,6 @@
     {
       "args": [
         "pdflatex",
-        "-recorder",
         "-interaction=nonstopmode",
         "-halt-on-error",
         "supplement.tex"
@@ -65,7 +61,6 @@
     {
       "args": [
         "pdflatex",
-        "-recorder",
         "-interaction=nonstopmode",
         "-halt-on-error",
         "main.tex"
@@ -75,7 +70,6 @@
     {
       "args": [
         "pdflatex",
-        "-recorder",
         "-interaction=nonstopmode",
         "-halt-on-error",
         "supplement.tex"
@@ -85,7 +79,6 @@
     {
       "args": [
         "pdflatex",
-        "-recorder",
         "-interaction=nonstopmode",
         "-halt-on-error",
         "main.tex"
@@ -95,7 +88,6 @@
     {
       "args": [
         "pdflatex",
-        "-recorder",
         "-interaction=nonstopmode",
         "-halt-on-error",
         "Cover_Letter_EJOR.tex"
@@ -105,7 +97,6 @@
     {
       "args": [
         "pdflatex",
-        "-recorder",
         "-interaction=nonstopmode",
         "-halt-on-error",
         "Submission_Title_Page.tex"
@@ -145,70 +136,32 @@
         "main.tex"
       ],
       "returncode": 0
-    },
-    {
-      "args": [
-        "pdflatex",
-        "-interaction=nonstopmode",
-        "-halt-on-error",
-        "main.tex"
-      ],
-      "returncode": 0,
-      "phase": "final_delivery_zip"
-    },
-    {
-      "args": [
-        "bibtex",
-        "main"
-      ],
-      "returncode": 0,
-      "phase": "final_delivery_zip"
-    },
-    {
-      "args": [
-        "pdflatex",
-        "-interaction=nonstopmode",
-        "-halt-on-error",
-        "main.tex"
-      ],
-      "returncode": 0,
-      "phase": "final_delivery_zip"
-    },
-    {
-      "args": [
-        "pdflatex",
-        "-interaction=nonstopmode",
-        "-halt-on-error",
-        "main.tex"
-      ],
-      "returncode": 0,
-      "phase": "final_delivery_zip"
     }
   ],
   "pdfs": {
     "main": {
       "pages": 30,
       "warnings": [],
-      "text_identical_to_published_pdf": true,
-      "sha256": "0732555d922b1ae1de250bc4c04b3eecfccf252e885b0aee2e242e238620f2f5"
+      "text_identical_to_published_pdf": false,
+      "sha256": "85877e3029adcf3a5368481c081b0824cb46905b94005deb15072d9001e370aa"
     },
     "supplement": {
       "pages": 10,
       "warnings": [],
       "text_identical_to_published_pdf": true,
-      "sha256": "5e02d7103a9050bd1b313d6ff801cab39607b93d53cce841b2ecf40f06275ef1"
+      "sha256": "6d52f57770fe5976f9c1b53c6e4eea91102e9fb8369f6340aea64136a3efe3f1"
     },
     "Cover_Letter_EJOR": {
       "pages": 1,
       "warnings": [],
       "text_identical_to_published_pdf": true,
-      "sha256": "2997fa502db6ad73a4f866fc81fb52d5cdafd1515ca448a7697e63d43793ddcf"
+      "sha256": "eec5d903424334d910bd8c416120b489eba298f700f5cea9f4dbff538494cd37"
     },
     "Submission_Title_Page": {
       "pages": 1,
       "warnings": [],
       "text_identical_to_published_pdf": true,
-      "sha256": "9e01bcaa2e47c42de1aec75b8a08e8053c6a9821b5354a021ece906c61bfa7e6"
+      "sha256": "86f250a7554c42225c0816ce08e3f77a61d23453bc251bb5b87854f4c4651b2c"
     }
   },
   "source_package_files": [
@@ -277,11 +230,11 @@
   "portal_single_entry_point_build": {
     "pages": 30,
     "warnings": [],
-    "text_identical_to_published_pdf": true,
-    "sha256": "98b5bc2be74c6617d84a5104fb469f8838104d1bff0908b7cbabf53d12e1b902"
+    "text_identical_to_published_pdf": false,
+    "sha256": "1372ce4216be3c201d55dbc1922081d0c5ce27723c97a3c90f8a60e1cd8c7b0c"
   },
   "zip_extraction_and_manifest_verified": true,
-  "package_zip_sha256": "6d1e77b8cda9a3c2111eab58b62fec781c7d05644e283a7b83a90b125f8825a3",
+  "package_zip_sha256": "9cd60e4fc5b20601b7f7da1bd59fc5e08a8be215270969b45a64e4a78d265272",
   "nine_numerical_macro_hashes_unchanged": true,
   "offline_tests_passed": 218,
   "final_delivery_zip_rebuilt_and_verified": true,
@@ -290,14 +243,20 @@
   "new_release_authorized": false,
   "author_choice": "Push fix only; no new GitHub release or Zenodo deposit.",
   "delivery_pdf_sha256": {
-    "main.pdf": "b77b384a0c3da3ecce9b46b8d70c4b93d418b5535b79a17721641e43caa759b7",
+    "main.pdf": "85877e3029adcf3a5368481c081b0824cb46905b94005deb15072d9001e370aa",
     "supplement.pdf": "1095c753b2d3b852f8fdd155ee4e1f67ee75664a24a6c8d8d820497388d69449",
     "Cover_Letter_EJOR.pdf": "9e9fcdfbd45418aa7a8582eb958588721710f709891de3a8fe60942f7ab9b0a7",
     "Submission_Title_Page.pdf": "34742ad8593448b4204019552b83cfb8afc38a2dae4360a6182411ac6026717d"
   },
-  "pdf_hash_note": "pdfs.sha256 records fresh isolated builds; delivery_pdf_sha256 records the retained exact published PDF bytes. Extracted text and pagination match.",
+  "pdf_hash_note": "Main PDF refreshed for disclosure placement; other three delivery PDFs retain published bytes. Source output matches current delivery PDFs; fresh build metadata may vary.",
   "author_only_checks_remaining": [
-    "Confirm author/contact/affiliation and declarations.",
-    "Inspect the submission portal-generated PDF and complete its declarations."
-  ]
+    "Confirm author/contact/affiliation and declarations, including any current/past editorial service.",
+    "Upload main PDF and supplement initially; retain LaTeX ZIP for revision.",
+    "Answer AI-use question Yes; inspect the portal-generated PDF."
+  ],
+  "manuscript_change": "Only move the unchanged Funding section above the unchanged AI disclosure, immediately before References.",
+  "initial_portal_requires_pdf_only": true,
+  "source_zip_stage": "Revision; not required for initial submission.",
+  "ai_disclosure_is_last_section_before_references": true,
+  "scientific_tex_content_unchanged": true
 }

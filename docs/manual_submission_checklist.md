@@ -5,8 +5,10 @@ as manuscript attachments. It is not a scientific acceptance certificate.
 
 ## Actions before submitting
 
-1. **Use the completed editable-source package.** Upload
-   `submission/ejor-source-package.zip` and select `main.tex` as the entry point.
+1. **Initial upload: PDF only.** Upload `submission/main.pdf` as Manuscript.
+   The portal explicitly says LaTeX source files are not needed until revision.
+   Retain `submission/ejor-source-package.zip`; when requested at revision,
+   upload it and select `main.tex` as the entry point.
    A redistributable `apalike-ejor.bst`, license/provenance, figures, macro files,
    class and build instructions are included. Both a clean source build and
    an extracted-ZIP main-entry-point build pass, without the installed custom
@@ -20,7 +22,7 @@ as manuscript attachments. It is not a scientific acceptance certificate.
    a duplicate Zenodo record. Post-release citation metadata now records the
    assigned version DOI without moving the GitHub tag or modifying its archive.
    The subsequent source-packaging fix is **push only**, as requested: no new
-   release/deposit. Use the current repository's source ZIP for submission;
+   release/deposit. Use the current repository's source ZIP at revision;
    the old v1.1.0 ZIP does not retroactively acquire the bundled style.
 3. **Verify author statements.** Confirm name, affiliation, email, ORCID,
    funding, competing interests, CRediT roles, and the precise AI-use declaration.
@@ -29,6 +31,13 @@ as manuscript attachments. It is not a scientific acceptance certificate.
    submission form, main article, supplement, title page and cover letter.
    Confirm tables, mathematical symbols and cross-document references in the
    PDF the submission system assembles, not only the local PDFs.
+5. **AI-use question: Yes.** The manuscript contains a disclosure immediately
+   before References, with Funding moved above it. Verify the tool/model names
+   and actual use. Basic grammar-only exemptions do not describe this project.
+6. **Competing interests:** only select the no-interests confirmation if its
+   full wording is true, including current/past editorial service. Otherwise
+   use the portal's declaration tool and upload the generated **Word file**.
+   The repository's `.txt` statement is not a substitute for that required format.
 
 ## Files and form entries
 
@@ -37,7 +46,8 @@ Title:
 > Pairwise Judging versus Voting for Language Model Answer Selection: Finite-Pool Theory and an Empirical Audit
 
 - Article type: **Theory and Methodology**.
-- Editable-source bundle: `submission/ejor-source-package.zip`; see its
+- Editable-source bundle **for revision**, not initial upload:
+  `submission/ejor-source-package.zip`; see its
   `BUILD_README.md` and `SOURCE_MANIFEST.json`.
 - Main article: `manuscript/main.pdf`, with editable `main.tex`, `refs.bib`,
   required macro files, figure sources/assets and bibliography dependency.
@@ -46,9 +56,11 @@ Title:
 - Title/author page: `manuscript/Submission_Title_Page.pdf` and `.tex`.
 - Cover letter: `manuscript/Cover_Letter_EJOR.pdf` and `.tex`.
 - Highlights: `manuscript/highlights.txt` (five bullets, each within 85 characters).
-- Declarations: the three `Credit_Author_Statement.txt`,
+- Other declarations, where the portal accepts their formats: `Credit_Author_Statement.txt`,
   `Declaration_of_Competing_Interest.txt` and `Declaration_of_Generative_AI.txt`
   files, as requested by the upload form.
+- Required competing-interest step: truthful no-interests confirmation, or
+  the declaration tool's Word file. Do not upload `.txt` into a Word-only field.
 - Copy the abstract and keywords from the final source; retain the official
   first keyword **Artificial intelligence in OR**.
 - Complete any portal-specific originality, exclusive-submission, reviewer,

@@ -13,7 +13,7 @@ not part of the journal manuscript.
 | Title/author page | `manuscript/Submission_Title_Page.tex` | `manuscript/Submission_Title_Page.pdf` |
 | Highlights | `manuscript/highlights.txt` | Same editable file |
 | CRediT roles | `manuscript/Credit_Author_Statement.txt` | Same editable file |
-| Competing interests | `manuscript/Declaration_of_Competing_Interest.txt` | Same editable file |
+| Competing interests | `manuscript/Declaration_of_Competing_Interest.txt` (reference text) | Truthful portal confirmation, or declaration tool's Word file |
 | AI disclosure | `manuscript/Declaration_of_Generative_AI.txt` | Same editable file; also in main article |
 | Complete editable upload bundle | Sources and licensed dependencies in `manuscript/` | `submission/ejor-source-package.zip` |
 
@@ -45,16 +45,22 @@ data. `Figure_4_Accuracy.pdf` is a legacy, unused plot, not an additional result
 
 ## Ready-to-upload bundle
 
-Use **`submission/ejor-source-package.zip`** for editable sources. It contains
+**Initial EJOR upload is PDF-only for LaTeX manuscripts.** Use
+`submission/main.pdf` as Manuscript and include `submission/supplement.pdf`
+for peer review. Editable sources are not required until revision.
+
+Retain **`submission/ejor-source-package.zip`** for editable sources at revision. It contains
 the entry points, generated numerical macros, figure assets and sources,
 class/style files, license notices, build instructions and a SHA-256 manifest.
 Cross-reference `.aux` and `.bbl` files from the verified build are included as
 portal conveniences, not prerequisites for a full clean build. Select `main.tex`
 as the main entry point. See `manuscript/BUILD_README.md` for the pass sequence.
 
-The four PDFs in `submission/` retain the exact bytes of the published PDFs.
-The rebuilt source outputs have identical extracted text. No raw benchmark
-records, credentials, or internal review notes are in the source ZIP.
+The main PDF moves Funding above the AI disclosure so that the disclosure is
+immediately before References, as the portal requires. Its scientific content
+is unchanged. The other three PDFs retain the exact published bytes. Source
+builds match the current delivery PDFs. No raw benchmark records, credentials,
+or internal review notes are in the source ZIP.
 
 ## Full document build
 

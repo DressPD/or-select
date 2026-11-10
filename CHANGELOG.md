@@ -6,8 +6,12 @@
   with retained permission, renamed file and documented changes. The installed
   custom file was not accessed. Bibliographies remain byte-identical.
 - Add `submission/ejor-source-package.zip`, license notices, build instructions,
-  cross-reference conveniences and manifest; retain exact published PDF bytes
-  as the delivery PDFs. No benchmark inputs or credentials enter the bundle.
+  cross-reference conveniences and manifest. No benchmark inputs or credentials
+  enter the bundle. Initial packaging retained exact published PDF bytes.
+- Apply the subsequent portal instruction: initial LaTeX submission uses a PDF,
+  with sources retained for revision. Move Funding above the AI disclosure so
+  that it immediately precedes References; refresh the main PDF and source ZIP.
+  Scientific content and the three other published PDFs remain unchanged.
 - Verify a source build without preexisting `.aux`/`.bbl` files and an extracted
   ZIP main-entry-point build with custom installed-style search disabled.
   Main/supplement remain 30/10 pages; 218 offline tests pass; all nine numerical

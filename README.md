@@ -156,8 +156,12 @@ For source-package dependencies and author actions before journal upload, see th
 
 ### Completed source package (post-v1.1.0 fix)
 
+For **initial EJOR submission**, upload [`submission/main.pdf`](submission/main.pdf)
+and the supplement PDF. The portal requests LaTeX sources only at revision.
+The AI disclosure now directly precedes References, with Funding above it.
+
 Download [`submission/ejor-source-package.zip`](submission/ejor-source-package.zip)
-for the editable submission sources, licensed `apalike-ejor.bst`, class, figures,
+for revision-stage editable sources, licensed `apalike-ejor.bst`, class, figures,
 generated tables, build instructions and manifest. The four delivery PDFs are in
 [`submission/`](submission/). Isolated clean-source and extracted-ZIP builds pass;
 the bibliographies are byte-identical, main/supplement remain 30/10 pages, and all
