@@ -2,49 +2,59 @@
 \def\TracksTableRows{B --- GSM8K, homog. & 40/40 & 100.0 & 100.0 & 100.0 & -- \\
 B$'$ --- GSM8K, heterog. & 40/40 & \textbf{100.0} & \textbf{100.0} & 95.0 & -- \\
 C --- MATH L5, homog. & 134/134 & 89.6 & \textbf{91.0} & 89.6 & 90.3 \\
-C$'$ --- MATH L5, heterog. & 131/134 & 89.3 & \textbf{90.8} & 79.4 & 80.2 \\
+C$'$ --- MATH L5, heterog. & 134/134 & 88.1 & \textbf{90.3} & 79.1 & 79.9 \\
 D --- AIME 2026, homog. & 30/30 & 80.0 & 86.7 & \textbf{90.0} & 83.3 \\
-D$'$ --- AIME 2026, heterog. & 25/30 & \textbf{96.0} & \textbf{96.0} & 72.0 & 92.0 \\
-E --- GPQA Diamond, homog. & 195/198 & 75.4 & \textbf{79.0} & \textbf{79.0} & 78.5 \\
-E$'$ --- GPQA Diamond, heterog. & 90/198 & 76.7 & \textbf{83.3} & \textbf{83.3} & 74.4 \\}
+D$'$ --- AIME 2026, heterog. & 30/30 & 86.7 & \textbf{93.3} & 63.3 & 90.0 \\
+E --- GPQA Diamond, homog. & 198/198 & 75.3 & \textbf{78.8} & \textbf{78.8} & 78.3 \\
+E$'$ --- GPQA Diamond, heterog. & 198/198 & 74.7 & 77.3 & \textbf{79.3} & 72.7 \\
+F --- AIME 2025, homog. & 30/30 & 80.0 & \textbf{83.3} & 76.7 & 86.7 \\
+G --- MMLU-Pro, homog. & 100/100 & 85.0 & \textbf{86.0} & \textbf{86.0} & 83.0 \\}
 \def\PairedTableRows{B --- GSM8K, homog. & 0/0 & -- & 0/0 & -- & -- & -- \\
 B$'$ --- GSM8K, heterog. & 0/2 & 0.500 & 0/2 & 0.500 & -- & -- \\
 C --- MATH L5, homog. & 0/2 & 0.500 & 1/1 & 1.000 & 1/2 & 1.000 \\
-C$'$ --- MATH L5, heterog. & 0/15 & $<$0.001 & 3/16 & 0.004 & 7/8 & 1.000 \\
+C$'$ --- MATH L5, heterog. & 0/15 & $<$0.001 & 4/16 & 0.012 & 7/8 & 1.000 \\
 D --- AIME 2026, homog. & 1/0 & 1.000 & 3/0 & 0.250 & 2/0 & 0.500 \\
-D$'$ --- AIME 2026, heterog. & 0/6 & 0.031 & 0/6 & 0.031 & 1/6 & 0.125 \\
+D$'$ --- AIME 2026, heterog. & 0/9 & 0.004 & 0/7 & 0.016 & 1/9 & 0.021 \\
 E --- GPQA Diamond, homog. & 6/6 & 1.000 & 13/6 & 0.167 & 9/8 & 1.000 \\
-E$'$ --- GPQA Diamond, heterog. & 2/2 & 1.000 & 8/2 & 0.109 & 11/3 & 0.057 \\}
-\def\HomogPooledN{399}
-\def\HomogPooledB{7}
-\def\HomogPooledC{8}
-\def\HomogPooledP{$p=1.000$}
-\def\TotalProblems{402}
-\def\FigLabels{GSM8K,GSM8K-H,MATH5,MATH5-H,AIME,AIME-H,GPQA,GPQA-H}
-\def\FigGRCoordinates{(GSM8K,100.0) (GSM8K-H,100.0) (MATH5,89.6) (MATH5-H,89.3) (AIME,80.0) (AIME-H,96.0) (GPQA,75.4) (GPQA-H,76.7)}
-\def\FigSCCoordinates{(GSM8K,100.0) (GSM8K-H,100.0) (MATH5,91.0) (MATH5-H,90.8) (AIME,86.7) (AIME-H,96.0) (GPQA,79.0) (GPQA-H,83.3)}
-\def\FigORCoordinates{(GSM8K,100.0) (GSM8K-H,95.0) (MATH5,89.6) (MATH5-H,79.4) (AIME,90.0) (AIME-H,72.0) (GPQA,79.0) (GPQA-H,83.3)}
-\def\FigKYCoordinates{(MATH5,90.3) (MATH5-H,80.2) (AIME,83.3) (AIME-H,92.0) (GPQA,78.5) (GPQA-H,74.4)}
-\def\HeteroPooledN{286}
-\def\HeteroPooledB{2}
-\def\HeteroPooledC{25}
+E$'$ --- GPQA Diamond, heterog. & 10/6 & 0.454 & 20/11 & 0.150 & 24/11 & 0.041 \\
+F --- AIME 2025, homog. & 1/3 & 0.625 & 1/2 & 1.000 & 1/4 & 0.375 \\
+G --- MMLU-Pro, homog. & 2/2 & 1.000 & 3/2 & 1.000 & 5/2 & 0.453 \\}
+\def\HomogPooledN{532}
+\def\HomogPooledB{10}
+\def\HomogPooledC{13}
+\def\HomogPooledP{$p=0.678$}
+\def\TotalProblems{532}
+\def\FigLabels{GSM8K,GSM8K-H,MATH5,MATH5-H,AIME,AIME-H,GPQA,GPQA-H,AIME25,MMLU-Pro}
+\def\FigGRCoordinates{(GSM8K,100.0) (GSM8K-H,100.0) (MATH5,89.6) (MATH5-H,88.1) (AIME,80.0) (AIME-H,86.7) (GPQA,75.3) (GPQA-H,74.7) (AIME25,80.0) (MMLU-Pro,85.0)}
+\def\FigSCCoordinates{(GSM8K,100.0) (GSM8K-H,100.0) (MATH5,91.0) (MATH5-H,90.3) (AIME,86.7) (AIME-H,93.3) (GPQA,78.8) (GPQA-H,77.3) (AIME25,83.3) (MMLU-Pro,86.0)}
+\def\FigORCoordinates{(GSM8K,100.0) (GSM8K-H,95.0) (MATH5,89.6) (MATH5-H,79.1) (AIME,90.0) (AIME-H,63.3) (GPQA,78.8) (GPQA-H,79.3) (AIME25,76.7) (MMLU-Pro,86.0)}
+\def\FigKYCoordinates{(MATH5,90.3) (MATH5-H,79.9) (AIME,83.3) (AIME-H,90.0) (GPQA,78.3) (GPQA-H,72.7) (AIME25,86.7) (MMLU-Pro,83.0)}
+\def\HeteroPooledN{402}
+\def\HeteroPooledB{10}
+\def\HeteroPooledC{32}
 \def\HeteroPooledP{$p<0.001$}
 \def\ExtendedTableRows{C --- MATH L5, homog. & 132 & 90.9 & 92.4 & 2 & 89.6 & 91.0 \\
+C$'$ --- MATH L5, heterog. & 131 & 79.4 & 90.8 & 3 & 79.1 & 90.3 \\
 D --- AIME 2026, homog. & 24 & 95.8 & 91.7 & 6 & 90.0 & 86.7 \\
-D$'$ --- AIME 2026, heterog. & 23 & 78.3 & 100.0 & 2 & 72.0 & 96.0 \\
-E --- GPQA Diamond, homog. & 174 & 82.2 & 82.8 & 21 & 79.0 & 79.0 \\}
+D$'$ --- AIME 2026, heterog. & 23 & 78.3 & 100.0 & 7 & 63.3 & 93.3 \\
+E --- GPQA Diamond, homog. & 175 & 82.3 & 82.9 & 23 & 78.8 & 78.8 \\
+E$'$ --- GPQA Diamond, heterog. & 163 & 85.3 & 82.8 & 35 & 79.3 & 77.3 \\
+F --- AIME 2025, homog. & 24 & 87.5 & 95.8 & 6 & 76.7 & 83.3 \\
+G --- MMLU-Pro, homog. & 94 & 88.3 & 88.3 & 6 & 86.0 & 86.0 \\}
 \def\CoverageTableRows{B --- GSM8K, homog. & 40 & 40 & 0 & 0 & 0 & -- \\
 B$'$ --- GSM8K, heterog. & 40 & 40 & 0 & 0 & 0 & 40 \\
 C --- MATH L5, homog. & 134 & 134 & 0 & 0 & 0 & -- \\
-C$'$ --- MATH L5, heterog. & 134 & 131 & 3 & 0 & 0 & 131 \\
+C$'$ --- MATH L5, heterog. & 134 & 134 & 0 & 0 & 0 & 131 \\
 D --- AIME 2026, homog. & 30 & 30 & 0 & 0 & 0 & -- \\
-D$'$ --- AIME 2026, heterog. & 30 & 25 & 5 & 0 & 0 & 23 \\
-E --- GPQA Diamond, homog. & 198 & 195 & 2 & 1 & 0 & -- \\
-E$'$ --- GPQA Diamond, heterog. & 198 & 90 & 19 & 3 & 86 & 79 \\}
-\def\KYTopOneN{605}
-\def\KYTopOneDiffers{91}
-\def\KYORwins{31}
-\def\KYKYwins{27}
+D$'$ --- AIME 2026, heterog. & 30 & 30 & 0 & 0 & 0 & 23 \\
+E --- GPQA Diamond, homog. & 198 & 198 & 0 & 0 & 0 & -- \\
+E$'$ --- GPQA Diamond, heterog. & 198 & 198 & 0 & 0 & 0 & 80 \\
+F --- AIME 2025, homog. & 30 & 30 & 0 & 0 & 0 & -- \\
+G --- MMLU-Pro, homog. & 100 & 100 & 0 & 0 & 0 & -- \\}
+\def\KYTopOneN{854}
+\def\KYTopOneDiffers{139}
+\def\KYORwins{50}
+\def\KYKYwins{44}
 \def\NGSMh{40}
 \def\TotGSMh{40}
 \def\AccORGSMh{100.0}
@@ -73,12 +83,12 @@ E$'$ --- GPQA Diamond, heterog. & 198 & 90 & 19 & 3 & 86 & 79 \\}
 \def\ORwinsMATHh{0}
 \def\SCwinsMATHh{2}
 \def\LegacyMATHh{0}
-\def\NMATHx{131}
+\def\NMATHx{134}
 \def\TotMATHx{134}
-\def\AccORMATHx{79.4}
-\def\AccSCMATHx{90.8}
-\def\AccGRMATHx{89.3}
-\def\AccKYMATHx{80.2}
+\def\AccORMATHx{79.1}
+\def\AccSCMATHx{90.3}
+\def\AccGRMATHx{88.1}
+\def\AccKYMATHx{79.9}
 \def\DiscMATHx{15}
 \def\ORwinsMATHx{0}
 \def\SCwinsMATHx{15}
@@ -93,36 +103,56 @@ E$'$ --- GPQA Diamond, heterog. & 198 & 90 & 19 & 3 & 86 & 79 \\}
 \def\ORwinsAIMEh{1}
 \def\SCwinsAIMEh{0}
 \def\LegacyAIMEh{0}
-\def\NAIMEx{25}
+\def\NAIMEx{30}
 \def\TotAIMEx{30}
-\def\AccORAIMEx{72.0}
-\def\AccSCAIMEx{96.0}
-\def\AccGRAIMEx{96.0}
-\def\AccKYAIMEx{92.0}
-\def\DiscAIMEx{6}
+\def\AccORAIMEx{63.3}
+\def\AccSCAIMEx{93.3}
+\def\AccGRAIMEx{86.7}
+\def\AccKYAIMEx{90.0}
+\def\DiscAIMEx{9}
 \def\ORwinsAIMEx{0}
-\def\SCwinsAIMEx{6}
+\def\SCwinsAIMEx{9}
 \def\LegacyAIMEx{23}
-\def\NGPQAh{195}
+\def\NGPQAh{198}
 \def\TotGPQAh{198}
-\def\AccORGPQAh{79.0}
-\def\AccSCGPQAh{79.0}
-\def\AccGRGPQAh{75.4}
-\def\AccKYGPQAh{78.5}
+\def\AccORGPQAh{78.8}
+\def\AccSCGPQAh{78.8}
+\def\AccGRGPQAh{75.3}
+\def\AccKYGPQAh{78.3}
 \def\DiscGPQAh{12}
 \def\ORwinsGPQAh{6}
 \def\SCwinsGPQAh{6}
 \def\LegacyGPQAh{0}
-\def\NGPQAx{90}
+\def\NGPQAx{198}
 \def\TotGPQAx{198}
-\def\AccORGPQAx{83.3}
-\def\AccSCGPQAx{83.3}
-\def\AccGRGPQAx{76.7}
-\def\AccKYGPQAx{74.4}
-\def\DiscGPQAx{4}
-\def\ORwinsGPQAx{2}
-\def\SCwinsGPQAx{2}
-\def\LegacyGPQAx{79}
+\def\AccORGPQAx{79.3}
+\def\AccSCGPQAx{77.3}
+\def\AccGRGPQAx{74.7}
+\def\AccKYGPQAx{72.7}
+\def\DiscGPQAx{16}
+\def\ORwinsGPQAx{10}
+\def\SCwinsGPQAx{6}
+\def\LegacyGPQAx{80}
+\def\NAIME25h{30}
+\def\TotAIME25h{30}
+\def\AccORAIME25h{76.7}
+\def\AccSCAIME25h{83.3}
+\def\AccGRAIME25h{80.0}
+\def\AccKYAIME25h{86.7}
+\def\DiscAIME25h{4}
+\def\ORwinsAIME25h{1}
+\def\SCwinsAIME25h{3}
+\def\LegacyAIME25h{0}
+\def\NMMLUh{100}
+\def\TotMMLUh{100}
+\def\AccORMMLUh{86.0}
+\def\AccSCMMLUh{86.0}
+\def\AccGRMMLUh{85.0}
+\def\AccKYMMLUh{83.0}
+\def\DiscMMLUh{4}
+\def\ORwinsMMLUh{2}
+\def\SCwinsMMLUh{2}
+\def\LegacyMMLUh{0}
 \def\RBOverallAcc{60.5}
 \def\RBN{161}
 \def\RBCILow{53.2}

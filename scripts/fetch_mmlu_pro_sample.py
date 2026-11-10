@@ -4,7 +4,7 @@
 
 TIGER-Lab/MMLU-Pro (test split, 12,032 questions, up to 10 options) via the Hugging Face
 datasets-server API. The split is stored in subject blocks, so the sample takes 5 consecutive
-questions at each of 20 evenly spaced offsets: every subject is represented, and the choice does
+questions at each of 20 evenly spaced offsets: 12 of the 14 subjects are represented, and the choice does
 not depend on any model output. Options are rendered as a lettered list inside `query`, so
 all N candidates for a question see the identical option mapping (same convention as GPQA).
 Output schema matches data/gpqa_diamond_sample.jsonl: query, ground_truth (letter), subject, unique_id.

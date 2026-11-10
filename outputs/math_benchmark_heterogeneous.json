@@ -2,22 +2,29 @@
   "n_samples": 6,
   "provider": "openrouter_mixed",
   "n_total": 134,
-  "n_valid": 131,
-  "n_failed": 3,
-  "n_valid_current_judge": 131,
+  "n_valid": 134,
+  "n_failed": 0,
+  "n_valid_current_judge": 134,
   "accuracy_of_valid": {
+    "or_select": 0.7910447761194029,
+    "self_consistency": 0.9029850746268657,
+    "greedy": 0.8805970149253731,
+    "kemeny_young": 0.7985074626865671
+  },
+  "n_extended_rescued": 3,
+  "accuracy_of_valid_main_protocol": {
     "or_select": 0.7938931297709924,
     "self_consistency": 0.9083969465648855,
     "greedy": 0.8931297709923665,
     "kemeny_young": 0.8015267175572519
   },
   "score_parse_this_run": {
-    "parsed": 216,
+    "parsed": 0,
     "missing": 0,
     "exhausted": 0
   },
   "disagreement": {
-    "n_disagreements": 28,
+    "n_disagreements": 29,
     "n_or_select_corrects_self_consistency": 0,
     "n_self_consistency_corrects_or_select": 15,
     "disagreement_queries": [
@@ -28,6 +35,7 @@
       "Let $x,$ $y,$ and $z$ be positive real numbers such that $xyz = 2.$  Find the mi",
       "Let $p(x)$ be a polynomial of degree 5 such that\n\\[p(n) = \\frac{n}{n^2 - 1}\\]for",
       "Find the number of integer values of $k$ in the closed interval $[-500,500]$ for",
+      "A gecko is in a room that is 12 feet long, 10 feet wide and 8 feet tall. The gec",
       "Sam is carrying a 2 gallon bucket of milk to his house from the barn, which is 3",
       "Let $S$ be the union of the set of all points inside a regular nonagon with side",
       "Let $\\lambda$ be a constant, $0 \\le \\lambda \\le 4,$ and let $f : [0,1] \\to [0,1]",
@@ -52,7 +60,7 @@
     ]
   },
   "copeland_vs_kemeny": {
-    "n_disagreements": 34,
+    "n_disagreements": 35,
     "n_or_select_corrects_kemeny_young": 7,
     "n_kemeny_young_corrects_or_select": 8,
     "disagreement_queries": [
@@ -65,6 +73,7 @@
       "For every positive integer $n$, let $\\text{mod}_5 (n)$ be the remainder obtained",
       "Let $p(x)$ be a polynomial of degree 5 such that\n\\[p(n) = \\frac{n}{n^2 - 1}\\]for",
       "Find the number of integer values of $k$ in the closed interval $[-500,500]$ for",
+      "A gecko is in a room that is 12 feet long, 10 feet wide and 8 feet tall. The gec",
       "If $-6\\leq a \\leq -2$ and $3 \\leq b \\leq 5$, what is the greatest possible value",
       "Find the largest $x$-value at which the graphs of $f(x)=e^{3x^2-|\\lfloor x \\rflo",
       "Sam is carrying a 2 gallon bucket of milk to his house from the barn, which is 3",
@@ -4526,32 +4535,121 @@
     {
       "query": "A gecko is in a room that is 12 feet long, 10 feet wide and 8 feet tall. The gecko is currently on a side wall ($10^{\\prime}$ by $8^{\\prime}$), one foot from the ceiling and one foot from the back wall ($12^{\\prime}$ by $8^{\\prime}$). The gecko spots a fly on the opposite side wall, one foot from the floor and one foot from the front wall. What is the length of the shortest path the gecko can take to reach the fly assuming that it does not jump and can only walk across the ceiling and the walls? Express your answer in simplest radical form.",
       "ground_truth": "2\\sqrt{113}",
+      "judge_version": "short-answer",
+      "judgments": {
+        "confidence": {
+          "c0": 0.98,
+          "c1": 1.0,
+          "c2": 0.98,
+          "c3": 0.99,
+          "c4": 0.8,
+          "c5": 1.0
+        },
+        "pairwise": {
+          "c0|c1": 0.77,
+          "c1|c0": 0.22999999999999998,
+          "c0|c2": 0.835,
+          "c2|c0": 0.16500000000000004,
+          "c0|c3": 0.7,
+          "c3|c0": 0.30000000000000004,
+          "c0|c4": 0.625,
+          "c4|c0": 0.375,
+          "c0|c5": 0.45999999999999996,
+          "c5|c0": 0.54,
+          "c1|c2": 0.57,
+          "c2|c1": 0.43000000000000005,
+          "c1|c3": 0.6,
+          "c3|c1": 0.4,
+          "c1|c4": 0.625,
+          "c4|c1": 0.375,
+          "c1|c5": 0.5900000000000001,
+          "c5|c1": 0.4099999999999999,
+          "c2|c3": 0.35,
+          "c3|c2": 0.65,
+          "c2|c4": 0.615,
+          "c4|c2": 0.385,
+          "c2|c5": 0.7,
+          "c5|c2": 0.30000000000000004,
+          "c3|c4": 0.5,
+          "c4|c3": 0.5,
+          "c3|c5": 0.5,
+          "c5|c3": 0.5,
+          "c4|c5": 0.82,
+          "c5|c4": 0.18000000000000005
+        },
+        "selection_scores": {
+          "c0": -1.146,
+          "c1": 0.05300000000000016,
+          "c2": -2.822,
+          "c3": -1.612,
+          "c4": -0.41900000000000004,
+          "c5": 0.6260000000000001
+        }
+      },
       "subject": "Geometry",
-      "error": "ValidityExhausted: seed=0 no valid answer in 3 attempts, output truncated at the token cap in at least one (last response: 0 chars)",
       "or_select": {
-        "answer": null,
+        "answer": "2\\sqrt{97}",
         "correct": false
       },
       "self_consistency": {
-        "answer": null,
+        "answer": "4\\sqrt{29}",
         "correct": false,
-        "had_majority": false
+        "had_majority": true
       },
       "greedy": {
-        "answer": null,
+        "answer": "2\\sqrt{106}",
         "correct": false
       },
       "kemeny_young": {
-        "answer": null,
+        "answer": "2\\sqrt{106}",
         "correct": false,
-        "is_optimal": null
+        "is_optimal": true
       },
-      "winner_texts": null,
-      "candidates": null,
-      "failed_last_response": "",
-      "truncated": true,
-      "truncated_at_tokens": 32768,
-      "truncation_attempts": 1
+      "winner_texts": {
+        "or_select": "\\boxed{2\\sqrt{97}}",
+        "self_consistency": "Let the side walls be \\(x=0\\) and \\(x=12\\), with width \\(y\\) along \\(0\\)\u2013\\(10\\) and height \\(z\\) along \\(0\\)\u2013\\(8\\). The gecko starts at \\((0,9,7)\\) and the fly is at \\((12,1,1)\\).\n\nBy unfolding the ceiling and the side walls, the shortest path is found using the sequence:\n\n\\[\n\\text{start} \\to \\text{ceiling} \\to \\text{end on opposite side wall.}\n\\]\n\nOptimizing the crossing points gives the minimal path length\n\n\\[\n4\\sqrt{29}\\text{ feet.}\n\\]\n\n\\[\n\\boxed{4\\sqrt{29}}\n\\]",
+        "greedy": "The room dimensions are 12 ft (length) \u00d7 10 ft (width) \u00d7 8 ft (height). Set coordinates: x from front (0) to back (12), y from left (0) to right (10), z from floor (0) to ceiling (8). The gecko A starts on the left side wall (y=0) at x=11 (1 ft from the back wall) and z=7 (1 ft from the ceiling). The fly B is on the right side wall (y=10) at x=1 (1 ft from the front wall) and z=1 (1 ft from the floor). The gecko may walk only on the ceiling and the four walls; the floor is excluded.\n\nThe shortest path on the allowed surfaces is found by unfolding the left wall, ceiling, and right wall into a plane. In this unfolding, A maps to coordinates (11, \u20131) and B maps to (1, 17) (or equivalently, the straight-line distance between them). The horizontal separation in x is 10 ft, and the vertical separation in the unfolding is 18 ft. The path length is the Euclidean distance:\n\\[\n\\sqrt{10^2 + 18^2} = \\sqrt{100 + 324} = \\sqrt{424} = 2\\sqrt{106}.\n\\]\nOther unfoldings (via the front or back wall) yield longer distances (\\(\\sqrt{520} = 2\\sqrt{130}\\)). Thus the shortest path length is \\(2\\sqrt{106}\\).\n\n\\boxed{2\\sqrt{106}}",
+        "kemeny_young": "The room dimensions are 12 ft (length) \u00d7 10 ft (width) \u00d7 8 ft (height). Set coordinates: x from front (0) to back (12), y from left (0) to right (10), z from floor (0) to ceiling (8). The gecko A starts on the left side wall (y=0) at x=11 (1 ft from the back wall) and z=7 (1 ft from the ceiling). The fly B is on the right side wall (y=10) at x=1 (1 ft from the front wall) and z=1 (1 ft from the floor). The gecko may walk only on the ceiling and the four walls; the floor is excluded.\n\nThe shortest path on the allowed surfaces is found by unfolding the left wall, ceiling, and right wall into a plane. In this unfolding, A maps to coordinates (11, \u20131) and B maps to (1, 17) (or equivalently, the straight-line distance between them). The horizontal separation in x is 10 ft, and the vertical separation in the unfolding is 18 ft. The path length is the Euclidean distance:\n\\[\n\\sqrt{10^2 + 18^2} = \\sqrt{100 + 324} = \\sqrt{424} = 2\\sqrt{106}.\n\\]\nOther unfoldings (via the front or back wall) yield longer distances (\\(\\sqrt{520} = 2\\sqrt{130}\\)). Thus the shortest path length is \\(2\\sqrt{106}\\).\n\n\\boxed{2\\sqrt{106}}"
+      },
+      "candidates": [
+        {
+          "seed": 0,
+          "source_model": "nvidia/nemotron-3.5-lightning:free",
+          "text": "The room dimensions are 12 ft (length) \u00d7 10 ft (width) \u00d7 8 ft (height). Set coordinates: x from front (0) to back (12), y from left (0) to right (10), z from floor (0) to ceiling (8). The gecko A starts on the left side wall (y=0) at x=11 (1 ft from the back wall) and z=7 (1 ft from the ceiling). The fly B is on the right side wall (y=10) at x=1 (1 ft from the front wall) and z=1 (1 ft from the floor). The gecko may walk only on the ceiling and the four walls; the floor is excluded.\n\nThe shortest path on the allowed surfaces is found by unfolding the left wall, ceiling, and right wall into a plane. In this unfolding, A maps to coordinates (11, \u20131) and B maps to (1, 17) (or equivalently, the straight-line distance between them). The horizontal separation in x is 10 ft, and the vertical separation in the unfolding is 18 ft. The path length is the Euclidean distance:\n\\[\n\\sqrt{10^2 + 18^2} = \\sqrt{100 + 324} = \\sqrt{424} = 2\\sqrt{106}.\n\\]\nOther unfoldings (via the front or back wall) yield longer distances (\\(\\sqrt{520} = 2\\sqrt{130}\\)). Thus the shortest path length is \\(2\\sqrt{106}\\).\n\n\\boxed{2\\sqrt{106}}"
+        },
+        {
+          "seed": 1,
+          "source_model": "xingchen-agi/xing4.0-29b-a4b:free",
+          "text": "Let the side walls be \\(x=0\\) and \\(x=12\\), with width \\(y\\) along \\(0\\)\u2013\\(10\\) and height \\(z\\) along \\(0\\)\u2013\\(8\\). The gecko starts at \\((0,9,7)\\) and the fly is at \\((12,1,1)\\).\n\nBy unfolding the ceiling and the side walls, the shortest path is found using the sequence:\n\n\\[\n\\text{start} \\to \\text{ceiling} \\to \\text{end on opposite side wall.}\n\\]\n\nOptimizing the crossing points gives the minimal path length\n\n\\[\n4\\sqrt{29}\\text{ feet.}\n\\]\n\n\\[\n\\boxed{4\\sqrt{29}}\n\\]"
+        },
+        {
+          "seed": 2,
+          "source_model": "cohere/north-mini-code:free",
+          "text": "**Solution Overview**\n\nPlace the room in a coordinate system with  \n\n\\[\n\\begin{aligned}\nx&\\in[0,12] &&\\text{(length, front\u2013back)}\\\\\ny&\\in[0,10] &&\\text{(width, left\u2013right)}\\\\\nz&\\in[0,8] &&\\text{(height, floor\u2013ceiling)} .\n\\end{aligned}\n\\]\n\nThe gecko starts on the east wall \\((x=12)\\) at  \n\n\\[\nS=(12,\\;y_S=9,\\;z_S=7)\n\\]\n\n(one foot from the ceiling and one foot from the back wall).\n\nThe fly is on the west wall \\((x=0)\\) at  \n\n\\[\nT=(0,\\;y_T=1,\\;z_T=1)\n\\]\n\n(one foot from the floor and one foot from the front wall).\n\nThe gecko may walk only on the ceiling \\((z=8)\\) and the four walls.  \nThe shortest path will be a straight line after \u201cunfolding\u2019\u2019 the\nsurfaces that the path traverses.  \n\nThe only ways to go from the east wall to the west wall using a single\nintermediate face are:\n\n* **Via the ceiling** \u2013 net \\(E\\!-\\!C\\!-\\!W\\)\n* **Via the back wall** \u2013 net \\(E\\!-\\!N\\!-\\!W\\)\n* **Via the front wall** \u2013 net \\(E\\!-\\!S\\!-\\!W\\)\n\n(Using two or more intermediate faces always yields a longer straight\nsegment, as shown below.)\n\n--------------------------------------------------------------------\n### 1.  Path via the ceiling \\((E\\!-\\!C\\!-\\!W)\\)\n\nUnfold the east wall, ceiling and west wall.  \nIn the net the gecko\u2019s point is \\((x,y)=(9,7)\\) and the fly\u2019s point is\n\\((x,y)=(0,1)\\).  \n\nThe straight\u2011line distance is  \n\n\\[\n\\begin{aligned}\nd_{ECW}&=\\sqrt{(9-0)^2+(7-1)^2}\n        =\\sqrt{9^2+6^2}\n        =\\sqrt{81+36}\n        =\\sqrt{117}=3\\sqrt{13}.\n\\end{aligned}\n\\]\n\nBut we must also add the 1\u2011ft climb to the ceiling and the 7\u2011ft drop\nfrom the ceiling to the fly, giving  \n\n\\[\nd_{ECW}=1+3\\sqrt{13}+7=8+3\\sqrt{13}=4\\sqrt{29}\\approx21.54 .\n\\]\n\n--------------------------------------------------------------------\n### 2.  Path via the back wall \\((E\\!-\\!N\\!-\\!W)\\)\n\nUnfold the east wall, back wall and west wall.  \nIn this net the coordinates are\n\n\\[\n\\begin{aligned}\nS&:(X,Y)=(y_S,z_S)=(9,7),\\\\\nT&:(X,Y)=(y_T-12,z_T)=(-11,1).\n\\end{aligned}\n\\]\n\nHence\n\n\\[\nd_{ENW}= \\sqrt{(9-(-11))^2+(7-1)^2}\n        =\\sqrt{20^2+6^2}\n        =\\sqrt{400+36}\n        =\\sqrt{436}=2\\sqrt{109}\\approx20.88 .\n\\]\n\n--------------------------------------------------------------------\n### 3.  Path via the front wall \\((E\\!-\\!S\\!-\\!W)\\)\n\nA similar unfolding gives  \n\n\\[\nd_{ESW}= \\sqrt{(9-(-13))^2+(7-1)^2}\n        =\\sqrt{22^2+6^2}\n        =\\sqrt{520}=2\\sqrt{130}\\approx22.80 .\n\\]\n\n--------------------------------------------------------------------\n### 4.  Paths using two intermediate faces\n\nAny net that traverses three faces (e.g. \\(E\\!-\\!C\\!-\\!N\\!-\\!W\\) or\n\\(E\\!-\\!N\\!-\\!C\\!-\\!W\\)) forces the straight segment to be much longer;\ndirect calculation shows all such distances exceed \\(30\\), far larger\nthan the three distances above.\n\n--------------------------------------------------------------------\n### 5.  Minimum distance\n\nComparing the three feasible two\u2011face nets:\n\n\\[\n\\begin{aligned}\nd_{ECW}&=4\\sqrt{29}\\approx21.54,\\\\\nd_{ENW}&=2\\sqrt{109}\\approx20.88,\\\\\nd_{ESW}&=2\\sqrt{130}\\approx22.80.\n\\end{aligned}\n\\]\n\nThe smallest is \\(d_{ENW}=2\\sqrt{109}\\).\n\n--------------------------------------------------------------------\n\\[\n\\boxed{2\\sqrt{109}}\n\\]"
+        },
+        {
+          "seed": 3,
+          "source_model": "nvidia/nemotron-3.5-lightning:free",
+          "text": "The room dimensions are 12 ft long, 10 ft wide, and 8 ft tall. The gecko starts on a side wall (10' by 8') one foot from the ceiling and one foot from the back wall (12' by 8'). The fly is on the opposite side wall, one foot from the floor and one foot from the front wall. Set coordinates: length along x (0\u201312), width along y (0\u201310), height along z (0\u20138). The gecko is at (x=0, y=1, z=7) on the left side wall. The fly is at (x=12, y=9, z=1) on the right side wall. The allowed surfaces are the four walls and the ceiling (floor excluded).\n\nThe shortest path unfolds the left side wall, ceiling, and right side wall into a plane. The left wall is placed with coordinates (u = y, v = z); the gecko starts at (1, 7). The ceiling is attached at v = 8, extending v from 8 to 20 while keeping u = y. The right wall is attached at v = 20, extending v from 20 to 28 with u = y and v = 20 + (8 \u2212 z); the fly ends at (9, 27). The straight line from (1, 7) to (9, 27) has \u0394u = 8 and \u0394v = 20, staying entirely within the faces. Its length is \\(\\sqrt{8^2 + 20^2} = \\sqrt{64 + 400} = \\sqrt{464} = 4\\sqrt{29}\\).\n\n\\boxed{4\\sqrt{29}}"
+        },
+        {
+          "seed": 4,
+          "source_model": "xingchen-agi/xing4.0-29b-a4b:free",
+          "text": "Set up coordinates with the room \\(12\\) ft long (\\(x\\)), \\(10\\) ft wide (\\(y\\)), and \\(8\\) ft tall (\\(z\\)).  \nLet the start be on a side wall: one foot from the ceiling \\(\\Rightarrow z=7\\), one foot from the back wall \\(\\Rightarrow y=9\\).  \nThe fly is on the opposite side wall: one foot from the floor \\(\\Rightarrow z=1\\), one foot from the front wall \\(\\Rightarrow y=1\\).\n\nTo get from one side wall to the opposite side wall while walking only on walls and the ceiling, unfold the top. In the unfolded net the distance becomes:\n\n\\[\n\\sqrt{(12)^2 + (9-1)^2 + (8-1+8-7)^2}\n= \\sqrt{144 + 64 + 64}\n= \\sqrt{272}\n= 4\\sqrt{17}.\n\\]\n\n\\(\\boxed{4\\sqrt{17}}\\)"
+        },
+        {
+          "seed": 5,
+          "source_model": "cohere/north-mini-code:free",
+          "text": "\\boxed{2\\sqrt{97}}"
+        }
+      ],
+      "extended_cap_pass": true,
+      "extended_cap_requested": 65536,
+      "main_protocol": {
+        "error": "ValidityExhausted: seed=0 no valid answer in 3 attempts, output truncated at the token cap in at least one (last response: 0 chars)",
+        "truncated_at_tokens": 32768,
+        "truncation_attempts": 1
+      }
     },
     {
       "query": "If $-6\\leq a \\leq -2$ and $3 \\leq b \\leq 5$, what is the greatest possible value of $\\displaystyle\\left(a+\\frac{1}{b}\\right)\\left(\\frac{1}{b}-a\\right) $?  Express your answer as a common fraction.",
@@ -9932,32 +10030,121 @@
     {
       "query": "Let $a,$ $b,$ $c$ be real numbers such that\n\\[|ax^2 + bx + c| \\le 1\\]for all $0 \\le x \\le 1.$  Find the largest possible value of $|a| + |b| + |c|.$",
       "ground_truth": "17",
+      "judge_version": "short-answer",
+      "judgments": {
+        "confidence": {
+          "c0": 1.0,
+          "c1": 0.97,
+          "c2": 0.98,
+          "c3": 0.9,
+          "c4": 0.95,
+          "c5": 1.0
+        },
+        "pairwise": {
+          "c0|c1": 0.55,
+          "c1|c0": 0.44999999999999996,
+          "c0|c2": 0.325,
+          "c2|c0": 0.675,
+          "c0|c3": 0.65,
+          "c3|c0": 0.35,
+          "c0|c4": 0.35,
+          "c4|c0": 0.65,
+          "c0|c5": 0.39999999999999997,
+          "c5|c0": 0.6000000000000001,
+          "c1|c2": 0.55,
+          "c2|c1": 0.44999999999999996,
+          "c1|c3": 0.45,
+          "c3|c1": 0.55,
+          "c1|c4": 0.6,
+          "c4|c1": 0.4,
+          "c1|c5": 0.5,
+          "c5|c1": 0.5,
+          "c2|c3": 0.6000000000000001,
+          "c3|c2": 0.3999999999999999,
+          "c2|c4": 0.3,
+          "c4|c2": 0.7,
+          "c2|c5": 0.44999999999999996,
+          "c5|c2": 0.55,
+          "c3|c4": 0.55,
+          "c4|c3": 0.44999999999999996,
+          "c3|c5": 0.45,
+          "c5|c3": 0.55,
+          "c4|c5": 0.3,
+          "c5|c4": 0.7
+        },
+        "selection_scores": {
+          "c0": -0.675,
+          "c1": 0.14400000000000002,
+          "c2": -0.33899999999999997,
+          "c3": -1.12,
+          "c4": 0.17999999999999994,
+          "c5": -0.8599999999999999
+        }
+      },
       "subject": "Intermediate Algebra",
-      "error": "ValidityExhausted: seed=3 no valid answer in 3 attempts, output truncated at the token cap in at least one (last response: 0 chars)",
       "or_select": {
-        "answer": null,
-        "correct": false
+        "answer": "17",
+        "correct": true
       },
       "self_consistency": {
-        "answer": null,
-        "correct": false,
-        "had_majority": false
+        "answer": "17",
+        "correct": true,
+        "had_majority": true
       },
       "greedy": {
-        "answer": null,
-        "correct": false
+        "answer": "17",
+        "correct": true
       },
       "kemeny_young": {
-        "answer": null,
-        "correct": false,
-        "is_optimal": null
+        "answer": "17",
+        "correct": true,
+        "is_optimal": true
       },
-      "winner_texts": null,
-      "candidates": null,
-      "failed_last_response": "",
-      "truncated": true,
-      "truncated_at_tokens": 32768,
-      "truncation_attempts": 1
+      "winner_texts": {
+        "or_select": "The maximum value of \\(|a| + |b| + |c|\\) is achieved by the polynomial \\(P(x) = 8x^2 - 8x + 1\\), which satisfies \\(|P(x)| \\le 1\\) on \\([0,1]\\) and gives \\(|a| + |b| + |c| = 8 + 8 + 1 = 17\\). No other quadratic satisfying the constraint yields a larger sum.\n\n\\[\n\\boxed{17}\n\\]",
+        "self_consistency": "The problem asks for the maximum possible value of \\(|a| + |b| + |c|\\) given that \\(|ax^2 + bx + c| \\le 1\\) for all \\(x \\in [0,1]\\). \n\nThe feasible set of quadratics bounded by \\(1\\) on \\([0,1]\\) is convex, and extreme points of this set are polynomials that alternate between \\(\\pm1\\) at three points in \\([0,1]\\). One such extremal polynomial is\n\\[\nf(x) = 8x^2 - 8x + 1,\n\\]\nwhich satisfies \\(f(0) = 1\\), \\(f(1) = 1\\), and \\(f(1/2) = -1\\). This gives \\(|a| + |b| + |c| = 8 + 8 + 1 = 17\\).\n\nTesting other configurations (e.g., different alternation points, different signs, or relaxing endpoint values) either yields smaller sums or violates the bound \\(|f(x)| \\le 1\\) on \\([0,1]\\). A known result in polynomial extremal problems confirms that \\(17\\) is the maximum.\n\n\\boxed{17}",
+        "greedy": "The problem asks for the maximum possible value of \\(|a| + |b| + |c|\\) given that \\(|ax^2 + bx + c| \\le 1\\) for all \\(x \\in [0,1]\\). \n\nThe feasible set of quadratics bounded by \\(1\\) on \\([0,1]\\) is convex, and extreme points of this set are polynomials that alternate between \\(\\pm1\\) at three points in \\([0,1]\\). One such extremal polynomial is\n\\[\nf(x) = 8x^2 - 8x + 1,\n\\]\nwhich satisfies \\(f(0) = 1\\), \\(f(1) = 1\\), and \\(f(1/2) = -1\\). This gives \\(|a| + |b| + |c| = 8 + 8 + 1 = 17\\).\n\nTesting other configurations (e.g., different alternation points, different signs, or relaxing endpoint values) either yields smaller sums or violates the bound \\(|f(x)| \\le 1\\) on \\([0,1]\\). A known result in polynomial extremal problems confirms that \\(17\\) is the maximum.\n\n\\boxed{17}",
+        "kemeny_young": "Let  \n\n\\[\np(x)=ax^{2}+bx+c ,\\qquad |p(x)|\\le 1\\ \\ (0\\le x\\le 1).\n\\]\n\n---\n\n### 1.  Values at three points\n\nSet  \n\n\\[\nu=p(0)=c,\\qquad v=p\\!\\Bigl(\\frac12\\Bigr)=a\\frac14+b\\frac12+c,\\qquad \nw=p(1)=a+b+c .\n\\]\n\nBecause \\(|p(x)|\\le1\\) on \\([0,1]\\),\n\n\\[\n|u|=|c|\\le1,\\qquad |v|\\le1,\\qquad |w|\\le1 .\n\\]\n\n---\n\n### 2.  Express \\(a,b,c\\) through \\(u,v,w\\)\n\nFrom the three equations we obtain\n\n\\[\n\\begin{aligned}\nc &=u,\\\\[2mm]\na+b &= w-u,\\\\[2mm]\na+2b &= 4v-4u .\n\\end{aligned}\n\\]\n\nSubtracting the second line from the third gives  \n\n\\[\nb = 4v-w-3u .\n\\]\n\nThen  \n\n\\[\na = (w-u)-b = 2(w-2v+u)=2\\,(u-2v+w).\n\\]\n\nHence  \n\n\\[\n\\boxed{a=2(u-2v+w)},\\qquad \n\\boxed{b=4v-w-3u},\\qquad \n\\boxed{c=u}.\n\\]\n\n---\n\n### 3.  Bounding the coefficients\n\nUsing \\(|u|,|v|,|w|\\le1\\) and the triangle inequality:\n\n\\[\n\\begin{aligned}\n|a| &\\le 2\\bigl(|u|+2|v|+|w|\\bigr)\n     \\le 2(1+2\\cdot1+1)=8,\\\\[2mm]\n|b| &\\le 4|v|+|w|+3|u|\n     \\le 4\\cdot1+1+3\\cdot1=8,\\\\[2mm]\n|c| &\\le |u|\\le 1 .\n\\end{aligned}\n\\]\n\nTherefore for every admissible quadratic\n\n\\[\n|a|+|b|+|c|\\le 8+8+1=17 .\n\\]\n\n---\n\n### 4.  Attaining the bound\n\nTake  \n\n\\[\np(x)=8x^{2}-8x+1.\n\\]\n\nThen  \n\n\\[\np(0)=1,\\; p\\!\\Bigl(\\frac12\\Bigr)=-1,\\; p(1)=1,\n\\]\n\nso \\(|p(x)|\\le1\\) on \\([0,1]\\).  Its coefficients are \\(a=8,\\;b=-8,\\;c=1\\), giving\n\n\\[\n|a|+|b|+|c|=8+8+1=17.\n\\]\n\nThus the upper bound \\(17\\) is sharp.\n\n---\n\n\\[\n\\boxed{17}\n\\]"
+      },
+      "candidates": [
+        {
+          "seed": 0,
+          "source_model": "nvidia/nemotron-3.5-lightning:free",
+          "text": "The problem asks for the maximum possible value of \\(|a| + |b| + |c|\\) given that \\(|ax^2 + bx + c| \\le 1\\) for all \\(x \\in [0,1]\\). \n\nThe feasible set of quadratics bounded by \\(1\\) on \\([0,1]\\) is convex, and extreme points of this set are polynomials that alternate between \\(\\pm1\\) at three points in \\([0,1]\\). One such extremal polynomial is\n\\[\nf(x) = 8x^2 - 8x + 1,\n\\]\nwhich satisfies \\(f(0) = 1\\), \\(f(1) = 1\\), and \\(f(1/2) = -1\\). This gives \\(|a| + |b| + |c| = 8 + 8 + 1 = 17\\).\n\nTesting other configurations (e.g., different alternation points, different signs, or relaxing endpoint values) either yields smaller sums or violates the bound \\(|f(x)| \\le 1\\) on \\([0,1]\\). A known result in polynomial extremal problems confirms that \\(17\\) is the maximum.\n\n\\boxed{17}"
+        },
+        {
+          "seed": 1,
+          "source_model": "xingchen-agi/xing4.0-29b-a4b:free",
+          "text": "The maximum possible value of \\(|a|+|b|+|c|\\) is 17, achieved by the polynomial \\(8x^2 - 8x + 1\\) (or its negation). This corresponds to the shifted Chebyshev polynomial \\(T_2(2x-1)\\), which equioscillates between \\(\\pm 1\\) at \\(x=0, \\frac12, 1\\). Any other choice of coefficients either violates the constraint \\(|ax^2+bx+c|\\le 1\\) on \\([0,1]\\) or gives a smaller sum of absolute values.\n\n\\[\n\\boxed{17}\n\\]"
+        },
+        {
+          "seed": 2,
+          "source_model": "cohere/north-mini-code:free",
+          "text": "Let  \n\n\\[\np(x)=ax^{2}+bx+c ,\\qquad |p(x)|\\le 1\\quad (0\\le x\\le 1).\n\\]\n\nEvaluate \\(p\\) at three convenient points.\n\n\\[\n\\begin{aligned}\np(0) &=c,\\\\[2pt]\np\\!\\left(\\tfrac12\\right) &=\\frac{a}{4}+\\frac{b}{2}+c,\\\\[2pt]\np(1) &=a+b+c .\n\\end{aligned}\n\\]\n\nSolving this linear system for \\(a,b,c\\) gives  \n\n\\[\n\\boxed{\\;\n\\begin{aligned}\na &=2p(1)-4p\\!\\left(\\tfrac12\\right)+2p(0),\\\\[2pt]\nb &=4p\\!\\left(\\tfrac12\\right)-3p(0)-p(1),\\\\[2pt]\nc &=p(0).\n\\end{aligned}}\n\\]\n\nSince \\(|p(x)|\\le 1\\) for every \\(x\\in[0,1]\\),\n\n\\[\n\\begin{aligned}\n|a|&\\le 2|p(1)|+4\\Big|p\\!\\left(\\tfrac12\\right)\\Big|+2|p(0)|\n      \\le 2+4+2=8,\\\\[4pt]\n|b|&\\le 4\\Big|p\\!\\left(\\tfrac12\\right)\\Big|+3|p(0)|+|p(1)|\n      \\le 4+3+1=8,\\\\[4pt]\n|c|&=|p(0)|\\le 1 .\n\\end{aligned}\n\\]\n\nConsequently\n\n\\[\n|a|+|b|+|c|\\le 8+8+1=17 .\n\\]\n\nThe bound is attainable.  \nTake the Chebyshev polynomial on \\([0,1]\\),\n\n\\[\np(x)=T_{2}(2x-1)=8x^{2}-8x+1 .\n\\]\n\nHere \\(p(0)=1,\\;p(1/2)=-1,\\;p(1)=1\\); hence \\(|p(x)|\\le1\\) on \\([0,1]\\) and  \n\n\\[\n|a|+|b|+|c|=|8|+|{-8}|+|1|=17 .\n\\]\n\nThus the largest possible value of \\(|a|+|b|+|c|\\) is  \n\n\\[\n\\boxed{17}.\n\\]"
+        },
+        {
+          "seed": 3,
+          "source_model": "nvidia/nemotron-3.5-lightning:free",
+          "text": "The problem asks for the maximum of \\(|a| + |b| + |c|\\) given that \\(|ax^2 + bx + c| \\le 1\\) for all \\(x \\in [0,1]\\).\n\nThe feasible set is convex, and the objective \\(|a| + |b| + |c|\\) is convex; its maximum over a convex polytope occurs at a vertex. The extreme points of the unit ball of quadratics on \\([0,1]\\) are those that attain \\(\\pm 1\\) at three points with alternating signs. The only such polynomials that satisfy the bound on the whole interval have alternation at \\(x = 0\\), \\(x = \\frac{1}{2}\\), and \\(x = 1\\) (or the symmetric version with opposite signs).\n\nFor example, \\(P(x) = 8x^2 - 8x + 1\\) gives values \\(1\\) at \\(x=0\\), \\(-1\\) at \\(x=\\frac{1}{2}\\), and \\(1\\) at \\(x=1\\). Its coefficients are \\(a=8\\), \\(b=-8\\), \\(c=1\\), and the sum \\(|a|+|b|+|c| = 17\\).\n\nAll other configurations of three alternation points either violate the condition \\(|P(x)| \\le 1\\) or yield a smaller sum. A systematic analysis of cases (vertex inside/outside, signs of coefficients) confirms that no polynomial can exceed a sum of 17.\n\n\\[\n\\boxed{17}\n\\]"
+        },
+        {
+          "seed": 4,
+          "source_model": "xingchen-agi/xing4.0-29b-a4b:free",
+          "text": "The maximum value of \\(|a| + |b| + |c|\\) is achieved by the polynomial \\(P(x) = 8x^2 - 8x + 1\\), which satisfies \\(|P(x)| \\le 1\\) on \\([0,1]\\) and gives \\(|a| + |b| + |c| = 8 + 8 + 1 = 17\\). No other quadratic satisfying the constraint yields a larger sum.\n\n\\[\n\\boxed{17}\n\\]"
+        },
+        {
+          "seed": 5,
+          "source_model": "cohere/north-mini-code:free",
+          "text": "Let  \n\n\\[\np(x)=ax^{2}+bx+c ,\\qquad |p(x)|\\le 1\\ \\ (0\\le x\\le 1).\n\\]\n\n---\n\n### 1.  Values at three points\n\nSet  \n\n\\[\nu=p(0)=c,\\qquad v=p\\!\\Bigl(\\frac12\\Bigr)=a\\frac14+b\\frac12+c,\\qquad \nw=p(1)=a+b+c .\n\\]\n\nBecause \\(|p(x)|\\le1\\) on \\([0,1]\\),\n\n\\[\n|u|=|c|\\le1,\\qquad |v|\\le1,\\qquad |w|\\le1 .\n\\]\n\n---\n\n### 2.  Express \\(a,b,c\\) through \\(u,v,w\\)\n\nFrom the three equations we obtain\n\n\\[\n\\begin{aligned}\nc &=u,\\\\[2mm]\na+b &= w-u,\\\\[2mm]\na+2b &= 4v-4u .\n\\end{aligned}\n\\]\n\nSubtracting the second line from the third gives  \n\n\\[\nb = 4v-w-3u .\n\\]\n\nThen  \n\n\\[\na = (w-u)-b = 2(w-2v+u)=2\\,(u-2v+w).\n\\]\n\nHence  \n\n\\[\n\\boxed{a=2(u-2v+w)},\\qquad \n\\boxed{b=4v-w-3u},\\qquad \n\\boxed{c=u}.\n\\]\n\n---\n\n### 3.  Bounding the coefficients\n\nUsing \\(|u|,|v|,|w|\\le1\\) and the triangle inequality:\n\n\\[\n\\begin{aligned}\n|a| &\\le 2\\bigl(|u|+2|v|+|w|\\bigr)\n     \\le 2(1+2\\cdot1+1)=8,\\\\[2mm]\n|b| &\\le 4|v|+|w|+3|u|\n     \\le 4\\cdot1+1+3\\cdot1=8,\\\\[2mm]\n|c| &\\le |u|\\le 1 .\n\\end{aligned}\n\\]\n\nTherefore for every admissible quadratic\n\n\\[\n|a|+|b|+|c|\\le 8+8+1=17 .\n\\]\n\n---\n\n### 4.  Attaining the bound\n\nTake  \n\n\\[\np(x)=8x^{2}-8x+1.\n\\]\n\nThen  \n\n\\[\np(0)=1,\\; p\\!\\Bigl(\\frac12\\Bigr)=-1,\\; p(1)=1,\n\\]\n\nso \\(|p(x)|\\le1\\) on \\([0,1]\\).  Its coefficients are \\(a=8,\\;b=-8,\\;c=1\\), giving\n\n\\[\n|a|+|b|+|c|=8+8+1=17.\n\\]\n\nThus the upper bound \\(17\\) is sharp.\n\n---\n\n\\[\n\\boxed{17}\n\\]"
+        }
+      ],
+      "extended_cap_pass": true,
+      "extended_cap_requested": 65536,
+      "main_protocol": {
+        "error": "ValidityExhausted: seed=3 no valid answer in 3 attempts, output truncated at the token cap in at least one (last response: 0 chars)",
+        "truncated_at_tokens": 32768,
+        "truncation_attempts": 1
+      }
     },
     {
       "query": "William Sydney Porter tried to perform the calculation $\\frac{-3+4i}{1+2i}$. However, he accidentally missed the minus sign, finding $\\frac{3+4i}{1+2i}=\\frac{11}{5}-\\frac{2}{5}i$. What answer should he have obtained?",
@@ -11082,32 +11269,121 @@
     {
       "query": "In the circle with center $Q$, radii $AQ$ and $BQ$ form a right angle. The two smaller regions are tangent semicircles, as shown. The radius of the circle with center $Q$ is 14 inches. What is the radius of the smaller semicircle? Express your answer as a common fraction.",
       "ground_truth": "\\frac{14}{3}",
+      "judge_version": "short-answer",
+      "judgments": {
+        "confidence": {
+          "c0": 0.92,
+          "c1": 0.95,
+          "c2": 0.9,
+          "c3": 0.93,
+          "c4": 1.0,
+          "c5": 1.0
+        },
+        "pairwise": {
+          "c0|c1": 0.35,
+          "c1|c0": 0.65,
+          "c0|c2": 0.7,
+          "c2|c0": 0.30000000000000004,
+          "c0|c3": 0.5,
+          "c3|c0": 0.5,
+          "c0|c4": 0.09999999999999998,
+          "c4|c0": 0.9,
+          "c0|c5": 0.8,
+          "c5|c0": 0.19999999999999996,
+          "c1|c2": 0.45,
+          "c2|c1": 0.55,
+          "c1|c3": 0.55,
+          "c3|c1": 0.44999999999999996,
+          "c1|c4": 0.5,
+          "c4|c1": 0.5,
+          "c1|c5": 0.975,
+          "c5|c1": 0.025000000000000022,
+          "c2|c3": 0.7050000000000001,
+          "c3|c2": 0.29499999999999993,
+          "c2|c4": 0.45,
+          "c4|c2": 0.55,
+          "c2|c5": 0.505,
+          "c5|c2": 0.495,
+          "c3|c4": 0.225,
+          "c4|c3": 0.775,
+          "c3|c5": 0.5,
+          "c5|c3": 0.5,
+          "c4|c5": 0.7949999999999999,
+          "c5|c4": 0.20500000000000007
+        },
+        "selection_scores": {
+          "c0": -0.5359999999999999,
+          "c1": -0.20500000000000007,
+          "c2": 0.7220000000000001,
+          "c3": -0.31999999999999995,
+          "c4": 0.2539999999999999,
+          "c5": 0.525
+        }
+      },
       "subject": "Geometry",
-      "error": "ValidityExhausted: seed=2 no valid answer in 3 attempts, output truncated at the token cap in at least one (last response: 0 chars)",
       "or_select": {
-        "answer": null,
-        "correct": false
+        "answer": "\\frac{14}{3}",
+        "correct": true
       },
       "self_consistency": {
-        "answer": null,
-        "correct": false,
-        "had_majority": false
+        "answer": "\\frac{14}{3}",
+        "correct": true,
+        "had_majority": true
       },
       "greedy": {
-        "answer": null,
+        "answer": "\\frac{28}{5}",
         "correct": false
       },
       "kemeny_young": {
-        "answer": null,
-        "correct": false,
-        "is_optimal": null
+        "answer": "\\frac{14}{3}",
+        "correct": true,
+        "is_optimal": true
       },
-      "winner_texts": null,
-      "candidates": null,
-      "failed_last_response": "",
-      "truncated": true,
-      "truncated_at_tokens": 32768,
-      "truncation_attempts": 1
+      "winner_texts": {
+        "or_select": "\\boxed{\\frac{14}{3}}",
+        "self_consistency": "The large circle has radius \\(14\\). One semicircle uses the entire radius \\(AQ\\) as its diameter, so its radius is \\(7\\). Place the center \\(Q\\) at \\((0,0)\\), \\(A=(14,0)\\), and \\(B=(0,14)\\). The larger semicircle has center \\((7,0)\\) and radius \\(7\\); the smaller semicircle has radius \\(r\\) and center \\((0,14-r)\\). The two semicircles are externally tangent, so the distance between their centers equals the sum of their radii:\n\\[\n\\sqrt{7^2 + (14-r)^2} = 7 + r.\n\\]\nSquaring both sides:\n\\[\n49 + 196 - 28r + r^2 = 49 + 14r + r^2.\n\\]\nSimplifying gives \\(196 = 42r\\), so \\(r = \\frac{196}{42} = \\frac{14}{3}\\).\n\n\\[\n\\boxed{\\frac{14}{3}}\n\\]",
+        "greedy": "The problem describes a circle of radius 14 with center \\(Q\\), and perpendicular radii \\(AQ\\) and \\(BQ\\). Inside the circle, two smaller semicircles are drawn, each having its diameter along one of the radii \\(AQ\\) and \\(BQ\\), and they are tangent to each other and to the large circle. Setting up coordinates with \\(Q\\) at the origin and the radii along the positive \\(x\\)- and \\(y\\)-axes, the semicircles have diameters from some points to \\(A(14,0)\\) and \\(B(0,14)\\), giving radii \\(r = 14-a\\) and \\(s = 14-c\\). Their tangency to each other yields the equation\n\n\\[\n\\sqrt{\\left(\\frac{a+14}{2}\\right)^2 + \\left(\\frac{c+14}{2}\\right)^2} = 28 - a - c.\n\\]\n\nSolving this system (as in the classic AMC 10 problem) gives the smaller semicircle's radius as \\(\\frac{28}{5}\\) inches.\n\n\\[\n\\boxed{\\frac{28}{5}}\n\\]",
+        "kemeny_young": "Let the big circle have radius \\(R=14\\).  \nThe larger semicircle has radius \\(\\frac{R}{2}=7\\) and is tangent to the big circle at \\(A\\).  \nLet the smaller semicircle have radius \\(r\\), with center at \\((0,R-r)\\) so that it is tangent to the big circle at \\(B\\).\n\nThe centers are \\((R/2,0)\\) and \\((0,R-r)\\), and the semicircles are externally tangent, so:\n\\[\n\\sqrt{\\left(\\frac{R}{2}\\right)^2+(R-r)^2}=\\frac{R}{2}+r.\n\\]\nSquaring and simplifying gives:\n\\[\nr=\\frac{R}{3}=\\frac{14}{3}.\n\\]\n\n\\[\n\\boxed{\\frac{14}{3}}\n\\]"
+      },
+      "candidates": [
+        {
+          "seed": 0,
+          "source_model": "nvidia/nemotron-3.5-lightning:free",
+          "text": "The problem describes a circle of radius 14 with center \\(Q\\), and perpendicular radii \\(AQ\\) and \\(BQ\\). Inside the circle, two smaller semicircles are drawn, each having its diameter along one of the radii \\(AQ\\) and \\(BQ\\), and they are tangent to each other and to the large circle. Setting up coordinates with \\(Q\\) at the origin and the radii along the positive \\(x\\)- and \\(y\\)-axes, the semicircles have diameters from some points to \\(A(14,0)\\) and \\(B(0,14)\\), giving radii \\(r = 14-a\\) and \\(s = 14-c\\). Their tangency to each other yields the equation\n\n\\[\n\\sqrt{\\left(\\frac{a+14}{2}\\right)^2 + \\left(\\frac{c+14}{2}\\right)^2} = 28 - a - c.\n\\]\n\nSolving this system (as in the classic AMC 10 problem) gives the smaller semicircle's radius as \\(\\frac{28}{5}\\) inches.\n\n\\[\n\\boxed{\\frac{28}{5}}\n\\]"
+        },
+        {
+          "seed": 1,
+          "source_model": "xingchen-agi/xing4.0-29b-a4b:free",
+          "text": "The large circle has radius \\(14\\). One semicircle uses the entire radius \\(AQ\\) as its diameter, so its radius is \\(7\\). Place the center \\(Q\\) at \\((0,0)\\), \\(A=(14,0)\\), and \\(B=(0,14)\\). The larger semicircle has center \\((7,0)\\) and radius \\(7\\); the smaller semicircle has radius \\(r\\) and center \\((0,14-r)\\). The two semicircles are externally tangent, so the distance between their centers equals the sum of their radii:\n\\[\n\\sqrt{7^2 + (14-r)^2} = 7 + r.\n\\]\nSquaring both sides:\n\\[\n49 + 196 - 28r + r^2 = 49 + 14r + r^2.\n\\]\nSimplifying gives \\(196 = 42r\\), so \\(r = \\frac{196}{42} = \\frac{14}{3}\\).\n\n\\[\n\\boxed{\\frac{14}{3}}\n\\]"
+        },
+        {
+          "seed": 2,
+          "source_model": "cohere/north-mini-code:free",
+          "text": "\\boxed{\\frac{14}{3}}"
+        },
+        {
+          "seed": 3,
+          "source_model": "nvidia/nemotron-3.5-lightning:free",
+          "text": "The problem describes a circle with center \\( Q \\) and radius 14 inches, with perpendicular radii \\( AQ \\) and \\( BQ \\). Inside the circle, two smaller semicircles are drawn that are tangent to each other and fit in the right\u2011angled corner. A standard configuration of this type places the two semicircles symmetrically, each tangent to one radius, the large circle, and the other semicircle. Setting up the geometry with the large circle \\( x^2+y^2=14^2 \\) and solving for the radius \\( r \\) of the smaller semicircles yields a rational answer.\n\n\\boxed{\\frac{14}{5}}"
+        },
+        {
+          "seed": 4,
+          "source_model": "xingchen-agi/xing4.0-29b-a4b:free",
+          "text": "Let the big circle have radius \\(R=14\\).  \nThe larger semicircle has radius \\(\\frac{R}{2}=7\\) and is tangent to the big circle at \\(A\\).  \nLet the smaller semicircle have radius \\(r\\), with center at \\((0,R-r)\\) so that it is tangent to the big circle at \\(B\\).\n\nThe centers are \\((R/2,0)\\) and \\((0,R-r)\\), and the semicircles are externally tangent, so:\n\\[\n\\sqrt{\\left(\\frac{R}{2}\\right)^2+(R-r)^2}=\\frac{R}{2}+r.\n\\]\nSquaring and simplifying gives:\n\\[\nr=\\frac{R}{3}=\\frac{14}{3}.\n\\]\n\n\\[\n\\boxed{\\frac{14}{3}}\n\\]"
+        },
+        {
+          "seed": 5,
+          "source_model": "cohere/north-mini-code:free",
+          "text": "\\boxed{\\frac{7}{2}}"
+        }
+      ],
+      "extended_cap_pass": true,
+      "extended_cap_requested": 65536,
+      "main_protocol": {
+        "error": "ValidityExhausted: seed=2 no valid answer in 3 attempts, output truncated at the token cap in at least one (last response: 0 chars)",
+        "truncated_at_tokens": 32768,
+        "truncation_attempts": 1
+      }
     },
     {
       "query": "Let $z$ be a complex number such that $|z| = 1.$  Find the maximum value of\n\\[|1 + z| + |1 - z + z^2|.\\]",

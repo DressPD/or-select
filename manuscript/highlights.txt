@@ -1,5 +1,5 @@
 - Best-of-N answer selection as a reproducible, exactly replayable integer program
 - Exact Kemeny-Young reference; Copeland aggregate is a 5-approximation
-- Ground-truth audit on GSM8K, MATH-5, AIME 2026 and GPQA with paired exact tests
-- Judge selection ties majority vote when homogeneous and is worse when mixed
+- Ground-truth audit on six benchmarks (GSM8K, MATH-5, AIME 2026, GPQA, AIME 2025, MMLU-Pro) with paired exact tests
+- Judge selection ties majority vote when homogeneous and is worse when mixed (pooled)
 - Exact threshold: a pairwise judge needs >80% accuracy to beat voting (p=0.8, N=3)

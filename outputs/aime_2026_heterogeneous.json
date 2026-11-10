@@ -2,16 +2,16 @@
   "n_samples": 6,
   "provider": "openrouter_mixed",
   "n_total": 30,
-  "n_valid": 25,
-  "n_failed": 5,
-  "n_valid_current_judge": 25,
+  "n_valid": 30,
+  "n_failed": 0,
+  "n_valid_current_judge": 30,
   "accuracy_of_valid": {
-    "or_select": 0.72,
-    "self_consistency": 0.96,
-    "greedy": 0.96,
-    "kemeny_young": 0.92
+    "or_select": 0.6333333333333333,
+    "self_consistency": 0.9333333333333333,
+    "greedy": 0.8666666666666667,
+    "kemeny_young": 0.9
   },
-  "n_extended_rescued": 2,
+  "n_extended_rescued": 7,
   "accuracy_of_valid_main_protocol": {
     "or_select": 0.782608695652174,
     "self_consistency": 1.0,
@@ -19,32 +19,39 @@
     "kemeny_young": 0.9565217391304348
   },
   "score_parse_this_run": {
-    "parsed": 72,
+    "parsed": 70,
     "missing": 0,
     "exhausted": 0
   },
   "disagreement": {
-    "n_disagreements": 6,
+    "n_disagreements": 10,
     "n_or_select_corrects_self_consistency": 0,
-    "n_self_consistency_corrects_or_select": 6,
+    "n_self_consistency_corrects_or_select": 9,
     "disagreement_queries": [
       "Joanne has a blank fair six-sided die and six stickers each displaying a differe",
+      "The integers from $1$ to $64$ are placed in some order into an $8 \\times 8$ grid",
       "Find the sum of all real numbers $r$ such that there is at least one point where",
+      "Call finite sets of integers $S$ and $T$ cousins if\n- $S$ and $T$ have the same ",
       "Find the number of integers less than or equal to 100 that are equal to $a+b+ab$",
+      "Let $\\triangle ABC$ have side lengths $AB = 13, BC = 14,$ and $CA = 15.$ Triangl",
       "For each positive integer $r$ less than $502,$ define\n\\[\nS_r=\\sum_{m\\ge 0}\\dbino",
       "Let $ABCDE$ be a nonconvex pentagon with internal angles $\\angle A = \\angle E = ",
-      "A standard fair six-sided die is rolled repeatedly. Each time the die reads 1 or"
+      "A standard fair six-sided die is rolled repeatedly. Each time the die reads 1 or",
+      "Find the number of ordered 7-tuples $(a_1, a_2, a_3, \\ldots, a_7)$ having the fo"
     ]
   },
   "copeland_vs_kemeny": {
-    "n_disagreements": 8,
+    "n_disagreements": 11,
     "n_or_select_corrects_kemeny_young": 1,
-    "n_kemeny_young_corrects_or_select": 6,
+    "n_kemeny_young_corrects_or_select": 9,
     "disagreement_queries": [
       "An urn contains $n$ marbles. Each marble is either red or blue, and there are at",
       "Joanne has a blank fair six-sided die and six stickers each displaying a differe",
+      "The integers from $1$ to $64$ are placed in some order into an $8 \\times 8$ grid",
       "Find the sum of all real numbers $r$ such that there is at least one point where",
+      "Call finite sets of integers $S$ and $T$ cousins if\n- $S$ and $T$ have the same ",
       "Find the number of integers less than or equal to 100 that are equal to $a+b+ab$",
+      "Let $\\triangle ABC$ have side lengths $AB = 13, BC = 14,$ and $CA = 15.$ Triangl",
       "For each positive integer $r$ less than $502,$ define\n\\[\nS_r=\\sum_{m\\ge 0}\\dbino",
       "Let $a, b,$ and $n$ be positive integers with both $a$ and $b$ greater than or e",
       "Let $ABCDE$ be a nonconvex pentagon with internal angles $\\angle A = \\angle E = ",
@@ -1132,34 +1139,121 @@
     {
       "query": "The integers from $1$ to $64$ are placed in some order into an $8 \\times 8$ grid of cells with one number in each cell. Let $a_{i,j}$ be the number placed in the cell in row $i$ and column $j,$ and let $M$ be the sum of the absolute differences between adjacent cells. That is,\n\\[\nM = \\sum^8_{i=1} \\sum^7_{j=1} (|a_{i,j+1} - a_{i,j}| + |a_{j+1,i} - a_{j,i}|).\n\\]\nFind the remainder when the maximum possible value of $M$ is divided by $1000.$",
       "ground_truth": "896",
+      "judge_version": "short-answer",
+      "judgments": {
+        "confidence": {
+          "c0": 0.82,
+          "c1": 0.95,
+          "c2": 0.99,
+          "c3": 0.9,
+          "c4": 1.0,
+          "c5": 0.99
+        },
+        "pairwise": {
+          "c0|c1": 0.38,
+          "c1|c0": 0.62,
+          "c0|c2": 0.46,
+          "c2|c0": 0.54,
+          "c0|c3": 0.43000000000000005,
+          "c3|c0": 0.57,
+          "c0|c4": 0.3,
+          "c4|c0": 0.7,
+          "c0|c5": 0.52,
+          "c5|c0": 0.48,
+          "c1|c2": 0.2,
+          "c2|c1": 0.8,
+          "c1|c3": 0.04999999999999999,
+          "c3|c1": 0.95,
+          "c1|c4": 0.35,
+          "c4|c1": 0.65,
+          "c1|c5": 0.75,
+          "c5|c1": 0.25,
+          "c2|c3": 0.7,
+          "c3|c2": 0.30000000000000004,
+          "c2|c4": 0.47500000000000003,
+          "c4|c2": 0.5249999999999999,
+          "c2|c5": 1.0,
+          "c5|c2": 0.0,
+          "c3|c4": 0.55,
+          "c4|c3": 0.44999999999999996,
+          "c3|c5": 0.7,
+          "c5|c3": 0.30000000000000004,
+          "c4|c5": 0.25,
+          "c5|c4": 0.75
+        },
+        "selection_scores": {
+          "c0": -0.9880000000000001,
+          "c1": -2.026,
+          "c2": -2.049,
+          "c3": -2.276,
+          "c4": -1.9350000000000003,
+          "c5": -2.836
+        }
+      },
       "subject": "AIME 2026",
-      "error": "ValidityExhausted: seed=0 no valid answer in 3 attempts, output truncated at the token cap in at least one (last response: 0 chars)",
       "or_select": {
-        "answer": null,
+        "answer": "584",
         "correct": false
       },
       "self_consistency": {
-        "answer": null,
-        "correct": false,
-        "had_majority": false
+        "answer": "896",
+        "correct": true,
+        "had_majority": true
       },
       "greedy": {
-        "answer": null,
+        "answer": "584",
         "correct": false
       },
       "kemeny_young": {
-        "answer": null,
-        "correct": false,
-        "is_optimal": null
+        "answer": "896",
+        "correct": true,
+        "is_optimal": true
       },
-      "winner_texts": null,
-      "candidates": null,
-      "failed_last_response": "",
-      "truncated": true,
-      "truncated_at_tokens": 32768,
-      "truncation_attempts": 2,
-      "extended_attempt_error": "APIError: xingchen-agi/xing4.0-29b-a4b:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations",
-      "extended_cap_requested": 65536
+      "winner_texts": {
+        "or_select": "The maximum possible value of \\(M\\) is achieved by assigning the numbers \\(1\\) through \\(32\\) to the cells of one color class of the \\(8 \\times 8\\) grid and \\(33\\) through \\(64\\) to the opposite color class, and then ordering each class so that larger numbers go to higher-degree vertices.  \n\nThe 8\u00d78 grid has 112 adjacent pairs (horizontal and vertical). Its degree distribution is 4 corners (degree 2), 24 edge non\u2011corners (degree 3), and 36 interior cells (degree 4). Each color class of the bipartite grid contains 2 corners, 12 edges, and 18 interior cells.  \n\nAssigning \\(U = \\{33,\\dots,64\\}\\) to one class and \\(L = \\{1,\\dots,32\\}\\) to the other, and within each class placing the largest/smallest numbers on the highest/lowest degrees, the sum becomes  \n\n\\[\nM = \\bigl(4\\cdot 999 + 3\\cdot 486 + 2\\cdot 67\\bigr) - \\bigl(4\\cdot 423 + 3\\cdot 102 + 2\\cdot 3\\bigr) = 5588 - 2004 = 3584.\n\\]\n\nThe remainder when \\(3584\\) is divided by \\(1000\\) is \\(584\\).\n\n\\boxed{584}",
+        "self_consistency": "The maximum sum of absolute differences \\(M\\) is achieved by partitioning the \\(8 \\times 8\\) grid into its two bipartite color classes. Assign all small numbers (1 through 32) to one color and all large numbers (33 through 64) to the other. Within each color, assign the numbers optimally: put the smallest numbers on the vertices with the highest degrees (to minimize the sum of products for the small color) and the largest numbers on the vertices with the highest degrees (to maximize the sum for the large color).\n\nCount the degrees for each color. A corner cell has degree 2, an edge cell degree 3, an interior cell degree 4. Each color receives exactly 2 corners (degree 2), 12 edges (degree 3), and 18 interior cells (degree 4).\n\nFor the small color (numbers 1\u201332), assign:\n- Numbers 1\u201318 to degree 4 cells: sum = \\(4 \\times (1+2+\\cdots+18) = 684\\).\n- Numbers 19\u201330 to degree 3 cells: sum = \\(3 \\times (19+20+\\cdots+30) = 882\\).\n- Numbers 31\u201332 to degree 2 cells: sum = \\(2 \\times (31+32) = 126\\).\nTotal small sum = \\(684 + 882 + 126 = 1692\\).\n\nFor the large color (numbers 33\u201364), assign:\n- Numbers 47\u201364 to degree 4 cells: sum = \\(4 \\times (47+48+\\cdots+64) = 3996\\).\n- Numbers 35\u201346 to degree 3 cells: sum = \\(3 \\times (35+36+\\cdots+46) = 1458\\).\n- Numbers 33\u201334 to degree 2 cells: sum = \\(2 \\times (33+34) = 134\\).\nTotal large sum = \\(3996 + 1458 + 134 = 5588\\).\n\nMaximum \\(M = 5588 - 1692 = 3896\\).\nThe remainder when divided by 1000 is \\(896\\).\n\n\\boxed{896}",
+        "greedy": "The maximum possible value of \\(M\\) is achieved by assigning the numbers \\(1\\) through \\(32\\) to the cells of one color class of the \\(8 \\times 8\\) grid and \\(33\\) through \\(64\\) to the opposite color class, and then ordering each class so that larger numbers go to higher-degree vertices.  \n\nThe 8\u00d78 grid has 112 adjacent pairs (horizontal and vertical). Its degree distribution is 4 corners (degree 2), 24 edge non\u2011corners (degree 3), and 36 interior cells (degree 4). Each color class of the bipartite grid contains 2 corners, 12 edges, and 18 interior cells.  \n\nAssigning \\(U = \\{33,\\dots,64\\}\\) to one class and \\(L = \\{1,\\dots,32\\}\\) to the other, and within each class placing the largest/smallest numbers on the highest/lowest degrees, the sum becomes  \n\n\\[\nM = \\bigl(4\\cdot 999 + 3\\cdot 486 + 2\\cdot 67\\bigr) - \\bigl(4\\cdot 423 + 3\\cdot 102 + 2\\cdot 3\\bigr) = 5588 - 2004 = 3584.\n\\]\n\nThe remainder when \\(3584\\) is divided by \\(1000\\) is \\(584\\).\n\n\\boxed{584}",
+        "kemeny_young": "The grid graph is bipartite: colour the cells black and white as a chessboard.  \nFor a placement \\(\\{a_{i,j}\\}\\) let  \n\n\\[\nM=\\sum_{\\text{edges }uv}|a_u-a_v|.\n\\]\n\nFor a vertex \\(v\\) set  \n\n\\[\ns(v)=\\#\\{u\\sim v:a_v>a_u\\}-\\#\\{u\\sim v:a_v<a_u\\}.\n\\]\n\nThen each edge contributes \\(+a_u\\) to the larger endpoint and \\(-a_u\\) to the smaller one, so  \n\n\\[\nM=\\sum_{v}s(v)\\,a_v .\n\\tag{1}\n\\]\n\nBecause every neighbour contributes \\(\\pm1\\), we have \\(|s(v)|\\le\\deg(v)\\).  \nTo make the sum in (1) as large as possible we want \\(|s(v)|=\\deg(v)\\) for every vertex:\nthe larger\u2011valued vertices must have all neighbours smaller, and the smaller\u2011valued\nvertices must have all neighbours larger.  \n\nThe grid is bipartite, so we can achieve this by putting all the larger numbers on one colour\nand all the smaller numbers on the other.  Hence in an optimal placement\n\n\\[\nM=\\sum_{\\text{black }v}\\deg(v)a_v-\\sum_{\\text{white }v}\\deg(v)a_v .\n\\tag{2}\n\\]\n\n--------------------------------------------------------------------\n### Degree distribution on each colour\nFor an \\(8\\times8\\) board  \n\n* interior cells: \\(6\\cdot6=36\\) (degree \\(4\\)) \u2013 18 black, 18 white;\n* edge (non\u2011corner) cells: \\(4\\cdot6=24\\) (degree \\(3\\)) \u2013 12 black, 12 white;\n* corners: \\(4\\) (degree \\(2\\)) \u2013 2 black, 2 white.\n\nThus each colour has the degree multiset  \n\n\\[\n\\{4^{18},\\,3^{12},\\,2^{2}\\}.\n\\]\n\n--------------------------------------------------------------------\n### Optimal assignment of numbers\nPlace the numbers \\(33,34,\\dots ,64\\) on the black squares and the numbers\n\\(1,2,\\dots ,32\\) on the white squares.  \nWithin each colour assign the numbers in decreasing order to vertices of\ndecreasing degree (rearrangement inequality).  \nConsequently\n\n* black interior (\\(\\deg4\\)) receive \\(64,63,\\dots ,47\\);\n* black edge (\\(\\deg3\\)) receive \\(46,45,\\dots ,35\\);\n* black corners (\\(\\deg2\\)) receive \\(34,33\\).\n\n* white interior (\\(\\deg4\\)) receive \\(1,2,\\dots ,18\\);\n* white edge (\\(\\deg3\\)) receive \\(19,20,\\dots ,30\\);\n* white corners (\\(\\deg2\\)) receive \\(31,32\\).\n\n--------------------------------------------------------------------\n### Computing \\(M\\)\n\n\\[\n\\begin{aligned}\n\\sum_{\\text{black}}\\deg(v)a_v &=\n4\\!\\sum_{k=47}^{64}k\\;+\\;3\\!\\sum_{k=35}^{46}k\\;+\\;2(34+33)\\\\\n&=4(999)+3(486)+2(67)=5588,\\\\[2mm]\n\\sum_{\\text{white}}\\deg(v)a_v &=\n4\\!\\sum_{k=1}^{18}k\\;+\\;3\\!\\sum_{k=19}^{30}k\\;+\\;2(31+32)\\\\\n&=4(171)+3(294)+2(63)=1692.\n\\end{aligned}\n\\]\n\nHence  \n\n\\[\nM_{\\max}=5588-1692=3896.\n\\]\n\n--------------------------------------------------------------------\n### Remainder modulo \\(1000\\)\n\n\\[\n3896\\equiv 896\\pmod{1000}.\n\\]\n\n\\[\n\\boxed{896}\n\\]"
+      },
+      "candidates": [
+        {
+          "seed": 0,
+          "source_model": "nvidia/nemotron-3.5-lightning:free",
+          "text": "The maximum possible value of \\(M\\) is achieved by assigning the numbers \\(1\\) through \\(32\\) to the cells of one color class of the \\(8 \\times 8\\) grid and \\(33\\) through \\(64\\) to the opposite color class, and then ordering each class so that larger numbers go to higher-degree vertices.  \n\nThe 8\u00d78 grid has 112 adjacent pairs (horizontal and vertical). Its degree distribution is 4 corners (degree 2), 24 edge non\u2011corners (degree 3), and 36 interior cells (degree 4). Each color class of the bipartite grid contains 2 corners, 12 edges, and 18 interior cells.  \n\nAssigning \\(U = \\{33,\\dots,64\\}\\) to one class and \\(L = \\{1,\\dots,32\\}\\) to the other, and within each class placing the largest/smallest numbers on the highest/lowest degrees, the sum becomes  \n\n\\[\nM = \\bigl(4\\cdot 999 + 3\\cdot 486 + 2\\cdot 67\\bigr) - \\bigl(4\\cdot 423 + 3\\cdot 102 + 2\\cdot 3\\bigr) = 5588 - 2004 = 3584.\n\\]\n\nThe remainder when \\(3584\\) is divided by \\(1000\\) is \\(584\\).\n\n\\boxed{584}"
+        },
+        {
+          "seed": 1,
+          "source_model": "xingchen-agi/xing4.0-29b-a4b:free",
+          "text": "The maximum sum of absolute differences \\(M\\) is achieved by partitioning the \\(8 \\times 8\\) grid into its two bipartite color classes. Assign all small numbers (1 through 32) to one color and all large numbers (33 through 64) to the other. Within each color, assign the numbers optimally: put the smallest numbers on the vertices with the highest degrees (to minimize the sum of products for the small color) and the largest numbers on the vertices with the highest degrees (to maximize the sum for the large color).\n\nCount the degrees for each color. A corner cell has degree 2, an edge cell degree 3, an interior cell degree 4. Each color receives exactly 2 corners (degree 2), 12 edges (degree 3), and 18 interior cells (degree 4).\n\nFor the small color (numbers 1\u201332), assign:\n- Numbers 1\u201318 to degree 4 cells: sum = \\(4 \\times (1+2+\\cdots+18) = 684\\).\n- Numbers 19\u201330 to degree 3 cells: sum = \\(3 \\times (19+20+\\cdots+30) = 882\\).\n- Numbers 31\u201332 to degree 2 cells: sum = \\(2 \\times (31+32) = 126\\).\nTotal small sum = \\(684 + 882 + 126 = 1692\\).\n\nFor the large color (numbers 33\u201364), assign:\n- Numbers 47\u201364 to degree 4 cells: sum = \\(4 \\times (47+48+\\cdots+64) = 3996\\).\n- Numbers 35\u201346 to degree 3 cells: sum = \\(3 \\times (35+36+\\cdots+46) = 1458\\).\n- Numbers 33\u201334 to degree 2 cells: sum = \\(2 \\times (33+34) = 134\\).\nTotal large sum = \\(3996 + 1458 + 134 = 5588\\).\n\nMaximum \\(M = 5588 - 1692 = 3896\\).\nThe remainder when divided by 1000 is \\(896\\).\n\n\\boxed{896}"
+        },
+        {
+          "seed": 2,
+          "source_model": "cohere/north-mini-code:free",
+          "text": "The grid graph is bipartite: colour the cells black and white as a chessboard.  \nFor a placement \\(\\{a_{i,j}\\}\\) let  \n\n\\[\nM=\\sum_{\\text{edges }uv}|a_u-a_v|.\n\\]\n\nFor a vertex \\(v\\) set  \n\n\\[\ns(v)=\\#\\{u\\sim v:a_v>a_u\\}-\\#\\{u\\sim v:a_v<a_u\\}.\n\\]\n\nThen each edge contributes \\(+a_u\\) to the larger endpoint and \\(-a_u\\) to the smaller one, so  \n\n\\[\nM=\\sum_{v}s(v)\\,a_v .\n\\tag{1}\n\\]\n\nBecause every neighbour contributes \\(\\pm1\\), we have \\(|s(v)|\\le\\deg(v)\\).  \nTo make the sum in (1) as large as possible we want \\(|s(v)|=\\deg(v)\\) for every vertex:\nthe larger\u2011valued vertices must have all neighbours smaller, and the smaller\u2011valued\nvertices must have all neighbours larger.  \n\nThe grid is bipartite, so we can achieve this by putting all the larger numbers on one colour\nand all the smaller numbers on the other.  Hence in an optimal placement\n\n\\[\nM=\\sum_{\\text{black }v}\\deg(v)a_v-\\sum_{\\text{white }v}\\deg(v)a_v .\n\\tag{2}\n\\]\n\n--------------------------------------------------------------------\n### Degree distribution on each colour\nFor an \\(8\\times8\\) board  \n\n* interior cells: \\(6\\cdot6=36\\) (degree \\(4\\)) \u2013 18 black, 18 white;\n* edge (non\u2011corner) cells: \\(4\\cdot6=24\\) (degree \\(3\\)) \u2013 12 black, 12 white;\n* corners: \\(4\\) (degree \\(2\\)) \u2013 2 black, 2 white.\n\nThus each colour has the degree multiset  \n\n\\[\n\\{4^{18},\\,3^{12},\\,2^{2}\\}.\n\\]\n\n--------------------------------------------------------------------\n### Optimal assignment of numbers\nPlace the numbers \\(33,34,\\dots ,64\\) on the black squares and the numbers\n\\(1,2,\\dots ,32\\) on the white squares.  \nWithin each colour assign the numbers in decreasing order to vertices of\ndecreasing degree (rearrangement inequality).  \nConsequently\n\n* black interior (\\(\\deg4\\)) receive \\(64,63,\\dots ,47\\);\n* black edge (\\(\\deg3\\)) receive \\(46,45,\\dots ,35\\);\n* black corners (\\(\\deg2\\)) receive \\(34,33\\).\n\n* white interior (\\(\\deg4\\)) receive \\(1,2,\\dots ,18\\);\n* white edge (\\(\\deg3\\)) receive \\(19,20,\\dots ,30\\);\n* white corners (\\(\\deg2\\)) receive \\(31,32\\).\n\n--------------------------------------------------------------------\n### Computing \\(M\\)\n\n\\[\n\\begin{aligned}\n\\sum_{\\text{black}}\\deg(v)a_v &=\n4\\!\\sum_{k=47}^{64}k\\;+\\;3\\!\\sum_{k=35}^{46}k\\;+\\;2(34+33)\\\\\n&=4(999)+3(486)+2(67)=5588,\\\\[2mm]\n\\sum_{\\text{white}}\\deg(v)a_v &=\n4\\!\\sum_{k=1}^{18}k\\;+\\;3\\!\\sum_{k=19}^{30}k\\;+\\;2(31+32)\\\\\n&=4(171)+3(294)+2(63)=1692.\n\\end{aligned}\n\\]\n\nHence  \n\n\\[\nM_{\\max}=5588-1692=3896.\n\\]\n\n--------------------------------------------------------------------\n### Remainder modulo \\(1000\\)\n\n\\[\n3896\\equiv 896\\pmod{1000}.\n\\]\n\n\\[\n\\boxed{896}\n\\]"
+        },
+        {
+          "seed": 3,
+          "source_model": "nvidia/nemotron-3.5-lightning:free",
+          "text": "The problem asks for the maximum possible value of \\( M \\), the sum of absolute differences between adjacent cells in an \\( 8 \\times 8 \\) grid filled with the numbers 1 to 64, and then the remainder when this maximum is divided by 1000.\n\nThe grid has 112 edges (56 horizontal, 56 vertical). To maximize \\( M \\), a checkerboard coloring partitions the cells into 32 black and 32 white. Placing the 32 largest numbers (33\u201364) on the black cells and the 32 smallest numbers (1\u201332) on the white cells ensures every edge connects a high and a low number, and all differences are positive (\\( \\text{black} - \\text{white} \\)). The sum becomes\n\\[\nM = \\sum_{\\text{black}} b \\cdot \\deg(b) - \\sum_{\\text{white}} w \\cdot \\deg(w).\n\\]\nThe degrees in an \\( 8 \\times 8 \\) grid are: 4 corners (degree 2), 24 edge non\u2011corners (degree 3), 36 interior cells (degree 4). By assigning the largest black numbers to the highest\u2011degree black cells and the smallest white numbers to the highest\u2011degree white cells:\n- Black interior (18 cells) get numbers 47\u201364: sum \\( 999 \\), weighted \\( 3996 \\).\n- Black edge (12 cells) get 35\u201346: sum \\( 486 \\), weighted \\( 1458 \\).\n- Black corners (2 cells) get 33,34: sum \\( 67 \\), weighted \\( 134 \\).\nTotal black contribution = \\( 5588 \\).\n\n- White interior (18 cells) get 1\u201318: sum \\( 171 \\), weighted \\( 684 \\).\n- White edge (12 cells) get 19\u201330: sum \\( 294 \\), weighted \\( 882 \\).\n- White corners (2 cells) get 31,32: sum \\( 63 \\), weighted \\( 126 \\).\nTotal white contribution = \\( 1692 \\).\n\nThus \\( M = 5588 - 1692 = 3896 \\). This arrangement is achievable and yields the maximum possible \\( M \\). The remainder when 3896 is divided by 1000 is 896.\n\n\\boxed{896}"
+        },
+        {
+          "seed": 4,
+          "source_model": "xingchen-agi/xing4.0-29b-a4b:free",
+          "text": "The maximum possible sum \\(M\\) is achieved by a strict bipartite assignment: place the numbers \\(1\\) through \\(32\\) on one color class (say black) and \\(33\\) through \\(64\\) on the other (white), with the numbers within each color class sorted by degree (descending). The 8\u00d78 grid has 32 black and 32 white cells, with degree distribution: 18 cells of degree 4, 12 of degree 3, and 2 of degree 2 per color.\n\nFor the white cells, assign the largest 32 numbers \\(64, 63, \\dots, 33\\):\n- Degree 4 (18 cells): \\(64 \\dots 47\\) \u2192 sum = \\(999\\), contribution \\(4 \\times 999 = 3996\\)\n- Degree 3 (12 cells): \\(46 \\dots 35\\) \u2192 sum = \\(486\\), contribution \\(3 \\times 486 = 1458\\)\n- Degree 2 (2 cells): \\(34, 33\\) \u2192 sum = \\(67\\), contribution \\(2 \\times 67 = 134\\)\nTotal \\(\\sum_{\\text{white}} \\deg \\cdot f = 5588\\).\n\nFor the black cells, assign the smallest 32 numbers \\(1 \\dots 32\\):\n- Degree 4 (18 cells): \\(1 \\dots 18\\) \u2192 sum = \\(171\\), contribution \\(4 \\times 171 = 684\\)\n- Degree 3 (12 cells): \\(19 \\dots 30\\) \u2192 sum = \\(294\\), contribution \\(3 \\times 294 = 882\\)\n- Degree 2 (2 cells): \\(31, 32\\) \u2192 sum = \\(63\\), contribution \\(2 \\times 63 = 126\\)\nTotal \\(\\sum_{\\text{black}} \\deg \\cdot f = 1692\\).\n\nSince every adjacent pair connects a white cell to a black cell and all white numbers are larger, the absolute difference on each edge equals the white value minus the black value. Hence \\(M = 5588 - 1692 = 3896\\).\n\nThe remainder when \\(3896\\) is divided by \\(1000\\) is \\(896\\).\n\n\\[\n\\boxed{896}\n\\]"
+        },
+        {
+          "seed": 5,
+          "source_model": "cohere/north-mini-code:free",
+          "text": "The grid can be regarded as a bipartite graph: colour the cells like a chessboard.\nLet the black squares be \\(B\\) and the white squares be \\(W\\); each edge joins a black\ncell to a white cell.\n\nFor a placement \\(\\{a_{v}\\}\\) define for each vertex  \n\n\\[\nC(v)=\\#\\{\\text{neighbours }u\\text{ with }a_{v}>a_{u}\\}\n      -\\#\\{\\text{neighbours }u\\text{ with }a_{v}<a_{u}\\}.\n\\]\n\nIf an edge \\((u,v)\\) is oriented from the larger to the smaller number,\nthen \\(C(v)\\) equals its out\u2011degree minus its in\u2011degree.  \nConsequently  \n\n\\[\nM=\\sum_{(u,v)\\in E}|a_{u}-a_{v}|\n   =\\sum_{v\\in V}C(v)\\,a_{v}. \\tag{1}\n\\]\n\nBecause a vertex of degree \\(d\\) can have at most \\(d\\) neighbours larger than it,\n\\[\n-d\\le C(v)\\le d,\\qquad C(v)\\equiv d\\pmod 2,\n\\]\nand \\(\\sum_{v}C(v)=0\\) (each edge contributes \\(+1\\) to the larger endpoint\nand \\(-1\\) to the smaller).\n\nTo maximise (1) we want the largest numbers on the vertices with the\nlargest possible \\(C(v)\\) and the smallest numbers on the vertices with the\nmost negative \\(C(v)\\).\nThe extreme feasible choice is  \n\n\\[\nC(v)=+d\\text{ for }v\\in B,\\qquad C(v)=-d\\text{ for }v\\in W,\n\\]\n\ni.e. all edges are oriented from black to white.\nThus every black number exceeds every white number, and (1) becomes  \n\n\\[\nM=\\sum_{b\\in B}d(b)a_{b}-\\sum_{w\\in W}d(w)a_{w}. \\tag{2}\n\\]\n\nHence we must place the 32 largest integers \\(\\{33,\\dots ,64\\}\\) on the black\nsquares and the 32 smallest \\(\\{1,\\dots ,32\\}\\) on the white squares.\nWithin each colour the degree\u2011distribution is\n\n\\[\n\\begin{array}{c|c}\n\\text{degree} & \\#\\text{vertices}\\\\ \\hline\n2 & 2\\\\\n3 & 12\\\\\n4 & 18\n\\end{array}\n\\]\n\nTo maximise (2) we assign the biggest numbers to the highest\u2011degree black\nvertices and the smallest numbers to the highest\u2011degree white vertices.\n\n\\[\n\\begin{aligned}\n\\text{Black (degree 4)} &: 64,63,\\dots ,47 &&\\sum = 999\\\\\n\\text{Black (degree 3)} &: 46,45,\\dots ,35 &&\\sum = 486\\\\\n\\text{Black (degree 2)} &: 34,33 &&\\sum = 67\\\\[2mm]\n\\text{White (degree 4)} &: 1,2,\\dots ,18 &&\\sum = 171\\\\\n\\text{White (degree 3)} &: 19,20,\\dots ,30 &&\\sum = 294\\\\\n\\text{White (degree 2)} &: 31,32 &&\\sum = 63\n\\end{aligned}\n\\]\n\nNow compute the weighted sums:\n\n\\[\n\\begin{aligned}\n\\sum_{b\\in B}d(b)a_{b}&=4(999)+3(486)+2(67)=5588,\\\\\n\\sum_{w\\in W}d(w)a_{w}&=4(171)+3(294)+2(63)=1692.\n\\end{aligned}\n\\]\n\nThus\n\n\\[\nM_{\\max}=5588-1692=3896.\n\\]\n\nFinally, the required remainder is  \n\n\\[\n3896\\pmod{1000}=896.\n\\]\n\n\\[\n\\boxed{896}\n\\]"
+        }
+      ],
+      "extended_cap_pass": true,
+      "extended_cap_requested": 65536,
+      "main_protocol": {
+        "error": "ValidityExhausted: seed=0 no valid answer in 3 attempts, output truncated at the token cap in at least one (last response: 0 chars)",
+        "truncated_at_tokens": 32768,
+        "truncation_attempts": 2
+      }
     },
     {
       "query": "For each positive integer $n$ let $f(n)$ be the value of the base-ten numeral $n$ viewed in base $b$, where $b$ is the least integer greater than the greatest digit in $n$. For example, if $n=72$, then $b=8$, and $72$ as a numeral in base $8$ equals $7\\cdot 8+2=58$; therefore $f(72)=58$. Find the number of positive integers $n$ less than $1000$ such that $f(n)=n$.",
@@ -1500,32 +1594,114 @@
     {
       "query": "Call finite sets of integers $S$ and $T$ cousins if\n- $S$ and $T$ have the same number of elements,\n- $S$ and $T$ are disjoint, and\n- the elements of $S$ can be paired with the elements of $T$ so that the elements in each pair differ by exactly $1$.\nFor example, $\\{1,2,5\\}$ and $\\{0,3,4\\}$ are cousins. Suppose that the set $S$ has exactly $4040$ cousins. Find the least number of elements the set $S$ can have.",
       "ground_truth": "107",
+      "judge_version": "short-answer",
+      "judgments": {
+        "confidence": {
+          "c0": 1.0,
+          "c1": 1.0,
+          "c2": 0.95,
+          "c3": 0.95,
+          "c4": 0.75,
+          "c5": 0.95
+        },
+        "pairwise": {
+          "c0|c1": 0.35,
+          "c1|c0": 0.65,
+          "c0|c2": 0.025000000000000022,
+          "c2|c0": 0.975,
+          "c0|c3": 0.96,
+          "c3|c0": 0.040000000000000036,
+          "c0|c4": 0.24999999999999997,
+          "c4|c0": 0.75,
+          "c0|c5": 0.53,
+          "c5|c0": 0.47,
+          "c1|c2": 0.7,
+          "c2|c1": 0.30000000000000004,
+          "c1|c3": 0.55,
+          "c3|c1": 0.44999999999999996,
+          "c1|c4": 0.575,
+          "c4|c1": 0.42500000000000004,
+          "c1|c5": 0.4,
+          "c5|c1": 0.6,
+          "c2|c3": 0.45,
+          "c3|c2": 0.55,
+          "c2|c4": 0.39999999999999997,
+          "c4|c2": 0.6000000000000001,
+          "c2|c5": 0.45,
+          "c5|c2": 0.55,
+          "c3|c4": 0.325,
+          "c4|c3": 0.675,
+          "c3|c5": 0.47500000000000003,
+          "c5|c3": 0.5249999999999999,
+          "c4|c5": 0.22499999999999998,
+          "c5|c4": 0.775
+        },
+        "selection_scores": {
+          "c0": -0.20699999999999996,
+          "c1": -2.0149999999999997,
+          "c2": -4.985,
+          "c3": -0.542,
+          "c4": -1.025,
+          "c5": -4.3660000000000005
+        }
+      },
       "subject": "AIME 2026",
-      "error": "ValidityExhausted: seed=4 no valid answer in 3 attempts, output truncated at the token cap in at least one (last response: 178022 chars)",
       "or_select": {
-        "answer": null,
+        "answer": "12",
         "correct": false
       },
       "self_consistency": {
-        "answer": null,
-        "correct": false,
-        "had_majority": false
+        "answer": "107",
+        "correct": true,
+        "had_majority": true
       },
       "greedy": {
-        "answer": null,
+        "answer": "12",
         "correct": false
       },
       "kemeny_young": {
-        "answer": null,
-        "correct": false,
-        "is_optimal": null
+        "answer": "107",
+        "correct": true,
+        "is_optimal": true
       },
-      "winner_texts": null,
-      "candidates": null,
-      "failed_last_response": "We are given: \"Cousin\" relation between finite sets of integers S and T. Conditions: 1) same number of elements, 2) disjoint, 3) the elements of S can be paired with the elements of T so that the elements in each pair differ by exactly 1. This means there is a bijection f: S -> T such that |f(x) - x| = 1 for all x in S. Since S and T are finite sets of integers, they must have same size, and we can pair them up.\n\nGiven that the set S has exactly 4040 cousins (i.e., the number of sets T such that T is a cousin of S). We need to find the least possible cardinality of S.\n\nLet n = |S|. We want to minimize n given that there are 4040 possible T's.\n\nFirst, analyze the structure of cousin pairs. For a fixed S, what are the possible T's?\n\nS is a set of integers. We can think of S as a union of intervals? Actually, the condition says S and T are disjoint sets of same size, with a bijection pairing each element of S to an element of T such that difference is exactly 1. This is essentially a perfect matching between S and T where edges connect numbers differing by 1. So we are pairing elements of S to adjacent integers not in S, using each integer exactly once. Since both are sets, it's a matching from S to complement of S in Z, within some domain? But the integers can be arbitrarily large; the problem doesn't restrict them. S is a finite set of integers. The condition does not limit the range of integers. So we can choose S as any set of size n, and then we want to count how many sets T of size n are disjoint from S and admit a perfect matching with adjacent elements. But wait: \"cousins if ... elements of S can be paired with the elements of T\". The pairs are between elements of S and elements of T. Since S and T are sets, the pairing is just a bijection. This means there exists a bijection f: S -> T such that for every s in S, |f(s) - s| = 1. Since T is exactly the image of this bijection, T = f(S). Since f is a bijection, T is determined by S up to the choice of matching. But multiple matchings could yield the same T set? Let's see: Suppose S = {0,2}. Possible matchings: Pair 0->1 and 2->3 gives T={1,3}. Could we pair 0->1 and 2->3 differently? That's the only way because 0 can only go to 1 (since 0-1=-1 not in S? Wait, S has 0 and 2. We can pair 0->1 and 2->3 => T={1,3}. Can we pair 0->1, 2->3 is the only way? What about pairing 0->1 and 2->3 is same T. What about pairing 2->1 and 0->-1? That gives T={1,-1} which is also valid. So T sets depend on matching. But the definition says \"the elements of S can be paired with the elements of T so that ...\" It doesn't say T is determined uniquely by S, just that T is a set such that such a pairing exists. So for a given S, multiple T's might be possible.\n\nThus, the number of cousins of S is the number of sets T (disjoint from S) of the same size that can be matched to S via adjacent differences.\n\nWe need to find the minimum size n of S such that there exists a set S with at least 4040 distinct T's? Wait, \"has exactly 4040 cousins\" means the exact number of cousin sets T is 4040. So we need a specific set S with exactly 4040 T's. And we want the minimal possible n for which such an S exists. The problem says \"Suppose that the set S has exactly 4040 cousins. Find the least number of elements the set S can have.\" So we need to find the minimum possible |S| over all S for which the number of T's is exactly 4040.\n\nThis is a combinatorial optimization problem. Let's try to understand how many T's a given S can produce.\n\nLet S be a finite set of integers. Consider the complement Z \\ S. The pairs of adjacent integers are (x, x+1) or (x+1, x). For a fixed S, we can form T by selecting for each element s in S one of its neighboring integers (either s+1 or s-1) that is not in S, such that overall we get a bijection. So it's like assigning each s to either +1 or -1, but ensuring no two elements map to the same target (i.e., no collisions among chosen targets). Also we don't care about targets outside? Ac",
-      "truncated": true,
-      "truncated_at_tokens": 65536,
-      "truncation_attempts": 2,
+      "winner_texts": {
+        "or_select": "The number of cousins \\(f(S)\\) of a finite set \\(S\\) of integers of size \\(n\\) is bounded above by \\(2^n\\), achieved when all gaps between consecutive elements of \\(S\\) are at least 3. Since \\(2^{11} = 2048 < 4040\\) and \\(2^{12} = 4096 \\ge 4040\\), the set \\(S\\) must have at least 12 elements. By choosing appropriate gaps (e.g., a combination of 1s, 2s, and gaps \\(\\ge 3\\)), one can reduce the count from 4096 to exactly 4040. Therefore, the least possible number of elements is 12.\n\n\\boxed{12}",
+        "self_consistency": "The problem asks for the minimal possible size of a set \\(S\\) of integers that has exactly \\(4040\\) \"cousins\", where two disjoint sets of the same size are cousins if their elements can be paired so that each pair differs by exactly \\(1\\). This is equivalent to counting the number of subsets \\(T\\) of \\(\\mathbb{Z}\\setminus S\\) of size \\(|S|\\) such that there exists a perfect matching between \\(S\\) and \\(T\\) using edges of the integer line.\n\nFor a fixed \\(S\\), the bipartite graph between \\(S\\) and the complement \\(C = \\mathbb{Z}\\setminus S\\) (with edges between consecutive integers) decomposes into connected components. Each component is a strictly alternating path of \\(S\\) and \\(C\\) vertices. For a component with \\(k\\) elements of \\(S\\):\n- If it is of Type A (both ends are \\(C\\)), it has \\(M = k+1\\) matchings, hence \\(k+1\\) cousins.\n- If it is of Type B or C (one end \\(C\\), one end \\(S\\)), it has exactly \\(1\\) matching.\n- Type D gives \\(0\\) matchings and is discarded.\n\nTo minimize the total size of \\(S\\), we only use Type A components (avoiding the wasted size of Type B/C components). Each such component contributes a factor \\(f_i = k_i+1 \\ge 2\\) to the total number of cousins, and consumes \\(k_i = f_i-1\\) elements of \\(S\\). The total number of cousins is the product of the \\(f_i\\), and the total size is \\(\\sum (f_i-1)\\). We must factor \\(4040 = 2^3 \\cdot 5 \\cdot 101\\) into integers \\(f_i \\ge 2\\) to minimize the sum of \\((f_i-1)\\).\n\nSplitting all prime factors apart gives the factors \\(2,2,2,5,101\\), corresponding to sizes \\(1,1,1,4,100\\). The sum is \\((1+1+1+4+100) = 107\\). No other factorization yields a smaller sum.\n\n\\[\n\\boxed{107}\n\\]",
+        "greedy": "The number of cousins \\(f(S)\\) of a finite set \\(S\\) of integers of size \\(n\\) is bounded above by \\(2^n\\), achieved when all gaps between consecutive elements of \\(S\\) are at least 3. Since \\(2^{11} = 2048 < 4040\\) and \\(2^{12} = 4096 \\ge 4040\\), the set \\(S\\) must have at least 12 elements. By choosing appropriate gaps (e.g., a combination of 1s, 2s, and gaps \\(\\ge 3\\)), one can reduce the count from 4096 to exactly 4040. Therefore, the least possible number of elements is 12.\n\n\\boxed{12}",
+        "kemeny_young": "Let  \n\n\\[\nS=\\{s_{1}<s_{2}<\\dots <s_{n}\\},\\qquad T\\subset \\mathbb Z ,\\ |T|=n ,\\ S\\cap T=\\varnothing .\n\\]\n\nFor a cousin\u2011pair \\((s,t)\\) we must have \\(|s-t|=1\\); hence each \\(s\\in S\\) can be paired only with the integer \\(s-1\\) or \\(s+1\\).\n\n--------------------------------------------------------------------\n### 1.  Structure of \\(S\\)\n\nIf an integer \\(x\\) has both neighbours \\(x-1\\) and \\(x+1\\) in \\(S\\), then \\(x\\) has no possible partner, so such an \\(x\\) cannot belong to a set having any cousins.  \nThus \\(S\\) cannot contain three consecutive integers.\n\nConsequently \\(S\\) is a disjoint union of \u201cblocks\u2019\u2019:\n\n* a **singleton block** \\(\\{a\\}\\);\n* a **pair block** \\(\\{a,a+1\\}\\).\n\nDifferent blocks must be separated by at least one integer not in \\(S\\) (otherwise we would obtain a run of three consecutive integers).\n\n--------------------------------------------------------------------\n### 2.  How many cousins does a block contribute?\n\n* **Singleton block** \\(\\{a\\}\\): the two possible partners are \\(a-1\\) and \\(a+1\\).  \n  If another singleton is exactly two units away, say \\(a+2\\), then the integer \\(a+1\\) is a common neighbour.  \n  A collection of \\(k\\) singletons spaced by exactly one free integer between successive members (i.e. \\(a, a+2, a+4,\\dots ,a+2(k-1))\\)) is a *type\u2011A component* of size \\(k\\).  \n  For such a component the number of possible matchings is  \n\n  \\[\n  f(k)=k+1 .\n  \\]\n\n  (Proof by induction: the leftmost element may match its left neighbour (forcing the rest to be a component of size \\(k-1\\)) or match its right neighbour, which forces the whole component uniquely; hence \\(f(k)=f(k-1)+1\\) with \\(f(1)=2\\).)\n\n* **Pair block** \\(\\{a,a+1\\}\\): the only admissible partners are \\(a-1\\) and \\(a+2\\); thus the matching is forced.  \n  Hence a pair block contributes a factor \\(1\\) to the total number of cousins.\n\nTherefore, if \\(S\\) consists of type\u2011A components of sizes \\(k_{1},k_{2},\\dots ,k_{m}\\) (and possibly some pair blocks), the total number of cousins of \\(S\\) equals  \n\n\\[\n\\prod_{i=1}^{m}(k_{i}+1).\n\\]\n\nPair blocks do not affect this product, so to minimise \\(|S|\\) for a given number of cousins we may assume there are no pair blocks.\n\n--------------------------------------------------------------------\n### 3.  Minimising \\(|S|\\) under \\(\\displaystyle\\prod (k_i+1)=4040\\)\n\nWe need  \n\n\\[\n\\prod_{i=1}^{m}(k_i+1)=4040,\n\\qquad |S|=\\sum_{i=1}^{m}k_i .\n\\]\n\nThe prime factorisation  \n\n\\[\n4040=2^{3}\\cdot5\\cdot101 .\n\\]\n\nIf a factor \\(a\\ge2\\) is written as a product \\(a=bc\\) with \\(b,c\\ge2\\), then  \n\n\\[\na-1 = bc-1 > (b-1)+(c-1),\n\\]\n\nso splitting a composite factor never decreases \\(\\sum (a_i-1)\\).  \nThus the minimal sum is attained when every factor \\((k_i+1)\\) is a prime factor of \\(4040\\).\n\nThe prime factors are \\(2,2,2,5,101\\).  Hence we may take  \n\n\\[\n(k_1+1,k_2+1,k_3+1,k_4+1+1,k_5+1)=(2,2,2,5,101),\n\\]\n\nwhich gives  \n\n\\[\nk_1=k_2=k_3=1,\\quad k_4=4,\\quad k_5=100 .\n\\]\n\nThe corresponding size of \\(S\\) is  \n\n\\[\n|S|=1+1+1+4+100=107 .\n\\]\n\nA concrete example is  \n\n\\[\nS=\\{0,2,4,\\dots ,198\\}\\cup\\{202,204,206,208\\}\\cup\\{212,214,216,218\\},\n\\]\n\nwhere the first 100 elements form a type\u2011A component of size\u202f100, the next four form a component of size\u202f4, and the three isolated elements are three components of size\u202f1.  \nAll gaps between components are at least two, so the components act independently and the number of cousins is  \n\n\\[\n(100+1)(4+1)(1+1)^3 = 101\\cdot5\\cdot2^{3}=4040 .\n\\]\n\nAny other factorisation of \\(4040\\) would replace one of the primes by a larger composite factor, which increases \\(\\sum (k_i)\\). Hence no set with fewer than \\(107\\) elements can have exactly \\(4040\\) cousins.\n\n--------------------------------------------------------------------\n\\[\n\\boxed{107}\n\\]"
+      },
+      "candidates": [
+        {
+          "seed": 0,
+          "source_model": "nvidia/nemotron-3.5-lightning:free",
+          "text": "The number of cousins \\(f(S)\\) of a finite set \\(S\\) of integers of size \\(n\\) is bounded above by \\(2^n\\), achieved when all gaps between consecutive elements of \\(S\\) are at least 3. Since \\(2^{11} = 2048 < 4040\\) and \\(2^{12} = 4096 \\ge 4040\\), the set \\(S\\) must have at least 12 elements. By choosing appropriate gaps (e.g., a combination of 1s, 2s, and gaps \\(\\ge 3\\)), one can reduce the count from 4096 to exactly 4040. Therefore, the least possible number of elements is 12.\n\n\\boxed{12}"
+        },
+        {
+          "seed": 1,
+          "source_model": "xingchen-agi/xing4.0-29b-a4b:free",
+          "text": "The problem asks for the minimal possible size of a set \\(S\\) of integers that has exactly \\(4040\\) \"cousins\", where two disjoint sets of the same size are cousins if their elements can be paired so that each pair differs by exactly \\(1\\). This is equivalent to counting the number of subsets \\(T\\) of \\(\\mathbb{Z}\\setminus S\\) of size \\(|S|\\) such that there exists a perfect matching between \\(S\\) and \\(T\\) using edges of the integer line.\n\nFor a fixed \\(S\\), the bipartite graph between \\(S\\) and the complement \\(C = \\mathbb{Z}\\setminus S\\) (with edges between consecutive integers) decomposes into connected components. Each component is a strictly alternating path of \\(S\\) and \\(C\\) vertices. For a component with \\(k\\) elements of \\(S\\):\n- If it is of Type A (both ends are \\(C\\)), it has \\(M = k+1\\) matchings, hence \\(k+1\\) cousins.\n- If it is of Type B or C (one end \\(C\\), one end \\(S\\)), it has exactly \\(1\\) matching.\n- Type D gives \\(0\\) matchings and is discarded.\n\nTo minimize the total size of \\(S\\), we only use Type A components (avoiding the wasted size of Type B/C components). Each such component contributes a factor \\(f_i = k_i+1 \\ge 2\\) to the total number of cousins, and consumes \\(k_i = f_i-1\\) elements of \\(S\\). The total number of cousins is the product of the \\(f_i\\), and the total size is \\(\\sum (f_i-1)\\). We must factor \\(4040 = 2^3 \\cdot 5 \\cdot 101\\) into integers \\(f_i \\ge 2\\) to minimize the sum of \\((f_i-1)\\).\n\nSplitting all prime factors apart gives the factors \\(2,2,2,5,101\\), corresponding to sizes \\(1,1,1,4,100\\). The sum is \\((1+1+1+4+100) = 107\\). No other factorization yields a smaller sum.\n\n\\[\n\\boxed{107}\n\\]"
+        },
+        {
+          "seed": 2,
+          "source_model": "cohere/north-mini-code:free",
+          "text": "For a set \\(S\\) let  \n\n\\[\nA_s=\\{s-1,s+1\\}\\setminus S\\qquad(s\\in S)\n\\]\n\nbe the possible partners of \\(s\\) in a cousin pair.  \nEvery \\(s\\) must have at least one element of \\(A_s\\); otherwise \\(S\\) would have no cousin.\n\n--------------------------------------------------------------------\n### 1.  Structure of a valid set \\(S\\)\n\nIf three consecutive integers belong to \\(S\\), the middle one has both neighbours in \\(S\\) and would have no possible partner, so **\\(S\\) cannot contain three consecutive integers**.\n\nHence the elements of \\(S\\) consist of\n\n* isolated points,\n* blocks of exactly two consecutive integers (a \u201cpair\u2019\u2019).\n\nBetween any two blocks there must be at least three integers, otherwise a free integer would be adjacent to two different elements of \\(S\\) and would create a conflict.\n\n--------------------------------------------------------------------\n### 2.  Counting cousins for a given pattern\n\nConsider a maximal block of \\(k\\) elements whose successive differences are exactly \\(2\\):\n\n\\[\ns,\\;s+2,\\;s+4,\\ldots ,s+2(k-1).\n\\]\n\nThe free integers that appear are  \n\n\\[\ns-1,\\;s+1,\\;s+3,\\ldots ,s+2k-1 .\n\\]\n\nThe bipartite graph formed by the \\(k\\) elements of \\(S\\) and these free integers is a path\n\n\\[\n\\text{free}_0-s-\\text{free}_1-s-\\text{free}_2-\\cdots-s-\\text{free}_k .\n\\]\n\nA cousin of \\(S\\) corresponds to a perfect matching of this path.\nWriting a matching as a binary string \\((b_1\\ldots b_k)\\) where  \n\\(b_i=0\\) means \u201cchoose the left free integer\u2019\u2019 and \\(b_i=1\\) means \u201cchoose the right one\u2019\u2019,\nthe only forbidden pattern is \\(b_i=1,\\;b_{i+1}=0\\) (otherwise the same free integer would be used twice).\n\nThus the number of possible matchings of such a block equals the number of binary strings of length \\(k\\) with **no** occurrence of the substring \\(10\\).  Those strings are exactly the monotone strings \\(0^a1^b\\), so their count is\n\n\\[\nk+1 .\n\\]\n\nA single isolated element (\\(k=1\\)) therefore contributes a factor \\(2\\); a pair of consecutive integers contributes a factor \\(1\\) (no choice).\n\nConsequently, if \\(S\\) is split into maximal blocks of lengths \\(k_1,k_2,\\dots ,k_t\\) (each block having gaps \\(2\\) inside and gaps \\(\\ge 3\\) between blocks), then the number of cousins of \\(S\\) is  \n\n\\[\n\\prod_{i=1}^{t}(k_i+1).\n\\tag{1}\n\\]\n\n--------------------------------------------------------------------\n### 3.  Reducing the problem to a factorisation\n\nEquation (1) shows that the problem is equivalent to:\n\n> Find a factorisation of \\(4040\\) into integers \\(\\ge 2\\) as  \n> \\(4040=\\prod_{i=1}^{t}f_i\\) with \\(f_i=k_i+1\\); then the size of \\(S\\) is  \n> \\(|S|=\\sum_{i=1}^{t}k_i=\\sum_{i=1}^{t}(f_i-1)=\\bigl(\\sum f_i\\bigr)-t\\).\n\nTo make \\(|S|\\) as small we want\n* many factors \\(t\\) (the term \\(-t\\) lowers the sum), and\n* the factors themselves as small as possible (each factor contributes \\(f_i-1\\) to the size).\n\nThe prime factorisation of \\(4040\\) is  \n\n\\[\n4040 = 2^3\\cdot5\\cdot101 .\n\\]\n\nSince a factor must be at least \\(2\\), the **largest possible number of factors** is the total number of prime factors counted with multiplicity, namely \\(t_{\\max}=5\\) (the factors \\(2,2,2,5,101\\)).  \nAny coarser factorisation would decrease \\(t\\) and increase the sum \\(\\sum f_i\\).\n\nHence the minimal size is obtained by using exactly those five factors:\n\n\\[\n\\begin{aligned}\nk_1 &=2-1=1,\\\\\nk_2 &=2-1=1,\\\\\nk_3 &=2-1=1,\\\\\nk_4 &=5-1=4,\\\\\nk_5 &=101-1=100,\n\\end{aligned}\n\\qquad\\Longrightarrow\\qquad\n|S|_{\\min}=1+1+1+4+100=107 .\n\\]\n\n--------------------------------------------------------------------\n### 4.  Realising the bound\n\nTake an integer \\(A\\) and define  \n\n\\[\n\\begin{aligned}\n&\\text{run }1:\\;A,\\;A+2,\\;A+4,\\dots ,A+198\\quad (100\\text{ elements}),\\\\\n&\\text{gap }\\ge3:\\;A+201,\\\\\n&\\text{run }2:\\;A+201,\\;A+203,\\;A+205,\\;A+207\\quad (4\\text{ elements}),\\\\\n&\\text{gap }\\ge3:\\;A+211,\\\\\n&\\text{singletons }:\\;A+211,\\;A+215,\\;A+219 .\n\\end{aligned}\n\\]\n\nThe set \\(S\\) has \\(100+4+3=107\\) elements, no three of which are consecutive, and its maximal blocks have lengths \\(100,4,1,1,1\\).  \nBy (1) the number of cousins is  \n\n\\[\n(100+1)(4+1)(1+1)^3 = 101\\cdot5\\cdot2^3 = 4040 .\n\\]\n\nThus a set of size \\(107\\) indeed has exactly \\(4040\\) cousins, and no smaller set can do so.\n\n--------------------------------------------------------------------\n\\[\n\\boxed{107}\n\\]"
+        },
+        {
+          "seed": 3,
+          "source_model": "nvidia/nemotron-3.5-lightning:free",
+          "text": "The number of cousins of a set \\(S\\) of size \\(n\\) is the number of injective functions \\(p: S \\to \\mathbb{Z}\\setminus S\\) with \\(p(x) \\in \\{x-1, x+1\\}\\). Each such function corresponds to choosing for each element of \\(S\\) a partner at distance 1, with distinct partners. The maximum possible number of cousins is \\(2^n\\), achieved when the gaps between consecutive elements of \\(S\\) are all at least 3. Since \\(2^{10} = 1024\\) and \\(2^{11} = 2048\\) are both less than 4040, and \\(2^{12} = 4096 > 4040\\), the set \\(S\\) must have at least 12 elements. The problem guarantees that a set with exactly 4040 cousins exists, and the least possible size is 12.\n\n\\boxed{12}"
+        },
+        {
+          "seed": 4,
+          "source_model": "xingchen-agi/xing4.0-29b-a4b:free",
+          "text": "The number of valid \u201ccousin\u201d sets \\(T\\) for a given set \\(S\\) equals the number of perfect matchings between \\(S\\) and \\(T\\) using edges between integers differing by 1. This decomposes into independent components: runs of consecutive elements of \\(S\\) spaced exactly 2 apart (forming components of size \\(k\\) with count \\(k+1\\)) and isolated elements (each contributing a factor of 2 and consuming 1 element). The total number of cousins is the product of the counts of these components.\n\nLet each component be a factor \\(a_i = L_i+1\\) (where \\(L_i \\ge 1\\) is the number of elements in the run, and isolated blocks give \\(a_i=2\\)). The total number of cousins is \\(\\prod a_i = 4040\\), and the total number of elements in \\(S\\) is \\(\\sum (a_i-1)\\). We must minimize \\(\\sum (a_i-1)\\) subject to \\(\\prod a_i = 4040\\) and \\(a_i \\ge 2\\). Splitting any composite factor into its prime factors reduces \\(\\sum (a_i-1)\\). The prime factorization of \\(4040\\) is \\(2^3 \\cdot 5 \\cdot 101\\). The minimal sum is therefore \\((2-1)+(2-1)+(2-1)+(5-1)+(101-1) = 1+1+1+4+100 = 107\\).\n\n\\[\n\\boxed{107}\n\\]"
+        },
+        {
+          "seed": 5,
+          "source_model": "cohere/north-mini-code:free",
+          "text": "Let  \n\n\\[\nS=\\{s_{1}<s_{2}<\\dots <s_{n}\\},\\qquad T\\subset \\mathbb Z ,\\ |T|=n ,\\ S\\cap T=\\varnothing .\n\\]\n\nFor a cousin\u2011pair \\((s,t)\\) we must have \\(|s-t|=1\\); hence each \\(s\\in S\\) can be paired only with the integer \\(s-1\\) or \\(s+1\\).\n\n--------------------------------------------------------------------\n### 1.  Structure of \\(S\\)\n\nIf an integer \\(x\\) has both neighbours \\(x-1\\) and \\(x+1\\) in \\(S\\), then \\(x\\) has no possible partner, so such an \\(x\\) cannot belong to a set having any cousins.  \nThus \\(S\\) cannot contain three consecutive integers.\n\nConsequently \\(S\\) is a disjoint union of \u201cblocks\u2019\u2019:\n\n* a **singleton block** \\(\\{a\\}\\);\n* a **pair block** \\(\\{a,a+1\\}\\).\n\nDifferent blocks must be separated by at least one integer not in \\(S\\) (otherwise we would obtain a run of three consecutive integers).\n\n--------------------------------------------------------------------\n### 2.  How many cousins does a block contribute?\n\n* **Singleton block** \\(\\{a\\}\\): the two possible partners are \\(a-1\\) and \\(a+1\\).  \n  If another singleton is exactly two units away, say \\(a+2\\), then the integer \\(a+1\\) is a common neighbour.  \n  A collection of \\(k\\) singletons spaced by exactly one free integer between successive members (i.e. \\(a, a+2, a+4,\\dots ,a+2(k-1))\\)) is a *type\u2011A component* of size \\(k\\).  \n  For such a component the number of possible matchings is  \n\n  \\[\n  f(k)=k+1 .\n  \\]\n\n  (Proof by induction: the leftmost element may match its left neighbour (forcing the rest to be a component of size \\(k-1\\)) or match its right neighbour, which forces the whole component uniquely; hence \\(f(k)=f(k-1)+1\\) with \\(f(1)=2\\).)\n\n* **Pair block** \\(\\{a,a+1\\}\\): the only admissible partners are \\(a-1\\) and \\(a+2\\); thus the matching is forced.  \n  Hence a pair block contributes a factor \\(1\\) to the total number of cousins.\n\nTherefore, if \\(S\\) consists of type\u2011A components of sizes \\(k_{1},k_{2},\\dots ,k_{m}\\) (and possibly some pair blocks), the total number of cousins of \\(S\\) equals  \n\n\\[\n\\prod_{i=1}^{m}(k_{i}+1).\n\\]\n\nPair blocks do not affect this product, so to minimise \\(|S|\\) for a given number of cousins we may assume there are no pair blocks.\n\n--------------------------------------------------------------------\n### 3.  Minimising \\(|S|\\) under \\(\\displaystyle\\prod (k_i+1)=4040\\)\n\nWe need  \n\n\\[\n\\prod_{i=1}^{m}(k_i+1)=4040,\n\\qquad |S|=\\sum_{i=1}^{m}k_i .\n\\]\n\nThe prime factorisation  \n\n\\[\n4040=2^{3}\\cdot5\\cdot101 .\n\\]\n\nIf a factor \\(a\\ge2\\) is written as a product \\(a=bc\\) with \\(b,c\\ge2\\), then  \n\n\\[\na-1 = bc-1 > (b-1)+(c-1),\n\\]\n\nso splitting a composite factor never decreases \\(\\sum (a_i-1)\\).  \nThus the minimal sum is attained when every factor \\((k_i+1)\\) is a prime factor of \\(4040\\).\n\nThe prime factors are \\(2,2,2,5,101\\).  Hence we may take  \n\n\\[\n(k_1+1,k_2+1,k_3+1,k_4+1+1,k_5+1)=(2,2,2,5,101),\n\\]\n\nwhich gives  \n\n\\[\nk_1=k_2=k_3=1,\\quad k_4=4,\\quad k_5=100 .\n\\]\n\nThe corresponding size of \\(S\\) is  \n\n\\[\n|S|=1+1+1+4+100=107 .\n\\]\n\nA concrete example is  \n\n\\[\nS=\\{0,2,4,\\dots ,198\\}\\cup\\{202,204,206,208\\}\\cup\\{212,214,216,218\\},\n\\]\n\nwhere the first 100 elements form a type\u2011A component of size\u202f100, the next four form a component of size\u202f4, and the three isolated elements are three components of size\u202f1.  \nAll gaps between components are at least two, so the components act independently and the number of cousins is  \n\n\\[\n(100+1)(4+1)(1+1)^3 = 101\\cdot5\\cdot2^{3}=4040 .\n\\]\n\nAny other factorisation of \\(4040\\) would replace one of the primes by a larger composite factor, which increases \\(\\sum (k_i)\\). Hence no set with fewer than \\(107\\) elements can have exactly \\(4040\\) cousins.\n\n--------------------------------------------------------------------\n\\[\n\\boxed{107}\n\\]"
+        }
+      ],
       "extended_cap_pass": true,
       "extended_cap_requested": 65536,
       "main_protocol": {
@@ -1649,34 +1825,121 @@
     {
       "query": "Let $\\triangle ABC$ have side lengths $AB = 13, BC = 14,$ and $CA = 15.$ Triangle $\\triangle A'B'C'$ is obtained by rotating $\\triangle ABC$ about its circumcenter so that ${}\\overline{AC}$ is perpendicular $\\overline{BC},$ with $A'$ and $B$ not on the same side of line $B'C'.$ Find the integer closest to the area of hexagon $AA'CC'BB'.$",
       "ground_truth": "156",
+      "judge_version": "short-answer",
+      "judgments": {
+        "confidence": {
+          "c0": 0.6,
+          "c1": 0.92,
+          "c2": 0.9,
+          "c3": 0.93,
+          "c4": 0.98,
+          "c5": 0.99
+        },
+        "pairwise": {
+          "c0|c1": 0.3,
+          "c1|c0": 0.7,
+          "c0|c2": 0.75,
+          "c2|c0": 0.25,
+          "c0|c3": 0.3,
+          "c3|c0": 0.7,
+          "c0|c4": 0.5,
+          "c4|c0": 0.5,
+          "c0|c5": 0.65,
+          "c5|c0": 0.35,
+          "c1|c2": 0.45,
+          "c2|c1": 0.55,
+          "c1|c3": 0.3,
+          "c3|c1": 0.7,
+          "c1|c4": 0.975,
+          "c4|c1": 0.025000000000000022,
+          "c1|c5": 0.3,
+          "c5|c1": 0.7,
+          "c2|c3": 0.44999999999999996,
+          "c3|c2": 0.55,
+          "c2|c4": 0.8,
+          "c4|c2": 0.19999999999999996,
+          "c2|c5": 0.5,
+          "c5|c2": 0.5,
+          "c3|c4": 0.525,
+          "c4|c3": 0.475,
+          "c3|c5": 0.44,
+          "c5|c3": 0.56,
+          "c4|c5": 0.405,
+          "c5|c4": 0.595
+        },
+        "selection_scores": {
+          "c0": -0.66,
+          "c1": -0.4909999999999999,
+          "c2": -1.9699999999999998,
+          "c3": -0.131,
+          "c4": 0.38700000000000007,
+          "c5": -1.4209999999999998
+        }
+      },
       "subject": "AIME 2026",
-      "error": "ValidityExhausted: seed=0 no valid answer in 3 attempts, output truncated at the token cap in at least one (last response: 0 chars)",
       "or_select": {
-        "answer": null,
+        "answer": "21",
         "correct": false
       },
       "self_consistency": {
-        "answer": null,
-        "correct": false,
-        "had_majority": false
+        "answer": "156",
+        "correct": true,
+        "had_majority": true
       },
       "greedy": {
-        "answer": null,
-        "correct": false
+        "answer": "156",
+        "correct": true
       },
       "kemeny_young": {
-        "answer": null,
-        "correct": false,
-        "is_optimal": null
+        "answer": "156",
+        "correct": true,
+        "is_optimal": true
       },
-      "winner_texts": null,
-      "candidates": null,
-      "failed_last_response": "",
-      "truncated": true,
-      "truncated_at_tokens": 32768,
-      "truncation_attempts": 1,
-      "extended_attempt_error": "RateLimitError: Error code: 429 - {'error': {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'xingchen-agi/xing4.0-29b-a4b:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integr",
-      "extended_cap_requested": 65536
+      "winner_texts": {
+        "or_select": "The area of the hexagon is approximately \\(21.3009\\), so the integer closest to the area is \\(21\\).\n\n\\boxed{21}",
+        "self_consistency": "The triangle \\(ABC\\) has sides \\(AB=13\\), \\(BC=14\\), \\(CA=15\\). Its area is 84, circumradius \\(R = \\frac{65}{8}\\), and circumcenter \\(O = (7, \\frac{33}{8})\\) when \\(B=(0,0)\\), \\(C=(14,0)\\), \\(A=(5,12)\\).\n\nRotating \\(\\triangle ABC\\) about \\(O\\) to obtain \\(\\triangle A'B'C'\\) such that \\(A'C' \\perp BC\\) (interpreting the condition \\(\\overline{AC} \\perp \\overline{BC}\\) as the rotated side perpendicular to the original side) gives a rotation angle with \\(\\cos\\theta = \\frac{4}{5}\\), \\(\\sin\\theta = -\\frac{3}{5}\\). The condition \u201c\\(A'\\) and \\(B\\) not on the same side of line \\(B'C\\)\u201d selects this orientation. The rotated vertices are \\(A' = (\\frac{81}{8}, \\frac{93}{8})\\), \\(C' = (\\frac{81}{8}, -\\frac{27}{8})\\), \\(B' = (-\\frac{43}{40}, \\frac{201}{40})\\).\n\nThe hexagon \\(AA'CC'BB'\\) has vertices in order: \\(A(5,12)\\), \\(A'(\\frac{81}{8}, \\frac{93}{8})\\), \\(C(14,0)\\), \\(C'(\\frac{81}{8}, -\\frac{27}{8})\\), \\(B(0,0)\\), \\(B'(-\\frac{43}{40}, \\frac{201}{40})\\). Using the shoelace formula, its area is \\(\\frac{1557}{10} = 155.7\\). The integer closest to this area is 156.\n\n\\boxed{156}",
+        "greedy": "The triangle \\(ABC\\) has sides \\(AB=13\\), \\(BC=14\\), \\(CA=15\\). Its area is 84, circumradius \\(R = \\frac{65}{8}\\), and circumcenter \\(O = (7, \\frac{33}{8})\\) when \\(B=(0,0)\\), \\(C=(14,0)\\), \\(A=(5,12)\\).\n\nRotating \\(\\triangle ABC\\) about \\(O\\) to obtain \\(\\triangle A'B'C'\\) such that \\(A'C' \\perp BC\\) (interpreting the condition \\(\\overline{AC} \\perp \\overline{BC}\\) as the rotated side perpendicular to the original side) gives a rotation angle with \\(\\cos\\theta = \\frac{4}{5}\\), \\(\\sin\\theta = -\\frac{3}{5}\\). The condition \u201c\\(A'\\) and \\(B\\) not on the same side of line \\(B'C\\)\u201d selects this orientation. The rotated vertices are \\(A' = (\\frac{81}{8}, \\frac{93}{8})\\), \\(C' = (\\frac{81}{8}, -\\frac{27}{8})\\), \\(B' = (-\\frac{43}{40}, \\frac{201}{40})\\).\n\nThe hexagon \\(AA'CC'BB'\\) has vertices in order: \\(A(5,12)\\), \\(A'(\\frac{81}{8}, \\frac{93}{8})\\), \\(C(14,0)\\), \\(C'(\\frac{81}{8}, -\\frac{27}{8})\\), \\(B(0,0)\\), \\(B'(-\\frac{43}{40}, \\frac{201}{40})\\). Using the shoelace formula, its area is \\(\\frac{1557}{10} = 155.7\\). The integer closest to this area is 156.\n\n\\boxed{156}",
+        "kemeny_young": "The triangle \\(ABC\\) with sides \\(13,14,15\\) has  \n\n\\[\n\\angle C=\\arccos\\frac{3}{5},\\qquad \\sin C=\\frac45,\\qquad \n\\angle A=\\arctan\\frac{56}{33},\\qquad \n\\angle B=\\arctan\\frac{12}{5}.\n\\]\n\nIts circumradius is  \n\n\\[\nR=\\frac{abc}{4\\Delta}= \\frac{13\\cdot14\\cdot15}{4\\cdot84}= \\frac{65}{8}.\n\\]\n\n---\n\n### 1.  The rotation angle  \n\nWe rotate the triangle about its circumcenter \\(O\\) until the image of \\(AC\\) (call it \\(A'C'\\)) is perpendicular to the original side \\(BC\\).  \nSince the original angle between \\(AC\\) and \\(BC\\) is \\(\\angle C\\),\n\n\\[\n\\angle(A'C',BC)=|\\,\\angle C\\pm\\theta\\,|=90^\\circ\\Longrightarrow\\theta=90^\\circ-C.\n\\]\n\nBecause \\(\\angle C=\\arctan\\frac{4}{3}\\), we get  \n\n\\[\n\\theta = 90^\\circ-\\arctan\\frac{4}{3}= \\arctan\\frac{3}{4}.\n\\]\n\nThe problem also requires \\(A'\\) and \\(B\\) to lie on opposite sides of line \\(B'C'\\); this occurs for the clockwise rotation, i.e. \\(\\theta=-\\arctan\\frac{3}{4}\\).  \nHence  \n\n\\[\n\\sin\\theta=-\\frac35,\\qquad\\cos\\theta=\\frac45.\n\\]\n\n---\n\n### 2.  Coordinates  \n\nPlace \\(B(0,0),\\;C(14,0)\\) and \\(A(5,12)\\).  \nThe circumcenter is \\(O\\bigl(7,\\frac{33}{8}\\bigr)\\) and the radius \\(R=\\frac{65}{8}\\).\n\nRotating each vertex by \\(\\theta\\) about \\(O\\) gives  \n\n\\[\n\\begin{aligned}\nA' &=\\Bigl(\\frac{81}{8},\\frac{93}{8}\\Bigr),&\nB' &=\\Bigl(-\\frac{43}{40},\\frac{201}{40}\\Bigr),\\\\\nC' &=\\Bigl(\\frac{81}{8},-\\frac{27}{8}\\Bigr).\n\\end{aligned}\n\\]\n\nOne checks that \\(A'C'\\) is vertical while \\(BC\\) is horizontal, so they are perpendicular, and \\(A'\\) and \\(B\\) are on opposite sides of line \\(B'C'\\).\n\n---\n\n### 3.  Area of hexagon \\(AA'CC'BB'\\)\n\nThe vertices in order are  \n\n\\[\nA(5,12),\\;A'\\Bigl(\\frac{81}{8},\\frac{93}{8}\\Bigr),\\;\nC(14,0),\\;C'\\Bigl(\\frac{81}{8},-\\frac{27}{8}\\Bigr),\\;\nB(0,0),\\;B'\\Bigl(-\\frac{43}{40},\\frac{201}{40}\\Bigr).\n\\]\n\nUsing the shoelace formula (with all coordinates expressed over denominator \\(40\\)):\n\n\\[\n\\begin{aligned}\n\\sum (x_i y_{i+1}-x_{i+1} y_i)&=-498\\,240,\\\\[2mm]\n\\text{Area}&=\\frac{|\\sum|}{2\\cdot40^2}\n           =\\frac{498\\,240}{3200}\n           =\\frac{1557}{10}=155.7 .\n\\end{aligned}\n\\]\n\n---\n\n### 4.  Nearest integer  \n\nThe integer closest to \\(155.7\\) is \\(156\\).\n\n\\[\n\\boxed{156}\n\\]"
+      },
+      "candidates": [
+        {
+          "seed": 0,
+          "source_model": "nvidia/nemotron-3.5-lightning:free",
+          "text": "The triangle \\(ABC\\) has sides \\(AB=13\\), \\(BC=14\\), \\(CA=15\\). Its area is 84, circumradius \\(R = \\frac{65}{8}\\), and circumcenter \\(O = (7, \\frac{33}{8})\\) when \\(B=(0,0)\\), \\(C=(14,0)\\), \\(A=(5,12)\\).\n\nRotating \\(\\triangle ABC\\) about \\(O\\) to obtain \\(\\triangle A'B'C'\\) such that \\(A'C' \\perp BC\\) (interpreting the condition \\(\\overline{AC} \\perp \\overline{BC}\\) as the rotated side perpendicular to the original side) gives a rotation angle with \\(\\cos\\theta = \\frac{4}{5}\\), \\(\\sin\\theta = -\\frac{3}{5}\\). The condition \u201c\\(A'\\) and \\(B\\) not on the same side of line \\(B'C\\)\u201d selects this orientation. The rotated vertices are \\(A' = (\\frac{81}{8}, \\frac{93}{8})\\), \\(C' = (\\frac{81}{8}, -\\frac{27}{8})\\), \\(B' = (-\\frac{43}{40}, \\frac{201}{40})\\).\n\nThe hexagon \\(AA'CC'BB'\\) has vertices in order: \\(A(5,12)\\), \\(A'(\\frac{81}{8}, \\frac{93}{8})\\), \\(C(14,0)\\), \\(C'(\\frac{81}{8}, -\\frac{27}{8})\\), \\(B(0,0)\\), \\(B'(-\\frac{43}{40}, \\frac{201}{40})\\). Using the shoelace formula, its area is \\(\\frac{1557}{10} = 155.7\\). The integer closest to this area is 156.\n\n\\boxed{156}"
+        },
+        {
+          "seed": 1,
+          "source_model": "xingchen-agi/xing4.0-29b-a4b:free",
+          "text": "The triangle \\(ABC\\) has side lengths \\(AB=13\\), \\(BC=14\\), \\(CA=15\\). Place \\(B=(0,0)\\), \\(C=(14,0)\\). Solving \\(A=(5,12)\\) gives the circumcenter \\(O=\\left(7,\\frac{33}{8}\\right)\\).\n\nRotating \\(\\triangle ABC\\) about \\(O\\) by an angle \\(\\phi\\) gives \\(\\triangle A'B'C'\\). The condition \\(\\overline{AC}\\perp\\overline{BC}\\) is interpreted as the new side \\(\\overline{A'C'}\\) being perpendicular to the original \\(\\overline{BC}\\). Since \\(\\overline{BC}=(14,0)\\), we need \\(\\overline{A'C'}\\) vertical, so the rotation must satisfy \\(9\\cos\\phi+12\\sin\\phi=0\\Rightarrow \\tan\\phi=-\\frac34\\). Two candidates: \\(\\phi=-\\arctan(3/4)\\) and \\(\\phi=180^\\circ-\\arctan(3/4)\\). Checking the condition \u201c\\(A'\\) and \\(B\\) are on opposite sides of line \\(B'C'\\)\u201d selects \\(\\phi=-\\arctan(3/4)\\) (where \\(\\cos\\phi=4/5,\\;\\sin\\phi=-3/5\\)).\n\nCoordinates after rotation:\n\\[\nA'=\\left(\\frac{81}{8},\\frac{93}{8}\\right),\\quad\nC'=\\left(\\frac{81}{8},-\\frac{27}{8}\\right),\\quad\nB'=\\left(-\\frac{43}{40},\\frac{201}{40}\\right).\n\\]\nThe hexagon vertices in order are\n\\[\nA(5,12),\\; A'\\!\\left(\\frac{81}{8},\\frac{93}{8}\\right),\\; C(14,0),\\; C'\\!\\left(\\frac{81}{8},-\\frac{27}{8}\\right),\\; B(0,0),\\; B'\\!\\left(-\\frac{43}{40},\\frac{201}{40}\\right).\n\\]\nUsing the shoelace formula, the area is\n\\[\n\\text{Area}=\\frac{1}{2}\\left|\\sum x_i y_{i+1}-\\sum y_i x_{i+1}\\right| = 155.7.\n\\]\nThe integer closest to \\(155.7\\) is \\(156\\).\n\n\\boxed{156}"
+        },
+        {
+          "seed": 2,
+          "source_model": "cohere/north-mini-code:free",
+          "text": "The side lengths are  \n\n\\[\nAB=13,\\qquad BC=14,\\qquad CA=15 .\n\\]\n\n---\n\n### 1.  Circumradius and coordinates  \n\nThe semiperimeter is  \n\n\\[\ns=\\frac{13+14+15}{2}=21,\\qquad \n\\Delta=\\sqrt{s(s-13)(s-14)(s-15)}=84 .\n\\]\n\nHence  \n\n\\[\nR=\\frac{abc}{4\\Delta}= \\frac{13\\cdot14\\cdot15}{4\\cdot84}\n      =\\frac{65}{8}.\n\\]\n\nPlace the circumcenter at the origin and let  \n\n\\[\nC=(R,0),\\qquad \nA=R(\\cos\\alpha,\\sin\\alpha),\\qquad \nB=R(\\cos\\beta,\\sin\\beta).\n\\]\n\nFrom the chord\u2013length formulas  \n\n\\[\n2R\\sin\\frac{\\alpha}{2}=CA=15,\\qquad \n2R\\sin\\frac{\\beta}{2}=BC=14,\n\\]\n\nwe obtain  \n\n\\[\n\\sin\\frac{\\alpha}{2}=\\frac{12}{13},\\qquad \n\\sin\\frac{\\beta}{2}=\\frac{56}{65}.\n\\]\n\nThus  \n\n\\[\n\\cos\\alpha=-\\frac{119}{169},\\; \\sin\\alpha=\\frac{120}{169},\n\\qquad \n\\cos\\beta=-\\frac{2047}{4225},\\; \\sin\\beta=-\\frac{3696}{4225}.\n\\]\n\n(The sign of \\(\\sin\\beta\\) is chosen so that the side\u2011condition below is satisfied.)\n\n---\n\n### 2.  The rotation angle  \n\nLet the rotation be through an angle \\(\\theta\\) about the circumcenter.\nWriting the vectors \\(a,b,c\\) for \\(A,B,C\\) and using the fact that after rotation  \n\n\\[\nA'C'\\perp BC,\n\\]\n\ngives  \n\n\\[\n(c' - a')\\cdot(c-b)=0 .\n\\]\n\nWith \\(a'=R(\\cos(\\alpha+\\theta),\\sin(\\alpha+\\theta))\\) etc., this condition reduces to  \n\n\\[\n\\tan(\\theta+\\tfrac{\\alpha}{2})=-\\cot\\frac{\\beta}{2}.\n\\]\n\nUsing \\(\\tan\\frac{\\alpha}{2}= \\frac{12}{5}\\) and \\(\\tan\\frac{\\beta}{2}=-\\frac{56}{33}\\),\n\n\\[\n\\tan(\\theta+\\tfrac{\\alpha}{2})=\\frac{33}{56}.\n\\]\n\nSolving for \\(\\tan\\theta\\) yields  \n\n\\[\n\\tan\\theta=-\\frac34 .\n\\]\n\nHence we may take  \n\n\\[\n\\cos\\theta=\\frac45,\\qquad \\sin\\theta=-\\frac35 .\n\\]\n\n(Choosing the opposite signs would give the same hexagon area, and the\nrequired side\u2011condition forces \\(\\sin\\theta>0\\); we use the above sign\nconvention.)\n\n---\n\n### 3.  Area of the hexagon  \n\nAll six vertices lie on the same circle of radius \\(R\\); for points\n\\((R\\cos\\phi_i,R\\sin\\phi_i)\\) the shoelace term is\n\\(R^{2}\\sin(\\phi_{i+1}-\\phi_i)\\).\nThe vertices in the order \\(A,A',C,C',B,B'\\) give the central\u2011angle\ndifferences\n\n\\[\n\\theta,\\;\\alpha+\\theta,\\;\\theta,\\;\\beta-\\theta,\\;\\theta,\\;\n\\alpha-\\beta-\\theta .\n\\]\n\nTherefore\n\n\\[\n\\begin{aligned}\nS&=R^{2}\\Bigl[3\\sin\\theta\n      -\\sin(\\alpha+\\theta)+\\sin(\\beta-\\theta)+\\sin(\\alpha-\\beta-\\theta)\\Bigr]\\\\\n  &=\\frac{R^{2}}5\\Bigl[\n      9+4\\sin\\alpha-3\\cos\\alpha-4\\sin\\beta-3\\cos\\beta\n      -4\\sin(\\alpha-\\beta)-3\\cos(\\alpha-\\beta)\\Bigr].\n\\end{aligned}\n\\]\n\nSubstituting the rational values of the sines and cosines and simplifying\ngives\n\n\\[\nS=\\frac{20\\,241}{65}.\n\\]\n\nThe signed area of the hexagon is \\(\\displaystyle\\frac{|S|}{2}\\); hence\n\n\\[\n\\operatorname{Area}= \\frac{20\\,241}{130}= \\frac{1\\,557}{10}=155.7 .\n\\]\n\n---\n\n### 4.  Nearest integer  \n\nThe integer nearest to \\(155.7\\) is  \n\n\\[\n\\boxed{156}.\n\\]"
+        },
+        {
+          "seed": 3,
+          "source_model": "nvidia/nemotron-3.5-lightning:free",
+          "text": "The triangle \\(ABC\\) has sides \\(AB=13\\), \\(BC=14\\), \\(CA=15\\). Placing \\(B=(0,0)\\), \\(C=(14,0)\\), and \\(A=(5,12)\\) (since \\(AB=13\\), \\(AC=15\\)). The circumcenter is \\(O=(7,\\frac{33}{8})\\). Rotating \\(\\triangle ABC\\) about \\(O\\) by an angle \\(\\theta\\) such that the rotated side \\(A'C'\\) is perpendicular to the original side \\(BC\\) yields \\(\\tan\\theta = -\\frac{3}{4}\\). Two rotation angles satisfy this; both place \\(A'\\) and \\(B\\) on opposite sides of line \\(B'C\\) as required. Computing the area of the hexagon \\(AA'CC'BB'\\) (vertices in order \\(A,A',C,C',B,B'\\)) using the shoelace formula gives exactly \\(\\frac{1557}{10} = 155.7\\) for both cases. The integer closest to \\(155.7\\) is \\(156\\).\n\n\\boxed{156}"
+        },
+        {
+          "seed": 4,
+          "source_model": "xingchen-agi/xing4.0-29b-a4b:free",
+          "text": "The area of the hexagon is approximately \\(21.3009\\), so the integer closest to the area is \\(21\\).\n\n\\boxed{21}"
+        },
+        {
+          "seed": 5,
+          "source_model": "cohere/north-mini-code:free",
+          "text": "The triangle \\(ABC\\) with sides \\(13,14,15\\) has  \n\n\\[\n\\angle C=\\arccos\\frac{3}{5},\\qquad \\sin C=\\frac45,\\qquad \n\\angle A=\\arctan\\frac{56}{33},\\qquad \n\\angle B=\\arctan\\frac{12}{5}.\n\\]\n\nIts circumradius is  \n\n\\[\nR=\\frac{abc}{4\\Delta}= \\frac{13\\cdot14\\cdot15}{4\\cdot84}= \\frac{65}{8}.\n\\]\n\n---\n\n### 1.  The rotation angle  \n\nWe rotate the triangle about its circumcenter \\(O\\) until the image of \\(AC\\) (call it \\(A'C'\\)) is perpendicular to the original side \\(BC\\).  \nSince the original angle between \\(AC\\) and \\(BC\\) is \\(\\angle C\\),\n\n\\[\n\\angle(A'C',BC)=|\\,\\angle C\\pm\\theta\\,|=90^\\circ\\Longrightarrow\\theta=90^\\circ-C.\n\\]\n\nBecause \\(\\angle C=\\arctan\\frac{4}{3}\\), we get  \n\n\\[\n\\theta = 90^\\circ-\\arctan\\frac{4}{3}= \\arctan\\frac{3}{4}.\n\\]\n\nThe problem also requires \\(A'\\) and \\(B\\) to lie on opposite sides of line \\(B'C'\\); this occurs for the clockwise rotation, i.e. \\(\\theta=-\\arctan\\frac{3}{4}\\).  \nHence  \n\n\\[\n\\sin\\theta=-\\frac35,\\qquad\\cos\\theta=\\frac45.\n\\]\n\n---\n\n### 2.  Coordinates  \n\nPlace \\(B(0,0),\\;C(14,0)\\) and \\(A(5,12)\\).  \nThe circumcenter is \\(O\\bigl(7,\\frac{33}{8}\\bigr)\\) and the radius \\(R=\\frac{65}{8}\\).\n\nRotating each vertex by \\(\\theta\\) about \\(O\\) gives  \n\n\\[\n\\begin{aligned}\nA' &=\\Bigl(\\frac{81}{8},\\frac{93}{8}\\Bigr),&\nB' &=\\Bigl(-\\frac{43}{40},\\frac{201}{40}\\Bigr),\\\\\nC' &=\\Bigl(\\frac{81}{8},-\\frac{27}{8}\\Bigr).\n\\end{aligned}\n\\]\n\nOne checks that \\(A'C'\\) is vertical while \\(BC\\) is horizontal, so they are perpendicular, and \\(A'\\) and \\(B\\) are on opposite sides of line \\(B'C'\\).\n\n---\n\n### 3.  Area of hexagon \\(AA'CC'BB'\\)\n\nThe vertices in order are  \n\n\\[\nA(5,12),\\;A'\\Bigl(\\frac{81}{8},\\frac{93}{8}\\Bigr),\\;\nC(14,0),\\;C'\\Bigl(\\frac{81}{8},-\\frac{27}{8}\\Bigr),\\;\nB(0,0),\\;B'\\Bigl(-\\frac{43}{40},\\frac{201}{40}\\Bigr).\n\\]\n\nUsing the shoelace formula (with all coordinates expressed over denominator \\(40\\)):\n\n\\[\n\\begin{aligned}\n\\sum (x_i y_{i+1}-x_{i+1} y_i)&=-498\\,240,\\\\[2mm]\n\\text{Area}&=\\frac{|\\sum|}{2\\cdot40^2}\n           =\\frac{498\\,240}{3200}\n           =\\frac{1557}{10}=155.7 .\n\\end{aligned}\n\\]\n\n---\n\n### 4.  Nearest integer  \n\nThe integer closest to \\(155.7\\) is \\(156\\).\n\n\\[\n\\boxed{156}\n\\]"
+        }
+      ],
+      "extended_cap_pass": true,
+      "extended_cap_requested": 65536,
+      "main_protocol": {
+        "error": "ValidityExhausted: seed=0 no valid answer in 3 attempts, output truncated at the token cap in at least one (last response: 0 chars)",
+        "truncated_at_tokens": 32768,
+        "truncation_attempts": 1
+      }
     },
     {
       "query": "Triangle $\\triangle ABC$ lies in plane $\\mathcal P$ with $AB = 6, AC = 4,$ and $\\angle BAC = 90^\\circ.$ Let $D$ be the reflection across $\\overline{BC}$ of the centroid of $\\triangle ABC. {}$ Four spheres, all on the same side of $\\mathcal P,$ have radii $1, 2, 3,$ and $r$ and are tangent to $\\mathcal P$ at points $A, B, C,$ and $D,$ respectively. The four spheres are also each tangent to a second plane $\\mathcal T$ and are all on the same side of $\\mathcal T.$ The value of $r$ can be written as $\\tfrac mn,$ where $m$ and $n$ are relatively prime positive integers. Find $m+n.$",
@@ -2920,62 +3183,240 @@
     {
       "query": "For integers $a$ and $b,$ let $a \\circ b = a - b$ if $a$ is odd and $b$ is even, and $a+b$ otherwise. Find the number of sequences $a_1, a_2, a_3, \\ldots, a_n$ of positive integers such that\n\\[\na_1 + a_2 + a_3 + \\cdots + a_n = 12 \\quad \\text{and} \\quad a_1 \\circ a_2 \\circ a_3 \\circ \\cdots \\circ a_n = 0\n\\]\nwhere the operations are performed from left to right; that is, $a_1 \\circ a_2 \\circ a_3$ means $(a_1 \\circ a_2) \\circ a_3.$",
       "ground_truth": "157",
+      "judge_version": "short-answer",
+      "judgments": {
+        "confidence": {
+          "c0": 0.91,
+          "c1": 0.98,
+          "c2": 0.92,
+          "c3": 0.92,
+          "c4": 0.0,
+          "c5": 0.99
+        },
+        "pairwise": {
+          "c0|c1": 0.9550000000000001,
+          "c1|c0": 0.04499999999999993,
+          "c0|c2": 0.45,
+          "c2|c0": 0.55,
+          "c0|c3": 0.4,
+          "c3|c0": 0.6,
+          "c0|c4": 0.405,
+          "c4|c0": 0.595,
+          "c0|c5": 0.37,
+          "c5|c0": 0.63,
+          "c1|c2": 0.20350000000000001,
+          "c2|c1": 0.7965,
+          "c1|c3": 0.175,
+          "c3|c1": 0.825,
+          "c1|c4": 0.35,
+          "c4|c1": 0.65,
+          "c1|c5": 0.17,
+          "c5|c1": 0.83,
+          "c2|c3": 0.53,
+          "c3|c2": 0.47,
+          "c2|c4": 0.51,
+          "c4|c2": 0.49,
+          "c2|c5": 0.5,
+          "c5|c2": 0.5,
+          "c3|c4": 0.625,
+          "c4|c3": 0.375,
+          "c3|c5": 0.35,
+          "c5|c3": 0.65,
+          "c4|c5": 0.65,
+          "c5|c4": 0.35
+        },
+        "selection_scores": {
+          "c0": -1.2119999999999997,
+          "c1": 0.20469999999999997,
+          "c2": -3.9687,
+          "c3": -3.5719999999999996,
+          "c4": -0.7480000000000001,
+          "c5": 0.81
+        }
+      },
       "subject": "AIME 2026",
-      "error": "ValidityExhausted: seed=0 no valid answer in 3 attempts, output truncated at the token cap in at least one (last response: 0 chars)",
       "or_select": {
-        "answer": null,
-        "correct": false
+        "answer": "157",
+        "correct": true
       },
       "self_consistency": {
-        "answer": null,
-        "correct": false,
-        "had_majority": false
+        "answer": "157",
+        "correct": true,
+        "had_majority": true
       },
       "greedy": {
-        "answer": null,
-        "correct": false
+        "answer": "157",
+        "correct": true
       },
       "kemeny_young": {
-        "answer": null,
-        "correct": false,
-        "is_optimal": null
+        "answer": "157",
+        "correct": true,
+        "is_optimal": true
       },
-      "winner_texts": null,
-      "candidates": null,
-      "failed_last_response": "",
-      "truncated": true,
-      "truncated_at_tokens": 32768,
-      "truncation_attempts": 1
+      "winner_texts": {
+        "or_select": "\\[\n\\boxed{157}\n\\]",
+        "self_consistency": "The problem defines a binary operation \\(a \\circ b = a - b\\) if \\(a\\) is odd and \\(b\\) is even, otherwise \\(a + b\\). We perform the operation left-to-right on a sequence of positive integers summing to 12, and we need the final result to be 0.\n\nBy analyzing the process, the final value after all operations is \\(0\\) if and only if the total amount subtracted, \\(T\\), equals 6. The subtracted terms are exactly the even-indexed terms \\(a_i\\) that appear after an odd partial sum \\(S_{i-1} = a_1 + \\cdots + a_{i-1}\\). The condition \\(T = 6\\) is equivalent to requiring that the sum of such selected even \\(a_i\\) equals 6.\n\nThis reduces the problem to counting compositions of 12 (sequences of positive integers summing to 12) where the described subtractions sum to 6. A dynamic programming approach over the remaining sum, the current parity of the partial sum, and the accumulated subtracted amount \\(T\\) (up to 6) yields the total number of valid sequences.\n\nAfter computing the DP from the starting state (sum 0, \\(T=0\\)) to the target states (sum 12, \\(T=6\\)), the total number of sequences is found to be 157.\n\n\\boxed{157}",
+        "greedy": "The problem defines a binary operation \\(a \\circ b = a - b\\) if \\(a\\) is odd and \\(b\\) is even, otherwise \\(a + b\\). We perform the operation left-to-right on a sequence of positive integers summing to 12, and we need the final result to be 0.\n\nBy analyzing the process, the final value after all operations is \\(0\\) if and only if the total amount subtracted, \\(T\\), equals 6. The subtracted terms are exactly the even-indexed terms \\(a_i\\) that appear after an odd partial sum \\(S_{i-1} = a_1 + \\cdots + a_{i-1}\\). The condition \\(T = 6\\) is equivalent to requiring that the sum of such selected even \\(a_i\\) equals 6.\n\nThis reduces the problem to counting compositions of 12 (sequences of positive integers summing to 12) where the described subtractions sum to 6. A dynamic programming approach over the remaining sum, the current parity of the partial sum, and the accumulated subtracted amount \\(T\\) (up to 6) yields the total number of valid sequences.\n\nAfter computing the DP from the starting state (sum 0, \\(T=0\\)) to the target states (sum 12, \\(T=6\\)), the total number of sequences is found to be 157.\n\n\\boxed{157}",
+        "kemeny_young": "The operation satisfies  \n\n\\[\na\\circ b=\\begin{cases}\na-b &\\text{if }a\\text{ odd and }b\\text{ even},\\\\[2pt]\na+b &\\text{otherwise.}\n\\end{cases}\n\\]\n\nWriting the left\u2013to\u2013right evaluation as  \n\n\\[\nx_1=a_1,\\qquad \nx_{i}=x_{i-1}\\circ a_i,\n\\]\n\nwe have  \n\n\\[\nx_i=\n\\begin{cases}\nx_{i-1}-a_i &\\text{if }x_{i-1}\\text{ odd and }a_i\\text{ even},\\\\\nx_{i-1}+a_i &\\text{otherwise.}\n\\end{cases}\n\\]\n\nThus an even term is **subtracted** exactly when the current total is odd; otherwise it is added.  \nThe parity of the current total flips only when an odd term is added.  \n\nLet  \n\n* \\(O\\) = sum of the odd terms,  \n* \\(E_{\\text{add}}\\) = sum of even terms that are added,  \n* \\(E_{\\text{sub}}\\) = sum of even terms that are subtracted.\n\nBecause the final result must be \\(0\\),\n\n\\[\nO+E_{\\text{add}}-E_{\\text{sub}}=0,\\qquad \nO+E_{\\text{add}}+E_{\\text{sub}}=12 .\n\\]\n\nHence  \n\n\\[\nE_{\\text{sub}}=6,\\qquad O+E_{\\text{add}}=6 .\n\\]\n\nAll subtracted even terms must be even, so \\(E_{\\text{sub}}=6\\) forces the subtracted evens to be a composition of \\(6\\) into even parts.  \nThe odd terms themselves are a composition of an even number \\(O\\) (the sum of odds) into odd parts.\n\nSince \\(O+E_{\\text{add}}=6\\) and \\(E_{\\text{add}}\\) is a sum of even numbers, \\(O\\) must be even and at most \\(6\\); thus \\(O\\in\\{2,4,6\\}\\).\n\nFor a given composition of the odd terms with \\(k\\) odd parts, the evens are placed in the alternating blocks  \n\n\\[\n\\underbrace{\\text{added}}_{B_0}\\,\\underbrace{\\text{subtracted}}_{B_1}\\,\n\\underbrace{\\text{added}}_{B_2}\\,\\underbrace{\\text{subtracted}}_{B_3}\\,\\dots\n\\]\n\nwhere block \\(B_i\\) is added if \\(i\\) is even and subtracted if \\(i\\) is odd.  \nIf the composition has \\(k\\) odd terms then there are \\(k+1\\) blocks:\n\\((k/2)+1\\) added blocks and \\(k/2\\) subtracted blocks.\n\nLet  \n\n\\[\nC(S)=\\begin{cases}\n1 & S=0,\\\\[2pt]\n2^{\\frac{S}{2}-1}& S\\ge2\\text{ even},\n\\end{cases}\n\\]\n\nthe number of ordered compositions of an even sum \\(S\\) into even parts.\nThe number of ways to distribute the required sums among the blocks is the coefficient of \\(x^{E_{\\text{add}}}\\) in \\(\\bigl(1+x^{2}+2x^{4}+4x^{6}+\\cdots\\bigr)^{(k/2)+1}\\) for the added blocks and the coefficient of \\(x^{6}\\) in the same series raised to the power \\(k/2\\) for the subtracted blocks.\n\nEvaluating these coefficients gives\n\n| \\(O\\) | compositions of \\(O\\) (odd parts) | possible \\(k\\) | added\u2011block count | ways to distribute added evens | subtracted\u2011block count | ways to distribute subtracted evens | total for this case |\n|------|-----------------------------------|----------------|-------------------|--------------------------------|------------------------|--------------------------------------|----------------------|\n| 2    | \\(1+1\\) (1)                       | \\(k=2\\)        | 2                 | 5                              | 1                      | 4                                    | \\(1\\cdot5\\cdot4=20\\) |\n| 4    | \\(1+1+1+1\\) (1), \\(1+3,3+1\\) (2)  | \\(k=4\\)        | 3                 | 3                              | 2                      | 12                                   | \\(1\\cdot3\\cdot12=36\\)|\n|      |                                   | \\(k=2\\)        | 2                 | 2                              | 1                      | 4                                    | \\(2\\cdot2\\cdot4=16\\) |\n| 6    | \\(1^6\\) (1), one\u20113\u2011and\u2011three\u20111\u2019s (4), \\(3+3,5+1,1+5\\) (3) | \\(k=6\\) | 4 | 1 | 3 | 25 | \\(1\\cdot1\\cdot25=25\\) |\n|      |                                   | \\(k=4\\)        | 3                 | 1                              | 2                      | 12                                   | \\(4\\cdot1\\cdot12=48\\)|\n|      |                                   | \\(k=2\\)        | 2                 | 1                              | 1                      | 4                                    | \\(3\\cdot1\\cdot4=12\\)|\n\nAdding all contributions:\n\n\\[\n20+36+16+25+48+12 = 157 .\n\\]\n\nHence there are **157** ordered sequences of positive integers whose sum is \\(12\\) and whose left\u2011to\u2011right \\(\\circ\\)-value equals \\(0\\).\n\n\\[\n\\boxed{157}\n\\]"
+      },
+      "candidates": [
+        {
+          "seed": 0,
+          "source_model": "nvidia/nemotron-3.5-lightning:free",
+          "text": "The problem defines a binary operation \\(a \\circ b = a - b\\) if \\(a\\) is odd and \\(b\\) is even, otherwise \\(a + b\\). We perform the operation left-to-right on a sequence of positive integers summing to 12, and we need the final result to be 0.\n\nBy analyzing the process, the final value after all operations is \\(0\\) if and only if the total amount subtracted, \\(T\\), equals 6. The subtracted terms are exactly the even-indexed terms \\(a_i\\) that appear after an odd partial sum \\(S_{i-1} = a_1 + \\cdots + a_{i-1}\\). The condition \\(T = 6\\) is equivalent to requiring that the sum of such selected even \\(a_i\\) equals 6.\n\nThis reduces the problem to counting compositions of 12 (sequences of positive integers summing to 12) where the described subtractions sum to 6. A dynamic programming approach over the remaining sum, the current parity of the partial sum, and the accumulated subtracted amount \\(T\\) (up to 6) yields the total number of valid sequences.\n\nAfter computing the DP from the starting state (sum 0, \\(T=0\\)) to the target states (sum 12, \\(T=6\\)), the total number of sequences is found to be 157.\n\n\\boxed{157}"
+        },
+        {
+          "seed": 1,
+          "source_model": "xingchen-agi/xing4.0-29b-a4b:free",
+          "text": "The number of sequences \\(a_1, a_2, \\dots, a_n\\) of positive integers summing to 12 with the given operation ending in 0 is \\(\\boxed{56}\\)."
+        },
+        {
+          "seed": 2,
+          "source_model": "cohere/north-mini-code:free",
+          "text": "The operation satisfies  \n\n\\[\na\\circ b=\\begin{cases}\na-b &\\text{if }a\\text{ odd and }b\\text{ even},\\\\[2pt]\na+b &\\text{otherwise.}\n\\end{cases}\n\\]\n\nWriting the left\u2013to\u2013right evaluation as  \n\n\\[\nx_1=a_1,\\qquad \nx_{i}=x_{i-1}\\circ a_i,\n\\]\n\nwe have  \n\n\\[\nx_i=\n\\begin{cases}\nx_{i-1}-a_i &\\text{if }x_{i-1}\\text{ odd and }a_i\\text{ even},\\\\\nx_{i-1}+a_i &\\text{otherwise.}\n\\end{cases}\n\\]\n\nThus an even term is **subtracted** exactly when the current total is odd; otherwise it is added.  \nThe parity of the current total flips only when an odd term is added.  \n\nLet  \n\n* \\(O\\) = sum of the odd terms,  \n* \\(E_{\\text{add}}\\) = sum of even terms that are added,  \n* \\(E_{\\text{sub}}\\) = sum of even terms that are subtracted.\n\nBecause the final result must be \\(0\\),\n\n\\[\nO+E_{\\text{add}}-E_{\\text{sub}}=0,\\qquad \nO+E_{\\text{add}}+E_{\\text{sub}}=12 .\n\\]\n\nHence  \n\n\\[\nE_{\\text{sub}}=6,\\qquad O+E_{\\text{add}}=6 .\n\\]\n\nAll subtracted even terms must be even, so \\(E_{\\text{sub}}=6\\) forces the subtracted evens to be a composition of \\(6\\) into even parts.  \nThe odd terms themselves are a composition of an even number \\(O\\) (the sum of odds) into odd parts.\n\nSince \\(O+E_{\\text{add}}=6\\) and \\(E_{\\text{add}}\\) is a sum of even numbers, \\(O\\) must be even and at most \\(6\\); thus \\(O\\in\\{2,4,6\\}\\).\n\nFor a given composition of the odd terms with \\(k\\) odd parts, the evens are placed in the alternating blocks  \n\n\\[\n\\underbrace{\\text{added}}_{B_0}\\,\\underbrace{\\text{subtracted}}_{B_1}\\,\n\\underbrace{\\text{added}}_{B_2}\\,\\underbrace{\\text{subtracted}}_{B_3}\\,\\dots\n\\]\n\nwhere block \\(B_i\\) is added if \\(i\\) is even and subtracted if \\(i\\) is odd.  \nIf the composition has \\(k\\) odd terms then there are \\(k+1\\) blocks:\n\\((k/2)+1\\) added blocks and \\(k/2\\) subtracted blocks.\n\nLet  \n\n\\[\nC(S)=\\begin{cases}\n1 & S=0,\\\\[2pt]\n2^{\\frac{S}{2}-1}& S\\ge2\\text{ even},\n\\end{cases}\n\\]\n\nthe number of ordered compositions of an even sum \\(S\\) into even parts.\nThe number of ways to distribute the required sums among the blocks is the coefficient of \\(x^{E_{\\text{add}}}\\) in \\(\\bigl(1+x^{2}+2x^{4}+4x^{6}+\\cdots\\bigr)^{(k/2)+1}\\) for the added blocks and the coefficient of \\(x^{6}\\) in the same series raised to the power \\(k/2\\) for the subtracted blocks.\n\nEvaluating these coefficients gives\n\n| \\(O\\) | compositions of \\(O\\) (odd parts) | possible \\(k\\) | added\u2011block count | ways to distribute added evens | subtracted\u2011block count | ways to distribute subtracted evens | total for this case |\n|------|-----------------------------------|----------------|-------------------|--------------------------------|------------------------|--------------------------------------|----------------------|\n| 2    | \\(1+1\\) (1)                       | \\(k=2\\)        | 2                 | 5                              | 1                      | 4                                    | \\(1\\cdot5\\cdot4=20\\) |\n| 4    | \\(1+1+1+1\\) (1), \\(1+3,3+1\\) (2)  | \\(k=4\\)        | 3                 | 3                              | 2                      | 12                                   | \\(1\\cdot3\\cdot12=36\\)|\n|      |                                   | \\(k=2\\)        | 2                 | 2                              | 1                      | 4                                    | \\(2\\cdot2\\cdot4=16\\) |\n| 6    | \\(1^6\\) (1), one\u20113\u2011and\u2011three\u20111\u2019s (4), \\(3+3,5+1,1+5\\) (3) | \\(k=6\\) | 4 | 1 | 3 | 25 | \\(1\\cdot1\\cdot25=25\\) |\n|      |                                   | \\(k=4\\)        | 3                 | 1                              | 2                      | 12                                   | \\(4\\cdot1\\cdot12=48\\)|\n|      |                                   | \\(k=2\\)        | 2                 | 1                              | 1                      | 4                                    | \\(3\\cdot1\\cdot4=12\\)|\n\nAdding all contributions:\n\n\\[\n20+36+16+25+48+12 = 157 .\n\\]\n\nHence there are **157** ordered sequences of positive integers whose sum is \\(12\\) and whose left\u2011to\u2011right \\(\\circ\\)-value equals \\(0\\).\n\n\\[\n\\boxed{157}\n\\]"
+        },
+        {
+          "seed": 3,
+          "source_model": "nvidia/nemotron-3.5-lightning:free",
+          "text": "The operation \\(\\circ\\) is defined as:  \n\\(a \\circ b = a - b\\) if \\(a\\) is odd and \\(b\\) is even, and \\(a + b\\) otherwise.  \nThe process is applied left to right: \\((a_1 \\circ a_2) \\circ a_3 \\circ \\cdots\\).\n\nLet \\(S_k\\) be the accumulated value after the first \\(k\\) terms, and \\(S_0 = 0\\).  \nModulo 2, the operation is always addition: \\(a \\circ b \\equiv a+b \\pmod 2\\).  \nThus \\(S_{k-1} \\equiv \\sum_{i=1}^{k-1} a_i \\pmod 2\\).\n\nThe condition for subtraction (i.e., the \\(a_k\\) term being subtracted instead of added) is:\n\\[\n\\delta_k = 1 \\iff a_k \\text{ is even and } S_{k-1} \\text{ is odd}\n\\iff a_k \\text{ is even and } \\sum_{i=1}^{k-1} a_i \\text{ is odd}.\n\\]\n\nThe final accumulated value after \\(n\\) terms is\n\\[\nS_n = \\sum_{i=1}^n a_i - 2 \\sum_{k=2}^n a_k \\delta_k = 12 - 2 \\cdot T,\n\\]\nwhere \\(T = \\sum_{k=2}^n a_k \\delta_k\\) is the sum of selected even terms.  \nWe require \\(S_n = 0\\), so \\(T = 6\\).\n\nThe total sum 12 splits into selected even terms (sum 6), unselected even terms, and odd terms.  \nThe number of odd terms must be even (otherwise the sum of odds is odd, but the unselected even sum is even, making the total odds + unselected even odd \\(\\neq 6\\)). The possible numbers of odd terms are 0, 2, 4, 6.\n\n**Case 0 odd terms:** All terms even, \\(T = 12 \\neq 6\\). \\(\\Rightarrow 0\\) sequences.\n\n**Case 2 odd terms:** Exactly two odd terms, selected even terms between them sum to 6.  \nThe remaining terms (before first odd, after second odd) sum to \\(6 - B\\) where \\(B\\) is the sum of the two odds (\\(B \\in \\{2,4,6\\}\\)).  \nCounting all choices of ordered odd pairs, compositions of the selected/even blocks gives:\n- \\(B=2\\): \\(5 \\times 4 \\times 1 = 20\\) sequences,\n- \\(B=4\\): \\(2 \\times 4 \\times 2 = 16\\) sequences,\n- \\(B=6\\): \\(3 \\times 4 \\times 1 = 12\\) sequences.  \nTotal \\(48\\) sequences.\n\n**Case 4 odd terms:** Four odd terms.  \n- Subcase O=4 (all 1's): selected windows W1,W3 sum to 6; unselected W0,W2,W4 sum to 2.  \n  12 choices for selected even windows \\(\\times\\) 3 choices for unselected = 36 sequences.  \n- Subcase O=6 (three 1's and one 3): unselected even sum 0; selected windows sum to 6 with 4 odd orders: \\(4 \\times 12 = 48\\) sequences.  \nTotal \\(84\\) sequences.\n\n**Case 6 odd terms:** Six 1's; selected windows between 1st\u20132nd, 3rd\u20134th, 5th\u20136th sum to 6.  \n25 compositions of 6 into three ordered even windows.  \nTotal \\(25\\) sequences.\n\nSumming all valid cases:\n\\[\n0 + 48 + 84 + 25 = 157.\n\\]\n\n\\boxed{157}"
+        },
+        {
+          "seed": 4,
+          "source_model": "xingchen-agi/xing4.0-29b-a4b:free",
+          "text": "The operation \\(a \\circ b\\) returns \\(a - b\\) when \\(a\\) is odd and \\(b\\) is even, and \\(a + b\\) otherwise. For the final operation \\(v_{n-1} \\circ a_n = 0\\), we consider all possible parities:\n\n- If \\(v_{n-1}\\) is odd and \\(a_n\\) is even: \\(v_{n-1} - a_n\\) is odd (difference of odd and even), never \\(0\\).\n- If \\(v_{n-1}\\) is odd and \\(a_n\\) is odd: sum of two odds is at least \\(2\\), not \\(0\\).\n- If \\(v_{n-1}\\) is even and \\(a_n\\) is even: sum of two positive evens is at least \\(4\\), not \\(0\\).\n- If \\(v_{n-1}\\) is even and \\(a_n\\) is odd: sum is odd, at least \\(1\\), not \\(0\\).\n\nThus the final operation can never yield \\(0\\) for any positive integers \\(a_i\\). Consequently, no sequence satisfies both conditions.\n\n\\[\n\\boxed{0}\n\\]"
+        },
+        {
+          "seed": 5,
+          "source_model": "cohere/north-mini-code:free",
+          "text": "\\[\n\\boxed{157}\n\\]"
+        }
+      ],
+      "extended_cap_pass": true,
+      "extended_cap_requested": 65536,
+      "main_protocol": {
+        "error": "ValidityExhausted: seed=0 no valid answer in 3 attempts, output truncated at the token cap in at least one (last response: 0 chars)",
+        "truncated_at_tokens": 32768,
+        "truncation_attempts": 1
+      }
     },
     {
       "query": "Find the number of ordered 7-tuples $(a_1, a_2, a_3, \\ldots, a_7)$ having the following properties:\n- $a_k \\in \\{1,2,3\\}$ for all $k.$\n- $a_1+a_2+a_3+a_4+a_5+a_6+a_7$ is a multiple of $3.$\n- $a_1a_2 a_4 + a_2a_3a_5 + a_3a_4 a_6 + a_4 a_5 a_7 + a_5 a_6 a_1 + a_6 a_7 a_2 + a_7 a_1 a_3$ is a multiple of $3.$",
       "ground_truth": "393",
+      "judge_version": "short-answer",
+      "judgments": {
+        "confidence": {
+          "c0": 0.85,
+          "c1": 0.91,
+          "c2": 1.0,
+          "c3": 0.95,
+          "c4": 0.98,
+          "c5": 0.9
+        },
+        "pairwise": {
+          "c0|c1": 0.48000000000000004,
+          "c1|c0": 0.52,
+          "c0|c2": 0.475,
+          "c2|c0": 0.525,
+          "c0|c3": 0.52,
+          "c3|c0": 0.48,
+          "c0|c4": 0.48000000000000004,
+          "c4|c0": 0.52,
+          "c0|c5": 0.43,
+          "c5|c0": 0.5700000000000001,
+          "c1|c2": 0.25,
+          "c2|c1": 0.75,
+          "c1|c3": 0.19999999999999998,
+          "c3|c1": 0.8,
+          "c1|c4": 0.54,
+          "c4|c1": 0.45999999999999996,
+          "c1|c5": 0.16999999999999998,
+          "c5|c1": 0.8300000000000001,
+          "c2|c3": 0.47500000000000003,
+          "c3|c2": 0.5249999999999999,
+          "c2|c4": 0.435,
+          "c4|c2": 0.565,
+          "c2|c5": 0.45,
+          "c5|c2": 0.55,
+          "c3|c4": 0.345,
+          "c4|c3": 0.655,
+          "c3|c5": 0.45,
+          "c5|c3": 0.55,
+          "c4|c5": 0.4,
+          "c5|c4": 0.6
+        },
+        "selection_scores": {
+          "c0": -1.5830000000000002,
+          "c1": 0.40800000000000003,
+          "c2": 0.7470000000000001,
+          "c3": -1.03,
+          "c4": 0.5760000000000001,
+          "c5": 0.8400000000000001
+        }
+      },
       "subject": "AIME 2026",
-      "error": "ValidityExhausted: seed=1 no valid answer in 3 attempts, output truncated at the token cap in at least one (last response: 0 chars)",
       "or_select": {
-        "answer": null,
+        "answer": "141",
         "correct": false
       },
       "self_consistency": {
-        "answer": null,
+        "answer": "243",
         "correct": false,
-        "had_majority": false
+        "had_majority": true
       },
       "greedy": {
-        "answer": null,
+        "answer": "243",
         "correct": false
       },
       "kemeny_young": {
-        "answer": null,
+        "answer": "141",
         "correct": false,
-        "is_optimal": null
+        "is_optimal": true
       },
-      "winner_texts": null,
-      "candidates": null,
-      "failed_last_response": "",
-      "truncated": true,
-      "truncated_at_tokens": 32768,
-      "truncation_attempts": 1
+      "winner_texts": {
+        "or_select": "\\boxed{141}",
+        "self_consistency": "We map each \\(a_k \\in \\{1,2,3\\}\\) to an element \\(x_k \\in \\text{GF}(3)\\) by \\(x_k = 0\\) if \\(a_k = 3\\), and \\(x_k = 1\\) if \\(a_k = 1\\), \\(x_k = 2\\) if \\(a_k = 2\\). The conditions become:\n\n1. \\(x_1 + x_2 + \\cdots + x_7 \\equiv 0 \\pmod{3}\\) (sum modulo 3),\n2. \\(S = x_1x_2x_4 + x_2x_3x_5 + x_3x_4x_6 + x_4x_5x_7 + x_5x_6x_1 + x_6x_7x_2 + x_7x_1x_3 \\equiv 0 \\pmod{3}\\).\n\nWe count the number of 7-tuples \\((x_1,\\dots,x_7) \\in \\text{GF}(3)^7\\) satisfying both equations. The total number of tuples is \\(3^7 = 2187\\).\n\nThe two equations are polynomial equations of degrees 1 and 3 in 7 variables over \\(\\text{GF}(3)\\). Because 7 > 1 + 3 and the equations are \u201cin general position\u201d (the linear equation is non-degenerate and the cubic sum has no singularities that create extra components), their common zero set defines a complete intersection of dimension \\(7 - 2 = 5\\). Over \\(\\text{GF}(3)\\), a complete intersection of dimension 5 contains exactly \\(3^5 = 243\\) points.\n\nEquivalently, the number of tuples with sum \\(\\equiv 0\\) is exactly 729. The additional product condition \\(S \\equiv 0\\) further reduces the count by a factor of 3, leaving 243 solutions. (One can verify by character sums that the distribution of \\(S\\) modulo 3 on the sum\u2011zero subset is uniform.)\n\nThus the number of ordered 7-tuples satisfying all conditions is 243.\n\n\\boxed{243}",
+        "greedy": "We map each \\(a_k \\in \\{1,2,3\\}\\) to an element \\(x_k \\in \\text{GF}(3)\\) by \\(x_k = 0\\) if \\(a_k = 3\\), and \\(x_k = 1\\) if \\(a_k = 1\\), \\(x_k = 2\\) if \\(a_k = 2\\). The conditions become:\n\n1. \\(x_1 + x_2 + \\cdots + x_7 \\equiv 0 \\pmod{3}\\) (sum modulo 3),\n2. \\(S = x_1x_2x_4 + x_2x_3x_5 + x_3x_4x_6 + x_4x_5x_7 + x_5x_6x_1 + x_6x_7x_2 + x_7x_1x_3 \\equiv 0 \\pmod{3}\\).\n\nWe count the number of 7-tuples \\((x_1,\\dots,x_7) \\in \\text{GF}(3)^7\\) satisfying both equations. The total number of tuples is \\(3^7 = 2187\\).\n\nThe two equations are polynomial equations of degrees 1 and 3 in 7 variables over \\(\\text{GF}(3)\\). Because 7 > 1 + 3 and the equations are \u201cin general position\u201d (the linear equation is non-degenerate and the cubic sum has no singularities that create extra components), their common zero set defines a complete intersection of dimension \\(7 - 2 = 5\\). Over \\(\\text{GF}(3)\\), a complete intersection of dimension 5 contains exactly \\(3^5 = 243\\) points.\n\nEquivalently, the number of tuples with sum \\(\\equiv 0\\) is exactly 729. The additional product condition \\(S \\equiv 0\\) further reduces the count by a factor of 3, leaving 243 solutions. (One can verify by character sums that the distribution of \\(S\\) modulo 3 on the sum\u2011zero subset is uniform.)\n\nThus the number of ordered 7-tuples satisfying all conditions is 243.\n\n\\boxed{243}",
+        "kemeny_young": "\\boxed{141}"
+      },
+      "candidates": [
+        {
+          "seed": 0,
+          "source_model": "nvidia/nemotron-3.5-lightning:free",
+          "text": "We map each \\(a_k \\in \\{1,2,3\\}\\) to an element \\(x_k \\in \\text{GF}(3)\\) by \\(x_k = 0\\) if \\(a_k = 3\\), and \\(x_k = 1\\) if \\(a_k = 1\\), \\(x_k = 2\\) if \\(a_k = 2\\). The conditions become:\n\n1. \\(x_1 + x_2 + \\cdots + x_7 \\equiv 0 \\pmod{3}\\) (sum modulo 3),\n2. \\(S = x_1x_2x_4 + x_2x_3x_5 + x_3x_4x_6 + x_4x_5x_7 + x_5x_6x_1 + x_6x_7x_2 + x_7x_1x_3 \\equiv 0 \\pmod{3}\\).\n\nWe count the number of 7-tuples \\((x_1,\\dots,x_7) \\in \\text{GF}(3)^7\\) satisfying both equations. The total number of tuples is \\(3^7 = 2187\\).\n\nThe two equations are polynomial equations of degrees 1 and 3 in 7 variables over \\(\\text{GF}(3)\\). Because 7 > 1 + 3 and the equations are \u201cin general position\u201d (the linear equation is non-degenerate and the cubic sum has no singularities that create extra components), their common zero set defines a complete intersection of dimension \\(7 - 2 = 5\\). Over \\(\\text{GF}(3)\\), a complete intersection of dimension 5 contains exactly \\(3^5 = 243\\) points.\n\nEquivalently, the number of tuples with sum \\(\\equiv 0\\) is exactly 729. The additional product condition \\(S \\equiv 0\\) further reduces the count by a factor of 3, leaving 243 solutions. (One can verify by character sums that the distribution of \\(S\\) modulo 3 on the sum\u2011zero subset is uniform.)\n\nThus the number of ordered 7-tuples satisfying all conditions is 243.\n\n\\boxed{243}"
+        },
+        {
+          "seed": 1,
+          "source_model": "xingchen-agi/xing4.0-29b-a4b:free",
+          "text": "The number of ordered 7-tuples \\((a_1,\\dots,a_7)\\) with each \\(a_k\\in\\{1,2,3\\}\\) satisfying  \n\\[\na_1+\\cdots+a_7\\equiv0\\pmod3,\\qquad \na_1a_2a_4+a_2a_3a_5+\\cdots+a_7a_1a_3\\equiv0\\pmod3\n\\]  \nis \\(\\boxed{393}\\)."
+        },
+        {
+          "seed": 2,
+          "source_model": "cohere/north-mini-code:free",
+          "text": "\\[\n\\boxed{393}\n\\]"
+        },
+        {
+          "seed": 3,
+          "source_model": "nvidia/nemotron-3.5-lightning:free",
+          "text": "We are to count ordered 7-tuples \\((a_1,\\dots,a_7)\\) with each \\(a_k \\in \\{1,2,3\\}\\) such that:\n\n1. \\(S_1 = a_1+\\cdots+a_7 \\equiv 0 \\pmod 3\\)\n2. \\(S_2 = \\sum_{k=1}^7 a_k a_{k+1} a_{k+3} \\equiv 0 \\pmod 3\\) (indices modulo 7).\n\nMap each \\(a_k\\) to its residue modulo 3: \\(1 \\mapsto 1\\), \\(2 \\mapsto 2\\), \\(3 \\mapsto 0\\). The conditions become polynomial equations over \\(\\mathbb{Z}_3\\), and the mapping is a bijection, so we simply count the number of 7-tuples \\((x_1,\\dots,x_7) \\in \\mathbb{Z}_3^7\\) satisfying the two congruences.\n\nTotal number of unrestricted 7-tuples is \\(3^7 = 2187\\). The two conditions are polynomial equations modulo 3. Because 7 is prime and the cyclic structure gives symmetric equations, the conditions are \u201cgeneric\u201d and algebraically independent modulo 3. For a system of two independent polynomial equations over \\(\\mathbb{Z}_3\\) in 7 variables, the number of solutions is exactly \\(3^{7-2} = 3^5 = 243\\). This can also be seen via discrete Fourier analysis: the character sum factorizes and only the trivial character \\((u,v)=(0,0)\\) contributes non-zero, yielding exactly one ninth of all tuples.\n\nThus the number of such 7-tuples is \\(243\\).\n\n\\boxed{243}"
+        },
+        {
+          "seed": 4,
+          "source_model": "xingchen-agi/xing4.0-29b-a4b:free",
+          "text": "The number of ordered 7-tuples \\((a_1,\\dots,a_7)\\) with each \\(a_k\\in\\{1,2,3\\}\\) satisfying the two divisibility conditions is \\(386\\).\n\n\\[\n\\boxed{386}\n\\]"
+        },
+        {
+          "seed": 5,
+          "source_model": "cohere/north-mini-code:free",
+          "text": "\\boxed{141}"
+        }
+      ],
+      "extended_cap_pass": true,
+      "extended_cap_requested": 65536,
+      "main_protocol": {
+        "error": "ValidityExhausted: seed=1 no valid answer in 3 attempts, output truncated at the token cap in at least one (last response: 0 chars)",
+        "truncated_at_tokens": 32768,
+        "truncation_attempts": 1
+      }
     }
   ]
 }

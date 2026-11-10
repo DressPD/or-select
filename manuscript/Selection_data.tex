@@ -5,54 +5,61 @@
 \def\OracleGSMx{100.0}
 \def\FloorMATHh{89.8}
 \def\OracleMATHh{91.8}
-\def\FloorMATHx{82.6}
-\def\OracleMATHx{92.4}
+\def\FloorMATHx{81.8}
+\def\OracleMATHx{91.8}
 \def\FloorAIMEh{85.6}
 \def\OracleAIMEh{90.0}
-\def\FloorAIMEx{78.7}
-\def\OracleAIMEx{96.0}
-\def\FloorGPQAh{77.3}
-\def\OracleGPQAh{87.7}
-\def\FloorGPQAx{76.3}
-\def\OracleGPQAx{92.2}
+\def\FloorAIMEx{76.7}
+\def\OracleAIMEx{96.7}
+\def\FloorGPQAh{77.1}
+\def\OracleGPQAh{87.4}
+\def\FloorGPQAx{71.8}
+\def\OracleGPQAx{92.9}
+\def\FloorAIME25h{81.1}
+\def\OracleAIME25h{93.3}
+\def\FloorMMLUh{85.0}
+\def\OracleMMLUh{92.0}
 \def\RecoveryTableRows{B --- GSM8K, homog. & 40 & 99.2 & 100.0 & 100.0 & 100.0 & 100 & 100 \\
 B$'$ --- GSM8K, heterog. & 40 & 97.5 & 100.0 & 95.0 & 100.0 & 100 & -100 \\
 C --- MATH L5, homog. & 134 & 89.8 & 91.0 & 89.6 & 91.8 & 62 & -12 \\
-C$'$ --- MATH L5, heterog. & 131 & 82.6 & 90.8 & 79.4 & 92.4 & 84 & -32 \\
+C$'$ --- MATH L5, heterog. & 134 & 81.8 & 90.3 & 79.1 & 91.8 & 85 & -27 \\
 D --- AIME 2026, homog. & 30 & 85.6 & 86.7 & 90.0 & 90.0 & 25 & 100 \\
-D$'$ --- AIME 2026, heterog. & 25 & 78.7 & 96.0 & 72.0 & 96.0 & 100 & -38 \\
-E --- GPQA Diamond, homog. & 195 & 77.3 & 79.0 & 79.0 & 87.7 & 16 & 16 \\
-E$'$ --- GPQA Diamond, heterog. & 90 & 76.3 & 83.3 & 83.3 & 92.2 & 44 & 44 \\}
-\def\SelectionTableRows{Nemotron-3.5 (judge model) & 572 & 87.6 & 19 (7.9\%) & 100.0 \\
-North-Mini-Code & 572 & 87.2 & 168 (69.7\%) & 81.5 \\
-Laguna-S 2.1 & 546 & 73.3 & 53 (22.0\%) & 67.9 \\
-Xing4.0-29B & 26 & 50.0 & 1 (0.4\%) & 0.0 \\}
-\def\SelectionRows{286}
-\def\PickShareNemotron{7.9}
-\def\CandAccNemotron{87.6}
-\def\PickAccNemotron{100.0}
-\def\CandNNemotron{572}
-\def\PickShareCohere{69.7}
-\def\CandAccCohere{87.2}
-\def\PickAccCohere{81.5}
-\def\CandNCohere{572}
-\def\PickShareLaguna{22.0}
-\def\CandAccLaguna{73.3}
+D$'$ --- AIME 2026, heterog. & 30 & 76.7 & 93.3 & 63.3 & 96.7 & 83 & -67 \\
+E --- GPQA Diamond, homog. & 198 & 77.1 & 78.8 & 78.8 & 87.4 & 16 & 16 \\
+E$'$ --- GPQA Diamond, heterog. & 198 & 71.8 & 77.3 & 79.3 & 92.9 & 26 & 35 \\
+F --- AIME 2025, homog. & 30 & 81.1 & 83.3 & 76.7 & 93.3 & 18 & -36 \\
+G --- MMLU-Pro, homog. & 100 & 85.0 & 86.0 & 86.0 & 92.0 & 14 & 14 \\}
+\def\SelectionTableRows{Nemotron-3.5 (judge model) & 804 & 82.5 & 21 (6.1\%) & 90.5 \\
+North-Mini-Code & 802 & 83.9 & 260 (75.6\%) & 79.6 \\
+Laguna-S 2.1 & 548 & 73.4 & 53 (15.4\%) & 67.9 \\
+Xing4.0-29B & 256 & 56.2 & 9 (2.6\%) & 44.4 \\
+LFM-2.5 2.6B & 2 & 50.0 & 1 (0.3\%) & 100.0 \\}
+\def\SelectionRows{402}
+\def\PickShareNemotron{6.1}
+\def\CandAccNemotron{82.5}
+\def\PickAccNemotron{90.5}
+\def\CandNNemotron{804}
+\def\PickShareCohere{75.6}
+\def\CandAccCohere{83.9}
+\def\PickAccCohere{79.6}
+\def\CandNCohere{802}
+\def\PickShareLaguna{15.4}
+\def\CandAccLaguna{73.4}
 \def\PickAccLaguna{67.9}
-\def\CandNLaguna{546}
-\def\PickShareXingchen{0.4}
-\def\CandAccXingchen{50.0}
-\def\PickAccXingchen{0.0}
-\def\CandNXingchen{26}
-\def\SelectionTopSharePct{69.7}
-\def\SelectionXingchenCands{26}
-\def\LongestPickHomK{18}
-\def\LongestPickHomN{359}
+\def\CandNLaguna{548}
+\def\PickShareXingchen{2.6}
+\def\CandAccXingchen{56.2}
+\def\PickAccXingchen{44.4}
+\def\CandNXingchen{256}
+\def\SelectionTopSharePct{75.6}
+\def\SelectionXingchenCands{256}
+\def\LongestPickHomK{31}
+\def\LongestPickHomN{492}
 \def\LongestPickHomChance{33}
-\def\LongestPickHomPct{5}
-\def\WinnerLenRatioHom{0.67}
+\def\LongestPickHomPct{6}
+\def\WinnerLenRatioHom{0.70}
 \def\LongestPickHetK{2}
-\def\LongestPickHetN{246}
+\def\LongestPickHetN{362}
 \def\LongestPickHetChance{17}
 \def\LongestPickHetPct{1}
-\def\WinnerLenRatioHet{0.45}
+\def\WinnerLenRatioHet{0.38}

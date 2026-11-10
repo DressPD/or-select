@@ -64,9 +64,9 @@ reproducible (the shipped objective reproduces all \AblationFidelityN{}
 replayable stored winners). The Copeland-style aggregate is a
 5-approximation to the NP-hard Kemeny-optimal ranking, and we report the
 exact Kemeny--Young winner as a reference. We audit the method against
-self-consistency and greedy sampling on GSM8K, MATH Level~5, AIME 2026 and
-GPQA Diamond (\TotalProblems{} problems) with homogeneous and heterogeneous
-generation, paired exact tests, a headroom/recovery metric and full
+self-consistency and greedy sampling on GSM8K, MATH Level~5, AIME 2026,
+GPQA Diamond, AIME 2025 and MMLU-Pro (\TotalProblems{} problems) with
+homogeneous generation on all six and heterogeneous generation on the first four, paired exact tests, a headroom/recovery metric and full
 coverage accounting. The audit is negative. The judge scores
 \RBOverallAcc\% on RewardBench; with homogeneous generation OR-Select is
 indistinguishable from self-consistency (\HomogPooledB{} versus
@@ -79,7 +79,7 @@ because the judge's signal concentrates picks on one generator
 (\PickShareCohere\%) that is no more accurate. No other selector we tried that relies on the judge's output (pointwise
 confidence, knockout tournament, Bradley--Terry) beats plurality voting
 either. A closed-form threshold shows why: with three candidates, a judge must prefer the correct
-answer in more than 80\% of mixed pairs once generators are 80\% accurate, and we measure 48--55\% on every track with at least 70 mixed pairs. Reproducible selection is not accurate selection; we release the protocol and replayable data.
+answer in more than 80\% of mixed pairs once generators are 80\% accurate, and we measure 49--56\% on every track with at least 70 mixed pairs. Reproducible selection is not accurate selection; we release the protocol and replayable data.
 \end{abstract}
 
 \begin{keyword}
@@ -155,7 +155,7 @@ The negative result is the point of contribution~5: judge-based aggregation
 is attractive in theory, and the literature on correlated judge errors
 \citep{correlatederrors2026,kim2025correlated} and on the weak link between
 judge metrics and selection accuracy \citep{landesberg2026bestofn}
-predicts trouble; this paper measures it on four benchmarks with an exact
+predicts trouble; this paper measures it on six benchmarks with an exact
 reference and explains where it comes from.
 
 \section{Related Work}
@@ -592,7 +592,7 @@ and the threshold is lower, about $0.82$ at $p=0.8$ for $N\ge4$. The
 direction of the relaxation is therefore the one a reader would expect, but its
 size is large enough that the realistic threshold is far from $\tfrac12$.
 For GPQA Diamond, whose wrong answers are heavily correlated, this lowers the
-threshold from $0.788$ to $0.716$
+threshold from $0.787$ to $0.714$
 (Table~\ref{tab:threshold-emp-gen}); the measured $\hat q=0.536$ remains far below it.
 We checked the exact enumeration against an independent Monte Carlo
 simulation with common random numbers (Table~\ref{tab:threshold-valid}; all
@@ -778,7 +778,8 @@ provider while the study ran. Problems graded before that keep their
 Laguna candidates; for problems generated afterwards its slot is filled
 by Xing4.0-29B (Xingchen; \SelectionXingchenCands{} candidates in total). The
 tables report how many graded problems still contain Laguna candidates
-(Table~\ref{tab:coverage}).
+(Table~\ref{tab:coverage}). One early GPQA problem also keeps two candidates
+from LFM-2.5 (2.6B), the first pool's third model.
 
 \emph{Homogeneous generation.} $N=3$ candidates from Nemotron with distinct
 seeds.
@@ -826,7 +827,15 @@ answer.
 \textbf{D -- AIME 2026}: 30 problems \citep{matharena2025aime}.
 \textbf{E -- GPQA Diamond}: 198 graduate-level multiple-choice questions
 \citep{rein2024gpqa}, exact-letter grading.
-Tracks C--E are chosen because they are not saturated for the model used
+\textbf{F -- AIME 2025}: the 30 problems of AIME~I and II 2025
+\citep{matharena2025aime}, homogeneous generation only. It predates the
+generator, so contamination is possible and the track is a robustness check,
+not an uncontaminated one.
+\textbf{G -- MMLU-Pro} \citep{wang2024mmlupro}: a deterministic 100-question
+sample of the test split (five consecutive questions at each of 20 evenly
+spaced offsets, independent of any model output; 12 of the 14 subjects occur),
+up to ten lettered options, exact-letter grading, homogeneous generation only.
+Tracks C--G are chosen because they are not saturated for the model used
 \citep{kim2025correlated,ding2026agree}. Track~A (three open-ended queries
 without ground truth) is reported only as a pilot illustration
 (Section~\ref{sec:pilot}).
@@ -864,7 +873,7 @@ micro-average \RBMicroAcc\%, 95\% Wilson interval for the micro-average
 [\RBCILow\%, \RBCIHigh\%]), below the range the
 pre-registration treated as sufficient to trust the quality signal.
 Table~\ref{tab:rewardbench} gives the breakdown. Reasoning pairs, the
-category most relevant to Tracks B--E, reach \RBReasoningAcc\%
+category most relevant to Tracks B--G, reach \RBReasoningAcc\%
 (\RBReasoningCorrect/\RBReasoningRows); Chat Hard, which is adversarial,
 is at \RBChatHardAcc\%, below the 50\% chance level. When the judge is rotated across the
 three heterogeneous-pool models instead of being held fixed, overall
@@ -907,25 +916,30 @@ Safety & \RBSafetyRows & \RBSafetyAcc\% \\
 \label{sec:accuracy-results}
 
 Table~\ref{tab:tracks} and Figure~\ref{fig:accuracy} give accuracy on graded
-problems. With homogeneous generation (rows B, C, D, E) the three
+problems. With homogeneous generation (rows B--G) the three
 non-exact selectors are within a few problems of each other on every track.
 On GSM8K all candidates agree on all 40 problems, so no selector can
 differ; on MATH Level~5 self-consistency is ahead of OR-Select by two
-problems; on AIME OR-Select is ahead by one; on GPQA Diamond they tie.
-Table~\ref{tab:paired} makes the comparison paired: pooled over the four
+problems; on AIME 2026 OR-Select is ahead by one; on AIME 2025
+self-consistency is ahead by two; on GPQA Diamond and MMLU-Pro they tie.
+Table~\ref{tab:paired} makes the comparison paired: pooled over the six
 homogeneous tracks, OR-Select is right where self-consistency is wrong on
 \HomogPooledB{} problems and wrong where it is right on \HomogPooledC{}
 (\HomogPooledP, $n=\HomogPooledN$). There is no evidence of an advantage or
 a disadvantage.
 
-With heterogeneous generation (rows B$'$--E$'$) OR-Select falls behind:
+With heterogeneous generation (rows B$'$--E$'$) OR-Select falls behind on
+three of the four tracks:
 on MATH Level~5 it is right where self-consistency is wrong on 0 problems
 and wrong where it is right on \SCwinsMATHx{} (\AccORMATHx\% versus
-\AccSCMATHx\%), on AIME on 0 versus \SCwinsAIMEx{}, and pooled over the four
-heterogeneous tracks on \HeteroPooledB{} versus \HeteroPooledC{} problems
-($n=\HeteroPooledN$, \HeteroPooledP). Heterogeneous coverage of MATH, AIME
-and GPQA is still partial (Table~\ref{tab:coverage}); the direction on the
-tracks that are (nearly) complete, GSM8K and MATH, is unambiguous.
+\AccSCMATHx\%), on AIME 2026 on 0 versus \SCwinsAIMEx{}, on GSM8K on 0 versus
+\SCwinsGSMx{}, and pooled over the four heterogeneous tracks on
+\HeteroPooledB{} versus \HeteroPooledC{} problems
+($n=\HeteroPooledN$, \HeteroPooledP). GPQA Diamond is the exception: there
+OR-Select is nominally ahead of self-consistency (right where it is wrong on
+10 problems, wrong where it is right on \SCwinsGPQAx{}; exact $p=0.454$), so the pooled
+harm is carried by MATH, AIME and GSM8K. All heterogeneous tracks are fully
+graded (Table~\ref{tab:coverage}).
 
 \begin{table}[htbp]
 \centering
@@ -978,10 +992,15 @@ Accuracy alone hides how much a selector could have gained
 coincide. On GPQA Diamond with homogeneous generation the oracle is
 \OracleGPQAh\% against a floor of \FloorGPQAh\%, so a perfect selector
 would add about ten points; both self-consistency and OR-Select capture
-16\% of that headroom. On heterogeneous MATH Level~5 and AIME,
+16\% of that headroom. On heterogeneous MATH Level~5 and AIME 2026,
 self-consistency recovers most of the headroom while OR-Select scores
 \emph{below} the random-pick floor. The selector is not merely failing to
-help; in heterogeneous pools it is anti-informative.
+help; in those heterogeneous pools it is anti-informative. Heterogeneous GPQA
+Diamond is the exception, where OR-Select recovers 35\% of the headroom
+against 26\% for self-consistency, a difference that is not significant
+(Table~\ref{tab:paired}). On the two added homogeneous tracks the two selectors
+recover the same share on MMLU-Pro (14\%), and OR-Select falls below the floor
+on AIME 2025.
 
 \begin{table}[htbp]
 \centering
@@ -1014,9 +1033,9 @@ Nemotron's (\CandAccNemotron\%). It picks Nemotron, the judge's own model, in on
 \citep{panickssery2024selfpref,wataoka2024selfpref} is not the explanation here.
 The picked Cohere candidates are right \PickAccCohere\% of the time, below
 the \CandAccCohere\% of Cohere's candidates in general: the preference
-selects a style, not correctness. The weakest model, Laguna-S
-(\CandAccLaguna\% correct), is picked in \PickShareLaguna\% of problems with \PickAccLaguna\%
-accuracy. The
+selects a style, not correctness. The weakest model, Xing4.0-29B
+(\CandAccXingchen\% correct), is picked in \PickShareXingchen\% of problems with \PickAccXingchen\%
+accuracy, and Laguna-S (\CandAccLaguna\% correct) in \PickShareLaguna\% with \PickAccLaguna\%. The
 winner is the longest candidate in only \LongestPickHetPct\% of
 heterogeneous problems (chance \LongestPickHetChance\%) and
 \LongestPickHomPct\% of homogeneous problems (chance
@@ -1145,15 +1164,16 @@ exactly one correct candidate) on the stored judge outputs, and compare $\hat q$
 exact threshold $q^{*}$ of Section~\ref{sec:theory}, first with distinct wrong answers
 ($q^{*}_{0}$) and then with the measured wrong-answer correlation $\hat\rho$
 (Table~\ref{tab:threshold-emp-gen}). Only tracks with at least 20 mixed ordered pairs
-are shown: for homogeneous generation that is GPQA Diamond alone, because the other
+are shown: for homogeneous generation that is GPQA Diamond and MMLU-Pro (28 mixed pairs), because the other
 homogeneous tracks stored too few judgments containing a mixed pair.
 
 The measured $\hat q$ is far below every threshold. For GPQA Diamond the judge prefers the
-correct candidate in only $53.6\%$ of mixed comparisons against a required $78.8\%$
-($71.6\%$ once the very high wrong-answer correlation, $\hat\rho=0.88$, is allowed for). On the
-heterogeneous tracks $\hat q$ lies between $0.48$ and $0.55$ on every track with at least 70 mixed
-pairs, which is at or near chance; GSM8K ($0.66$, 24 mixed pairs) and AIME ($0.55$) have too few wrong
-pairs for $\rho$ to be estimated, so their threshold intervals span every possible $\rho$, and $\hat q$ is
+correct candidate in only $53.6\%$ of mixed comparisons against a required $78.7\%$
+($71.4\%$ once the very high wrong-answer correlation, $\hat\rho=0.88$, is allowed for); for MMLU-Pro
+the figures are $44.3\%$ against $83.6\%$ ($78.6\%$). On the
+heterogeneous tracks $\hat q$ lies between $0.49$ and $0.56$ on every track with at least 70 mixed
+pairs, which is at or near chance; GSM8K ($0.66$, 24 mixed pairs) has only three wrong
+pairs, so $\rho$ cannot be estimated, its threshold interval spans every possible $\rho$, and $\hat q$ is
 still below the lower end. This is the pairwise-level counterpart of the selection-level results above:
 the judge's signal about correctness is too weak for any selector built on it to beat voting. The model
 is stylized (independent candidates, one wrong-answer structure, one accuracy for all pairs), so we use
@@ -1196,20 +1216,21 @@ helps because both consume the same weak pairwise signal.
 \subsection{Coverage and the higher-cap second pass}
 \label{sec:coverage}
 
-Table~\ref{tab:coverage} reports coverage, including problems that never
+Table~\ref{tab:coverage} reports coverage, which would also show problems that never
 produced a graded answer (truncated at the token cap after resampling,
-other failures, or not yet attempted). The second pass at 65{,}536 tokens
+other failures, or not yet attempted); in the final data there are none, and
+every problem of every track is graded. The second pass at 65{,}536 tokens
 rescued the problems in Table~\ref{tab:extended}. These are the problems
 with the longest reasoning, and they are harder: including them lowers
-accuracy by roughly one to six points for both selectors, without changing
-any comparison above.
+accuracy by between 0.3 and 15 points for either selector (the largest drops
+are on the 30-problem AIME tracks), without changing the direction of any
+comparison above.
 
 \begin{table}[htbp]
 \centering
 \caption{Coverage by track. Truncated: no valid answer after resampling
-because generation hit the output cap. Other: failed for another reason
-(including one problem graded under a superseded judge version, left
-out). Untried: not yet attempted. With Laguna: graded heterogeneous
+because generation hit the output cap. Other: failed for another reason.
+Untried: not attempted. With Laguna: graded heterogeneous
 problems that still contain Laguna-S candidates.}
 \label{tab:coverage}
 \small\setlength{\tabcolsep}{4pt}
@@ -1270,8 +1291,9 @@ the judge is only moderately reliable and, at \RBChatHardAcc\% on
 adversarial pairs, poor where candidates are close. Second, the headroom is
 small on the saturated benchmarks (floor $\approx$ oracle on GSM8K, within
 two points on MATH Level~5), leaving little to select. Third, where
-headroom exists (GPQA Diamond) the judge's pairwise signal recovers no more
-of it than a vote does. Fourth, in heterogeneous pools the judge's
+headroom exists (homogeneous GPQA Diamond) the judge's pairwise signal recovers no more
+of it than a vote does; on heterogeneous GPQA it recovers somewhat more, but
+not significantly so. Fourth, in heterogeneous pools the judge's
 preference for one generator and the default objective's length-scale
 mismatch turn a neutral selector into a harmful one. This agrees with the
 literature on correlated errors \citep{correlatederrors2026,kim2025correlated}
@@ -1282,7 +1304,7 @@ measurement of the effect.
 \paragraph{Why the judge cannot help, quantitatively} The threshold analysis of Section~\ref{sec:theory} turns the
 first three factors into one number. When generators are already accurate ($\hat p\approx0.8$) a pairwise judge must prefer
 the correct answer in roughly $70$--$95\%$ of mixed pairs, depending on $N$ and on how strongly wrong answers collide,
-before Copeland aggregation can match plurality voting; the measured value is $0.48$--$0.55$. The same analysis says where a
+before Copeland aggregation can match plurality voting; the measured value is $0.44$--$0.56$ (GSM8K, with three wrong pairs, $0.66$). The same analysis says where a
 judge can pay off: pools in which the most popular answer is wrong (Proposition~\ref{prop:regimes}), which none of our benchmark pools is.
 
 Reproducibility is not accuracy. A selector can be bit-for-bit
@@ -1331,8 +1353,14 @@ suggests that simply rotating weak judges is not a remedy.
 \textbf{Mixed pool and partial coverage.} Heterogeneous problems graded
 before Laguna-S~2.1 was withdrawn keep its candidates (Table~\ref{tab:coverage}),
 so the heterogeneous rows describe a mixed pool, not a single fixed one.
-Heterogeneous coverage is incomplete on AIME and GPQA; conclusions rest on
-the complete tracks and on the direction of the incomplete ones.
+All tracks are fully graded, but the Laguna share differs by track and one
+GPQA problem retains LFM-2.5 candidates; the pool composition is therefore
+not identical across problems.
+
+\textbf{Added tracks.} AIME 2025 and MMLU-Pro are homogeneous only. AIME 2025
+predates the generator and may be contaminated, and the MMLU-Pro sample is 100
+questions from 12 of 14 subjects, so neither supports a heterogeneous claim or
+a tight estimate.
 
 \textbf{Scale and power.} Candidate sets are small ($N=3$--$6$), and the
 homogeneous comparison with self-consistency has few discordant problems,
@@ -1370,10 +1398,10 @@ integer program over a pairwise matrix and a deterministic
 self-consistency term, inherited a 5-approximation guarantee against the
 NP-hard Kemeny-optimal ranking, and built an audit around it: exact
 Kemeny--Young reference, paired exact tests, headroom and recovery,
-coverage accounting, and replayable judge outputs. On four ground-truth
+coverage accounting, and replayable judge outputs. On six ground-truth
 benchmarks the audit finds no accuracy benefit of judge-based selection over
 majority vote with a single homogeneous generator, and a significant harm
-with heterogeneous generators, traced to a length-scale mismatch in the objective and a generator-specific judge preference rather than to nondeterminism,
+pooled over the heterogeneous tracks (carried by MATH, AIME and GSM8K; GPQA shows none), traced to a length-scale mismatch in the objective and a generator-specific judge preference rather than to nondeterminism,
 and a threshold analysis shows why: the measured pairwise accuracy of the judge sits far below the accuracy the aggregation would need. The practical lessons are to validate the judge on the
 configuration actually shipped, to report recovery against a floor and an
 oracle rather than accuracy alone, and to keep judge outputs so that a

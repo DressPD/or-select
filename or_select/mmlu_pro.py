@@ -3,7 +3,7 @@
 data/mmlu_pro_sample.jsonl is a deterministic, evenly spaced 100-question sample of the MMLU-Pro
 test split (Wang et al., "MMLU-Pro: A More Robust and Challenging Multi-Task Language
 Understanding Benchmark", NeurIPS 2024 Datasets and Benchmarks, arXiv:2406.01574): up to ten answer
-options (A-J) per question across 14 subjects, built to be harder and less guessable than MMLU.
+options (A-J) per question across 14 subjects (the sample covers 12), built to be harder and less guessable than MMLU.
 
 Same contract as or_select.gpqa, with a wider letter range. One difference is deliberate: the
 letter class is case-sensitive, so the prose fallback "the answer is a function ..." can never be
