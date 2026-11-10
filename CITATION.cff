@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "Please cite this OR-Select release. The DOI identifies the project across versions; the release URL identifies v1.1.0."
+message: "Please cite this OR-Select release. The DOI and release URL identify the published v1.1.0 archive."
 title: "Pairwise Judging versus Voting for Language Model Answer Selection: Finite-Pool Theory and an Empirical Audit"
 type: software
 authors:
@@ -9,7 +9,7 @@ authors:
     affiliation: "TUM School of Management, Technical University of Munich"
 repository-code: "https://github.com/DressPD/or-select"
 license: MIT
-doi: 10.5281/zenodo.24112044
+doi: 10.5281/zenodo.24115542
 url: "https://github.com/DressPD/or-select/releases/tag/v1.1.0"
 version: "1.1.0"
 date-released: "2026-11-10"

@@ -137,7 +137,10 @@ To cite the software and data, see `CITATION.cff`.
 
 Release **v1.1.0** contains the revised manuscript and online supplement; see the
 [GitHub release](https://github.com/DressPD/or-select/releases/tag/v1.1.0) and [release notes](CHANGELOG.md).
-`CITATION.cff` uses the verified all-versions concept DOI `10.5281/zenodo.24112044`, with the exact release URL and version.
+Zenodo automatically archived v1.1.0 at [10.5281/zenodo.24115542](https://doi.org/10.5281/zenodo.24115542).
+`CITATION.cff` now uses that confirmed version DOI. The tagged source used the valid concept DOI
+`10.5281/zenodo.24112044` plus an exact release URL before the new version DOI was assigned;
+this post-release metadata update does not move the tag or change the archived article.
 The article's dataset citation retains the original experimental archive DOI `10.5281/zenodo.24112045` (**v1.0.0**);
 the run files have not changed. Neither this git revision nor the new release overwrites that immutable archive.
 Current submission inventory: `docs/submission_files.md`. Online prior-art comparison and internal publication

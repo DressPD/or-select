@@ -4,6 +4,15 @@ Decision date: **10 November 2026**. Internal author/release guidance, prepared
 before publication. The author subsequently authorized publishing v1.1.0;
 execution and final metadata follow `CHANGELOG.md` and the GitHub release.
 
+**Execution confirmed:** v1.1.0 was published on GitHub at
+`1ffd6c84e1637f50d6ef6b0168db4288354bc602`, with four matching PDF assets.
+Automatic Zenodo archiving produced version DOI
+[10.5281/zenodo.24115542](https://doi.org/10.5281/zenodo.24115542), in the existing
+concept record. No manual deposit is needed. The post-release metadata commit
+records that assigned DOI without modifying the released tag or its archive.
+The planning discussion below is retained as provenance; confirmed execution
+supersedes its pre-publication uncertainty.
+
 ## Decision: archive a new version before submission
 
 **Yes — a new GitHub/Zenodo version is warranted. Recommend `v1.1.0`.**
@@ -40,9 +49,10 @@ The verified all-versions concept DOI is
 
 Do not move the old tag, overwrite its archive or assign its version DOI to
 the new contents. The article retains the real v1.0.0 DOI for its unchanged
-original dataset. For v1.1.0, `CITATION.cff` uses the verified all-versions
-concept DOI together with an exact GitHub version/release URL. It does not
-mislabel the v1.0.0 version DOI as v1.1.0 or invent an unpublished DOI.
+original dataset. In the v1.1.0 tag, `CITATION.cff` uses the verified all-versions
+concept DOI together with an exact GitHub version/release URL. The post-release
+metadata uses the subsequently assigned version DOI. Neither citation
+mislabels the v1.0.0 version DOI as v1.1.0 or invents an unpublished DOI.
 
 ## Submission/archive follow-up
 
@@ -55,7 +65,7 @@ mislabel the v1.0.0 version DOI as v1.1.0 or invent an unpublished DOI.
    distinguish permitted public data from local replay inputs.
 4. Finalize release metadata and notes for the new version. Historical
    preregistrations and original run files remain unchanged.
-5. The selected citation path for this release uses the already verified
+5. The selected citation path for the initial tag uses the already verified
    **concept DOI plus exact GitHub version URL**, while preserving the original
    dataset's v1.0.0 citation. No new DOI is reserved or invented by this workflow.
    For any later version-specific citation, first obtain the real published or

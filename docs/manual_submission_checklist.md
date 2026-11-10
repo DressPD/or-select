@@ -11,13 +11,13 @@ as manuscript attachments. It is not a scientific acceptance certificate.
    The installed copy compiled locally but is not bundled. Agent access to
    that installed file was denied; the restriction was not bypassed.
    Confirm the actual uploaded source set builds in the submission system.
-2. **Check the new Zenodo version.** Look for v1.1.0 under the existing
-   [all-versions record](https://doi.org/10.5281/zenodo.24112044). If automatic
-   GitHub archiving has not happened, complete the existing record's new-version
-   workflow or verify the GitHub–Zenodo integration. Do not create an unrelated
-   duplicate record or reuse the v1.0.0 version DOI for v1.1.0.
-   The current software citation uses the verified concept DOI plus the exact
-   GitHub release URL; the paper separately cites v1.0.0's unchanged original data.
+2. **Archiving is complete — no manual deposit needed.** Automatic GitHub
+   archiving produced [Zenodo v1.1.0](https://doi.org/10.5281/zenodo.24115542)
+   in the existing version chain. Use that DOI when referring to the new
+   software/manuscript release. The paper separately cites v1.0.0's unchanged
+   original data; do not silently relabel that dataset version. Do not create
+   a duplicate Zenodo record. Post-release citation metadata now records the
+   assigned version DOI without moving the GitHub tag or modifying its archive.
 3. **Verify author statements.** Confirm name, affiliation, email, ORCID,
    funding, competing interests, CRediT roles, and the precise AI-use declaration.
    These declarations require the author's confirmation, not an agent's inference.

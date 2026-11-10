@@ -1,0 +1,26 @@
+{
+  "version": "1.1.0",
+  "github_release": "https://github.com/DressPD/or-select/releases/tag/v1.1.0",
+  "published_at": "2026-11-10T16:23:19Z",
+  "is_draft": false,
+  "is_prerelease": false,
+  "release_commit": "1ffd6c84e1637f50d6ef6b0168db4288354bc602",
+  "old_v1_0_0_commit_unchanged": "c2e80d4033555445fd03018620a4868a91bfc07c",
+  "pdf_asset_sha256": {
+    "main.pdf": "b77b384a0c3da3ecce9b46b8d70c4b93d418b5535b79a17721641e43caa759b7",
+    "supplement.pdf": "1095c753b2d3b852f8fdd155ee4e1f67ee75664a24a6c8d8d820497388d69449",
+    "Cover_Letter_EJOR.pdf": "9e9fcdfbd45418aa7a8582eb958588721710f709891de3a8fe60942f7ab9b0a7",
+    "Submission_Title_Page.pdf": "34742ad8593448b4204019552b83cfb8afc38a2dae4360a6182411ac6026717d"
+  },
+  "zenodo_record": "https://zenodo.org/records/24115542",
+  "zenodo_doi": "10.5281/zenodo.24115542",
+  "zenodo_concept_doi": "10.5281/zenodo.24112044",
+  "zenodo_version": "1.1.0",
+  "zenodo_archive": {
+    "filename": "DressPD/or-select-v1.1.0.zip",
+    "bytes": 2544706,
+    "checksum_from_record": "md5:7d6ec5fb3eb4135e23589bcc61830bcf"
+  },
+  "verification_scope": "GitHub publication, remote tag target and asset hashes, and the public Zenodo record/file metadata were checked. ZIP contents were not independently downloaded and inspected in this check.",
+  "post_release_update": "Only metadata/checklist files record the assigned DOI after publication. The release tag, PDFs, experiments and v1.0.0 archive are not changed."
+}

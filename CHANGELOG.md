@@ -2,6 +2,10 @@
 
 ## v1.1.0 — 10 November 2026
 
+GitHub: https://github.com/DressPD/or-select/releases/tag/v1.1.0
+
+Verified Zenodo archive: https://doi.org/10.5281/zenodo.24115542
+
 Manuscript, bibliography and reproducibility-documentation revision.
 
 ### Updated
@@ -17,7 +21,9 @@ Manuscript, bibliography and reproducibility-documentation revision.
 - Close prior-art comparisons and published bibliographic metadata.
 - Internal citation, novelty, build and offline-verification records.
 - Citation metadata identifies v1.1.0 and uses the verified all-versions
-  Zenodo concept DOI; the paper's original-dataset citation remains v1.0.0.
+  Zenodo concept DOI in the tagged source. A post-release metadata update records
+  the subsequently assigned v1.1.0 version DOI. The paper's original-dataset
+  citation remains v1.0.0.
 
 ### Unchanged
 
@@ -34,9 +40,9 @@ Manuscript, bibliography and reproducibility-documentation revision.
 - TeX compilation requires `apalike-ejor.bst`, installed in the validation
   environment but not bundled. See the submission checklist before uploading
   an editable source package.
-- The GitHub release is not proof of successful automatic Zenodo archiving.
-  Confirm the new version in the existing Zenodo record before citing a new
-  version-specific DOI. Do not assign v1.0.0's DOI to v1.1.0.
+- Automatic Zenodo archiving is verified: record `24115542`, version `1.1.0`,
+  file `DressPD/or-select-v1.1.0.zip` (2,544,706 bytes). The v1.0.0 record and
+  DOI remain unchanged.
 
 ## v1.0.0 — 10 November 2026
 
