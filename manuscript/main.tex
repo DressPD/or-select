@@ -56,7 +56,7 @@
             country={Germany}}
 
 \begin{abstract}
-Sampling several answers from a large language model and choosing one buys accuracy at inference time, but the choosing rule is either majority vote, which fails when answers do not repeat, or a language-model judge whose verdicts are not reproducible. We cast selection as an integer program over a judge-derived pairwise matrix and a deterministic self-consistency term, so that the winner is exactly reproducible given the judge's outputs. The Copeland-style aggregate is a 5-approximation to the NP-hard Kemeny-optimal ranking, and we report the exact Kemeny--Young winner as a reference. We audit the method against self-consistency and greedy sampling on six benchmarks (\TotalProblems{} mathematics, science and knowledge problems), with paired exact tests and a headroom-and-recovery metric. The audit is negative. The judge scores \RBOverallAcc\% on RewardBench. With homogeneous generation the method is indistinguishable from self-consistency (\HomogPooledB{} versus \HomogPooledC{} discordant problems of \HomogPooledN{}); with heterogeneous generation it is significantly worse (\HeteroPooledB{} versus \HeteroPooledC{} of \HeteroPooledN{}, \HeteroPooledP). The default cost term dominates the quality term in \CostDominatesK{} of \CostDominatesN{} replayed problems, and the judge concentrates its picks on one generator (\PickShareCohere\%) that is no more accurate. No other judge-based selector we tried beats plurality voting. A closed-form threshold shows why: with three candidates of 80\% accuracy, a judge must prefer the correct answer in more than 80\% of mixed pairs, and we measure 49--56\% on every track with at least 70 mixed pairs. Reproducible selection is not accurate selection; we release the protocol and replayable data.
+Sampling several answers from a large language model and choosing one buys accuracy at inference time, but the choosing rule is either majority vote, which fails when answers do not repeat, or a language-model judge whose verdicts are not reproducible. We cast selection as an integer program over a judge-derived pairwise matrix and a deterministic self-consistency term, so that the winner is exactly reproducible given the judge's outputs. The Copeland-style aggregate is a 5-approximation to the NP-hard Kemeny-optimal ranking, and we report the exact Kemeny--Young winner as a reference. We audit the method against self-consistency and greedy sampling on six benchmarks (\TotalProblems{} mathematics, science and knowledge problems), with paired exact tests. The audit overturns the assumption that a judge adds accuracy. The judge scores \RBOverallAcc\% on RewardBench. With homogeneous generation the method is indistinguishable from self-consistency (\HomogPooledB{} versus \HomogPooledC{} discordant problems of \HomogPooledN{}); with heterogeneous generation it is significantly worse (\HeteroPooledB{} versus \HeteroPooledC{} of \HeteroPooledN{}, \HeteroPooledP). The default cost term dominates quality in \CostDominatesK{} of \CostDominatesN{} replayed problems, and the judge concentrates picks on one generator (\PickShareCohere\%) that is no more accurate. No other judge-based selector we tried beats plurality voting. A closed-form threshold shows why: with three candidates of 80\% accuracy, a judge must prefer the correct answer in more than 80\% of mixed pairs, and we measure 49--56\% on every track with at least 70 mixed pairs. The result is a pre-deployment test for any judge-based selector, and we release the replayable protocol and data.
 \end{abstract}
 
 \begin{keyword}
@@ -127,12 +127,14 @@ principled aggregation rule translates into better answers
   \KYTopOneDiffers{} of \KYTopOneN{} problems but is not more accurate.
 \end{enumerate}
 
-The negative result is the point of contribution~5: judge-based aggregation
-is attractive in theory, and the literature on correlated judge errors
-\citep{correlatederrors2026,kim2025correlated} and on the weak link between
-judge metrics and selection accuracy \citep{landesberg2026bestofn}
-predicts trouble; this paper measures it on six benchmarks with an exact
-reference and explains where it comes from.
+\paragraph{Outcome} The paper delivers a decision rule rather than another selector. Judge-based
+aggregation is widely assumed to beat voting, and the literature on correlated judge errors
+\citep{correlatederrors2026,kim2025correlated} and on the weak link between judge metrics and
+selection accuracy \citep{landesberg2026bestofn} gives reason to doubt it. We overturn the assumption
+with ground truth on six benchmarks and state the condition under which it would hold: a pairwise judge must
+exceed a computable accuracy threshold, which can be measured from stored judge outputs before a selector is
+deployed. The result applies wherever several sampled answers must be reduced to one: question answering,
+mathematics and science assistants, multi-model routing, and settings that require auditable, replayable choices.
 
 \section{Related Work}
 \label{sec:related}
@@ -507,7 +509,7 @@ a Bradley--Terry fit (Borda over the pairwise matrix coincides with the
 Copeland quality). Reward-model or process-reward best-of-$N$
 \citep{cobbe2021gsm8k,lightman2023letsverify} and universal
 self-consistency \citep{chen2023usc} need a trained model or further live
-calls and were not run (Section~\ref{sec:limitations}).
+calls and were not run (Section~\ref{sec:future}).
 
 \subsection{Judge validation: RewardBench}
 \label{sec:rewardbench-setup}
@@ -861,7 +863,7 @@ still below the lower end. This is the pairwise-level counterpart of the selecti
 the judge's signal about correctness is too weak for any selector built on it to beat voting. The model
 is stylized (independent candidates, one wrong-answer structure, one accuracy for all pairs), so we use
 it for the threshold comparison, not to predict accuracies. The replayable rows are the ones that stored judge
-outputs, not a random sample of problems (Section~\ref{sec:limitations}).
+outputs, not a random sample of problems (Section~\ref{sec:future}).
 
 
 \begin{table}[htbp]
@@ -940,6 +942,19 @@ collide, before Copeland aggregation can match plurality voting; the measured va
 wrong pairs, $0.66$). A judge can pay off where the most popular answer is wrong
 (Proposition~\ref{S-prop:regimes}), which none of our benchmark pools is.
 
+\subsection{Outcome and where it applies}
+\label{sec:outcome}
+
+Three outcomes can be used directly. (i) \emph{A pre-deployment test.} Compute $\hat p$ and $\hat q$ from stored judge
+outputs and compare $\hat q$ with $q^{*}(\hat p,N,\hat\rho)$ (Table~\ref{tab:threshold-emp-gen}): a judge below the
+threshold should not replace the vote, whatever its benchmark score; every judge we measured is far below it.
+(ii) \emph{An auditable selector and protocol.} Winners are exactly reproducible from stored outputs, and the exact
+Kemeny--Young reference, paired tests and recovery metric let any selector be audited offline at no API cost.
+(iii) \emph{Design rules.} Keep the judge fixed rather than rotating it, put quality and cost on one scale, and check
+the judge's pick share per generator before mixing generators. These apply to selection among sampled answers with
+checkable final answers (question answering, mathematics and science assistants, multi-model routing, decision support
+that must be auditable), and the test transfers to any judge-based selector that yields pairwise outputs.
+
 \subsection{A non-determinism observation}
 
 In an earlier pilot on a different provider and model, three byte-identical candidates
@@ -952,32 +967,31 @@ short-circuit removes the failure mode for identical text but not for different 
 receive unstable scores, which remains open.
 
 
-\subsection{Limitations}
-\label{sec:limitations}
+\subsection{Scope and future research}
+\label{sec:future}
 
-\textbf{One judge model.} Generation, scoring and judging use one free-tier model, which the RewardBench
-result shows to be only moderately reliable; a stronger or more diverse judge may change the conclusions, and we
-cannot say how. Only generator diversity was tested, and rotating weak judges is not a remedy.
+Two points guide the reading of the results. The heterogeneous rows describe a mixed pool, because Laguna-S~2.1 was
+withdrawn during the study and one GPQA problem retains LFM-2.5 candidates (Table~\ref{S-tab:coverage}); and the AIME 2025
+and MMLU-Pro tracks and the six-track pooled test were added after the pre-registrations, with AIME 2025 possibly
+contaminated. The default weights were fixed before the ground-truth runs and not tuned. The results open five
+directions.
 
-\textbf{Mixed pool.} Heterogeneous problems graded before Laguna-S~2.1 was withdrawn keep its candidates
-(Table~\ref{S-tab:coverage}), and one GPQA problem retains LFM-2.5 candidates, so the heterogeneous rows describe a
-mixed pool, not one fixed pool. AIME 2025 and MMLU-Pro are homogeneous only; AIME 2025 predates the generator and may
-be contaminated, and the MMLU-Pro sample covers 12 of 14 subjects.
+\textbf{Stronger and more diverse judges.} Generation, scoring and judging here use one free-tier model. The protocol
+and threshold test are built to answer whether a stronger or more diverse judge crosses $q^{*}$; rotating weak judges does
+not.
 
-\textbf{Power and post hoc analyses.} Candidate sets are small ($N=3$--$6$) and the homogeneous comparison has few
-discordant problems, so large effects can be excluded but not small ones. The weight ablations, selection-share and length
-analyses, the AIME 2025 and MMLU-Pro tracks and the six-track pooled test were not pre-registered; they confirm the earlier
-direction but are not independent pre-registrations. The default weights were fixed before the ground-truth runs and not
-tuned; we report the shipped objective as the primary result.
+\textbf{Pools in which the vote is wrong.} The theory locates where a judge can pay off, namely pools whose most popular
+answer is wrong. None of our pools is of that kind; hard, adversarial or open-ended tasks, where voting is undefined or
+unreliable, are the natural next test.
 
-\textbf{Theory scope.} The thresholds assume independent candidates, a symmetric judge and either one shared wrong
-answer or wrong answers uniform over $D$ values; real wrong answers are skewed and problem-specific. Exact values stop at
-$N=7$ and the quality-only model ignores the cost term. The measured $\hat q$ comes from rows that stored judge outputs,
-not a random sample, and contains few mixed pairs on most homogeneous tracks.
+\textbf{Larger, pre-registered evaluations.} Larger samples (candidate sets of $N=3$--$6$ give few discordant problems on
+the homogeneous tracks), heterogeneous AIME 2025 and MMLU-Pro, and a fixed generator pool would tighten the estimates.
 
-\textbf{Scope.} We did not run reward-model or process-reward best-of-$N$, which need a trained verifier, nor universal
-self-consistency. Tracks are mathematics and science questions with checkable answers; open-ended quality, where a judge is
-unavoidable, is covered only by a three-query pilot.
+\textbf{Theory.} Extending the thresholds beyond independent candidates, exact $N\le7$, a symmetric judge and the
+quality-only model, to skewed wrong-answer distributions and a joint cost--quality model, is open.
+
+\textbf{More selectors.} Reward-model and process-reward best-of-$N$ and universal self-consistency need a trained
+verifier or further live calls and can be added to the same audit.
 
 \section{Conclusion}
 

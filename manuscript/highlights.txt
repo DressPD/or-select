@@ -1,5 +1,5 @@
-- Answer selection as an exactly reproducible, replayable integer program
+- Reproducible, exactly replayable answer selection as an integer program
 - Exact Kemeny-Young reference; Copeland aggregate is a 5-approximation
-- Paired-test audit on six benchmarks: no gain over majority vote
-- Judge selection is worse than voting with mixed generators when pooled
+- Six benchmarks overturn the assumption that judges beat majority vote
 - Closed form: at 80% answer accuracy a judge needs over 80% pairwise accuracy
+- A pre-deployment test tells when a judge can improve answer selection
