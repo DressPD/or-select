@@ -21,8 +21,12 @@ primary sources, including PGED and Minority Sentinel now cited in the article.
 tests, 90 exact theorem settings with zero mismatches, and all nine generated
 data files reproduced byte-for-byte. Runtime behavior and experimental records
 are unchanged. README, methodology, ablation interpretation, metadata and
-explanatory code docstrings are synchronized. The installed bibliography style
-remains unbundled; local validation does not certify portable source packaging.
+explanatory code docstrings are synchronized. The subsequent source-package
+follow-up bundles a redistributable, renamed CTAN-derived bibliography style.
+`docs/source_package_audit.json` records clean-source and extracted-ZIP builds
+with custom installed-style search disabled, unchanged bibliographies/PDF text,
+30/10 pages, and 218 passing offline tests. That packaging issue is resolved;
+the scientific review below remains historical and is not an acceptance certificate.
 
 The subsequent revision targets **at most 30 pages**, including references, with 11-point type and 1.5 line spacing. The first shortening pass reached **23 pages** and compressed explanatory material too aggressively. Following author feedback, the next pass restores operational context, close-literature comparison, method interpretation, finite-pool calculations and two central tables. That restoration produced **29 pages**; the final published-reference and citation pass produces **30 pages**, with the supplement still **10 pages**. `docs/ejor_shortening_evidence.json` records the restoration build and `docs/citation_audit.json` the later citation build; `docs/ejor_review_evidence.json` describes the original audit, not the current pagination. `docs/ejor_length_changes.md` lists what was removed, condensed, relocated and restored.
 

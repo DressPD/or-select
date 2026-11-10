@@ -1,5 +1,21 @@
 # OR-Select release notes
 
+## Unreleased — source-package completion
+
+- Bundle a redistributable `apalike-ejor.bst` derived from public CTAN source,
+  with retained permission, renamed file and documented changes. The installed
+  custom file was not accessed. Bibliographies remain byte-identical.
+- Add `submission/ejor-source-package.zip`, license notices, build instructions,
+  cross-reference conveniences and manifest; retain exact published PDF bytes
+  as the delivery PDFs. No benchmark inputs or credentials enter the bundle.
+- Verify a source build without preexisting `.aux`/`.bbl` files and an extracted
+  ZIP main-entry-point build with custom installed-style search disabled.
+  Main/supplement remain 30/10 pages; 218 offline tests pass; all nine numerical
+  macro hashes are unchanged. See `docs/source_package_audit.json`.
+- Author selected **push only**. No new release or Zenodo record; existing
+  v1.0.0/v1.1.0 tags and archives remain unchanged. The v1.1.0 packaging limitation
+  described below is historical and does not apply to the current source bundle.
+
 ## v1.1.0 — 10 November 2026
 
 GitHub: https://github.com/DressPD/or-select/releases/tag/v1.1.0

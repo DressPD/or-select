@@ -15,10 +15,12 @@ not part of the journal manuscript.
 | CRediT roles | `manuscript/Credit_Author_Statement.txt` | Same editable file |
 | Competing interests | `manuscript/Declaration_of_Competing_Interest.txt` | Same editable file |
 | AI disclosure | `manuscript/Declaration_of_Generative_AI.txt` | Same editable file; also in main article |
+| Complete editable upload bundle | Sources and licensed dependencies in `manuscript/` | `submission/ejor-source-package.zip` |
 
 The main article uses 11-point type and 1.5 line spacing. The user ceiling is
 30 pages including references; EJOR's regular-paper ceiling is 35. Current
-build counts and checks: `docs/ejor_repo_audit.json`.
+build counts and checks: `docs/source_package_audit.json` (latest source-package
+check), with earlier experimental/reproduction checks in `docs/ejor_repo_audit.json`.
 
 The main article uses `Figure_1_Pipeline.pdf`; the supplement uses the worked
 example and order-averaging diagram. Retain their `.tex` sources and generated
@@ -28,14 +30,31 @@ data. `Figure_4_Accuracy.pdf` is a legacy, unused plot, not an additional result
 
 - `requirements.txt` lists Python dependencies, not a lockfile. The audit JSON
   records the validation environment, not necessarily the original collection environment.
-- TeX needs `pdflatex`, `bibtex`, the requested packages, and **`apalike-ejor.bst`**.
-  The style is installed in the audited environment but is not bundled here.
-  Check with `kpsewhich apalike-ejor.bst`.
-  **Portable source packaging is incomplete until the author supplies this
-  style file, with its redistribution terms, in `manuscript/`.** The agent's
-  workspace policy denied access to the installed copy; no access restriction
-  was bypassed. The local PDF build succeeds, but that is not a clean-machine test.
+- TeX needs `pdflatex`, `bibtex` and the standard packages requested by the sources.
+  **`apalike-ejor.bst` is now bundled**, with its redistribution permission and
+  upstream provenance in `manuscript/BIBLIOGRAPHY_STYLE.md`. The local adaptation
+  derives from public CTAN `apalike.bst`; the inaccessible installed custom style
+  was not read or copied. The main and supplement bibliographies are byte-identical
+  to the existing rendered versions (40 and five entries respectively).
+- The upload ZIP was built from sources without `.aux`/`.bbl` files, with BibTeX
+  search paths restricted to the extracted source directory. A second check
+  compiles only the main entry point from the extracted delivery ZIP. Both pass
+  without checked build warnings; main/supplement remain 30/10 pages. This tests
+  isolation from the custom installed style, not installation of TeX on a blank OS.
 - `pdfinfo` and `pdftotext` support PDF auditing, not document compilation.
+
+## Ready-to-upload bundle
+
+Use **`submission/ejor-source-package.zip`** for editable sources. It contains
+the entry points, generated numerical macros, figure assets and sources,
+class/style files, license notices, build instructions and a SHA-256 manifest.
+Cross-reference `.aux` and `.bbl` files from the verified build are included as
+portal conveniences, not prerequisites for a full clean build. Select `main.tex`
+as the main entry point. See `manuscript/BUILD_README.md` for the pass sequence.
+
+The four PDFs in `submission/` retain the exact bytes of the published PDFs.
+The rebuilt source outputs have identical extracted text. No raw benchmark
+records, credentials, or internal review notes are in the source ZIP.
 
 ## Full document build
 
@@ -74,11 +93,13 @@ live services. No API credentials are needed for offline checks.
 
 ## Release boundary
 
-The v1.0.0 Zenodo DOI and `CITATION.cff` identify an already published software
-archive. Local edits do not update that archive, a GitHub release or the remote
-repository. A new approved release needs its own version, packaged sources/PDFs,
-dependency information and archive record. Update archive citations only after
-that record exists; do not relabel old v1.0.0 evidence as a new release.
+The v1.0.0 dataset archive and v1.1.0 software/manuscript archive remain unchanged.
+`CITATION.cff` identifies the already published v1.1.0 release. The author selected
+**push only** for this subsequent source-packaging fix: no v1.1.1 release or new
+Zenodo deposit is authorized. The completed bundle is available from the current
+repository, not retroactively inside the immutable v1.1.0 Zenodo ZIP. Do not
+relabel that old archive or move its tag. A later approved release would need a
+new version and verified archive record before changing version-specific citations.
 
 Historical preregistrations and stored run files retain their original contents.
 Internal review, novelty-audit and machine-readable audit files in `docs/` are

@@ -126,6 +126,10 @@ see [submission files and build instructions](docs/submission_files.md). Offline
 
 MIT, see `LICENSE`, for the code.
 
+The bundled bibliography style has its own redistribution permission; see
+[`manuscript/BIBLIOGRAPHY_STYLE.md`](manuscript/BIBLIOGRAPHY_STYLE.md).
+The bundled Elsevier class/style files retain their LPPL notices.
+
 Data sources and licences: the small samples in `data/` are subsets of public benchmarks (GSM8K, MATH,
 MATH-500, AIME 2025 and 2026 via MathArena, MMLU-Pro, RewardBench). Each sample keeps the licence and terms of its
 original source, which govern its reuse; check them before redistributing. GPQA Diamond is not redistributed
@@ -149,3 +153,15 @@ assessment: `docs/novelty_audit.md`. Historical preregistrations and stored run 
 Citation coverage and source policy: [citation audit](docs/citation_audit.md).
 For source-package dependencies and author actions before journal upload, see the
 [manual submission checklist](docs/manual_submission_checklist.md).
+
+### Completed source package (post-v1.1.0 fix)
+
+Download [`submission/ejor-source-package.zip`](submission/ejor-source-package.zip)
+for the editable submission sources, licensed `apalike-ejor.bst`, class, figures,
+generated tables, build instructions and manifest. The four delivery PDFs are in
+[`submission/`](submission/). Isolated clean-source and extracted-ZIP builds pass;
+the bibliographies are byte-identical, main/supplement remain 30/10 pages, and all
+218 offline tests pass. See [`docs/source_package_audit.json`](docs/source_package_audit.json).
+
+The author selected **push only** for this packaging fix. No new release or Zenodo
+deposit is created; the immutable v1.1.0 archive does not include this later fix.

@@ -13,6 +13,12 @@ records that assigned DOI without modifying the released tag or its archive.
 The planning discussion below is retained as provenance; confirmed execution
 supersedes its pre-publication uncertainty.
 
+**Subsequent source-package fix:** the missing bibliography style is now bundled,
+licensed and verified in isolation; see `docs/source_package_audit.json` and
+`submission/ejor-source-package.zip`. The author explicitly selected **push only**,
+not a v1.1.1 release. Existing tags and Zenodo records remain unchanged; the
+completed bundle belongs to the current repository revision, not the old archive.
+
 ## Decision: archive a new version before submission
 
 **Yes — a new GitHub/Zenodo version is warranted. Recommend `v1.1.0`.**
@@ -56,10 +62,10 @@ mislabels the v1.0.0 version DOI as v1.1.0 or invents an unpublished DOI.
 
 ## Submission/archive follow-up
 
-1. Include a redistributable `apalike-ejor.bst` in the source bundle, or otherwise
-   supply an author-approved portable bibliography dependency. The existing
-   local installation compiled successfully, but the file is unbundled and
-   agent access to the installed copy was denied.
+1. **Completed after v1.1.0:** a redistributable `apalike-ejor.bst` is included
+   in the current source bundle. It derives from public CTAN source; the denied
+   installed copy was not accessed. Its license notice and modified filename
+   are included. The old v1.1.0 archive remains an accurate historical snapshot.
 2. Verify author/declaration metadata and the final main/supplement PDFs.
 3. Keep GPQA question-containing originals out of the public package; accurately
    distinguish permitted public data from local replay inputs.
