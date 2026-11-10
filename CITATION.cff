@@ -9,6 +9,7 @@ authors:
     affiliation: "TUM School of Management, Technical University of Munich"
 repository-code: "https://github.com/DressPD/or-select"
 license: MIT
+doi: 10.5281/zenodo.24112045
 version: "1.0.0"
 date-released: "2026-11-10"
 keywords:
