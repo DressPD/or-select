@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this software or data, please cite it as below."
+title: "OR-Select: Reproducible Best-of-N Answer Selection over LLM Ensembles, with an Exact Kemeny Reference and a Ground-Truth Audit"
+type: software
+authors:
+  - family-names: Dressino
+    given-names: Aris
+    orcid: "https://orcid.org/0009-0003-0693-9051"
+    affiliation: "TUM School of Management, Technical University of Munich"
+repository-code: "https://github.com/DressPD/or-select"
+license: MIT
+version: "1.0.0"
+date-released: "2026-11-10"
+keywords:
+  - operations research
+  - large language models
+  - answer selection
+  - self-consistency
+  - Kemeny rank aggregation
