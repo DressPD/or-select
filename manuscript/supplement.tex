@@ -1,0 +1,53 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage[section]{placeins}
+\usepackage[authoryear,round]{natbib}
+\usepackage{seqsplit}
+\usepackage{url}
+\usepackage{xr}
+\externaldocument[M-]{main}
+
+\renewcommand{\thesection}{S\arabic{section}}
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\thefigure}{S\arabic{figure}}
+\renewcommand{\theequation}{S\arabic{equation}}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\renewcommand{\theproposition}{S\arabic{proposition}}
+\renewcommand{\thelemma}{S\arabic{lemma}}
+\renewcommand{\thecorollary}{S\arabic{corollary}}
+
+\input{Results_data.tex}
+\input{Selection_data.tex}
+\input{Ablation_data.tex}
+\input{Baselines_data.tex}
+\input{Theory_data.tex}
+\input{ThresholdGeneral_data.tex}
+\input{ThresholdEmpiricalGeneral_data.tex}
+\input{ThresholdExt_data.tex}
+\input{Figure_3_WorkedExample_data.tex}
+
+\title{Online Supplement to ``Reproducible Answer Selection over Large Language Model Ensembles, with an Exact Kemeny Reference and a Ground-Truth Audit''}
+\author{Aris Dressino}
+\date{}
+
+\begin{document}
+\maketitle
+
+This supplement collects material that is not central to the argument of the main text: the extended
+threshold analysis and its proofs, the additional selectors, the coverage tables, the open-ended pilot,
+and two implementation notes. Section, table and result numbers prefixed with S refer to this supplement.
+
+\input{supplement_body.tex}
+
+\bibliographystyle{apalike-ejor}
+\bibliography{refs}
+
+\end{document}

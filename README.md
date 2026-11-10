@@ -34,7 +34,7 @@ scripts/      benchmark runners, offline analyses that generate the manuscript n
 data/         benchmark samples (GPQA Diamond is fetched locally, never committed)
 prompts/      generation and judge prompts
 docs/         methodology, ablations, results index, pre-registrations (historical), review notes, target journals
-manuscript/   main.tex (elsarticle), figures, generated *_data.tex macro files, submission documents
+manuscript/   main.tex (elsarticle) and supplement.tex (online supplement), figures, generated *_data.tex macro files, submission documents
 outputs/      stored run files (benchmark JSON); GPQA files are not published, see "Data" below
 tests/        unittest suite
 ```
@@ -84,7 +84,7 @@ python3 scripts/create_results_macros.py && python3 scripts/analyze_selection.py
   && python3 scripts/ablation_weights_offline.py && python3 scripts/baselines_extra_offline.py \
   && python3 scripts/judge_threshold_theory.py && python3 scripts/judge_threshold_general.py \
   && python3 scripts/judge_threshold_extensions.py && python3 scripts/judge_threshold_empirical.py
-cd manuscript && latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex
+cd manuscript && for t in supplement main main; do pdflatex -interaction=nonstopmode -halt-on-error $t.tex; done  # plus bibtex main && bibtex supplement; the two documents cross-reference each other
 ```
 
 Zero API calls; tracks with a missing output file are skipped. Tests (offline): `python3 -m unittest tests.test_<name>`
