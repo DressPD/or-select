@@ -1,0 +1,267 @@
+{
+  "date": "2026-11-10",
+  "scope": "Local offline validation; not acceptance or priority certification.",
+  "live_api_calls": 0,
+  "remote_publish_or_push": false,
+  "environment": {
+    "python": "3.14.10",
+    "platform": "Darwin",
+    "numpy": "2.5.2",
+    "ortools": "9.15.6755",
+    "requests": "2.34.2",
+    "python-dotenv": "1.2.2",
+    "openai": "2.53.0",
+    "google-genai": "2.24.0"
+  },
+  "commands": [
+    {
+      "args": [
+        "kpsewhich",
+        "apalike-ejor.bst"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "pdflatex",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "main.tex"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "bibtex",
+        "main"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "pdflatex",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "supplement.tex"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "bibtex",
+        "supplement"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "pdflatex",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "main.tex"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "pdflatex",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "supplement.tex"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "pdflatex",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "main.tex"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "pdflatex",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "supplement.tex"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "pdflatex",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "main.tex"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "pdflatex",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "Cover_Letter_EJOR.tex"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "pdflatex",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "Submission_Title_Page.tex"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "pdfinfo",
+        "main.pdf"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "pdfinfo",
+        "supplement.pdf"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "pdfinfo",
+        "Cover_Letter_EJOR.pdf"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "pdfinfo",
+        "Submission_Title_Page.pdf"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "git",
+        "diff",
+        "--name-only",
+        "--",
+        "outputs",
+        "data",
+        "scripts",
+        "tests",
+        "manuscript/*_data.tex"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "returncode": 0
+    }
+  ],
+  "bibliography_style_available": true,
+  "portable_source_bundle_complete": false,
+  "portable_source_bundle_blocker": "apalike-ejor.bst is installed locally but unbundled; reading the installed copy was denied by workspace policy. Author must supply a redistributable copy before source upload.",
+  "offline_tests": {
+    "run": 218,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "exact_theorem_check": {
+    "settings": 90,
+    "correctness_patterns": 8,
+    "comparison_patterns": 8,
+    "mismatches": []
+  },
+  "macro_checks": {
+    "Results_data.tex": {
+      "byte_identical": true,
+      "sha256": "87feb6273cdc914683cf099b4514396f74530fb1f9344861b61ac91b52c8289c"
+    },
+    "Selection_data.tex": {
+      "byte_identical": true,
+      "sha256": "6a8aaecc36d63cbedb0590da3f3f9d25c9d072272d4c4ac873b3f9c1587cf6d6"
+    },
+    "Ablation_data.tex": {
+      "byte_identical": true,
+      "sha256": "324943ef5dbb45e80b0d81c9b168bac26812fe72ea229ed6219d45b7b1f1c2e6"
+    },
+    "Baselines_data.tex": {
+      "byte_identical": true,
+      "sha256": "30842b9ccd02cde5cb158fb605c7b7e31d2c2bc3c12f65aa2979e4552814097a"
+    },
+    "Theory_data.tex": {
+      "byte_identical": true,
+      "sha256": "47d18e8061f104940d0cd4d9b4cfbf68250bb670d3a620c432ef114a16f5196a"
+    },
+    "ThresholdGeneral_data.tex": {
+      "byte_identical": true,
+      "sha256": "54c773313090dea31c20440e0cc4802f766c4b12ab68f71f72f99238c98effa3"
+    },
+    "ThresholdExt_data.tex": {
+      "byte_identical": true,
+      "sha256": "a1c05244fad0929c8dbc6f6ecde7bbb3a249dca9b7f246c4b02f1368a7544656"
+    },
+    "ThresholdEmpiricalGeneral_data.tex": {
+      "byte_identical": true,
+      "sha256": "fb3be6ef1c677dcc9c1e5c6cab63e642be2d46bd3b30f8645f8df880de960800"
+    },
+    "Figure_3_WorkedExample_data.tex": {
+      "byte_identical": true,
+      "sha256": "ba2e8fa9d8448d9fb615e9692032873787f55c54ce38e7c75c0729f012d88506"
+    }
+  },
+  "pdfs": {
+    "main": {
+      "pages": 30,
+      "warnings": []
+    },
+    "supplement": {
+      "pages": 10,
+      "warnings": []
+    },
+    "Cover_Letter_EJOR": {
+      "pages": 1,
+      "warnings": []
+    },
+    "Submission_Title_Page": {
+      "pages": 1,
+      "warnings": []
+    }
+  },
+  "missing_source_refs": [],
+  "highlights_characters": [
+    68,
+    77,
+    77,
+    74,
+    72
+  ],
+  "main_format": {
+    "eleven_point": true,
+    "line_spacing_1_5": true
+  },
+  "local_original_gpqa_files": {
+    "gpqa_benchmark.json": true,
+    "gpqa_heterogeneous.json": true
+  },
+  "scientific_data_or_numeric_macros_modified": false,
+  "main_within_30_pages": true,
+  "status": "passed",
+  "latest_citation_rebuild": {
+    "date": "2026-11-10",
+    "commands_passed": 9,
+    "offline_tests_passed": 218,
+    "all_nine_macro_hashes_unchanged": true,
+    "evidence": "docs/citation_audit.json"
+  }
+}

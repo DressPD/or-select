@@ -17,8 +17,8 @@ files are, and how to regenerate everything. Nothing here is a second copy of a 
 | G | MMLU-Pro (100-question sample, up to 10 options) | N=3 | `mmlu_pro_benchmark.json` |
 | RB | RewardBench judge validation (161 rows) | judge only | `reward_bench_benchmark.json`, `reward_bench_benchmark_heterogeneous.json` |
 
-Methods compared: OR-Select (`or_select/pipeline.py`), self-consistency (plurality over extracted answers), greedy
-(first candidate) and the exact Kemeny-Young winner (`or_select/kemeny.py`); further selectors are replayed offline
+Methods compared: OR-Select (`or_select/pipeline.py`), self-consistency (plurality over extracted answers), first sampled
+answer (legacy key `greedy`, not temperature-zero decoding) and the integerized Kemeny-Young winner (`or_select/kemeny.py`); further selectors are replayed offline
 (`scripts/baselines_extra_offline.py`). Candidates come from `nvidia/nemotron-3.5-lightning:free` (homogeneous) or from
 that model, `xingchen-agi/xing4.0-29b-a4b:free` and `cohere/north-mini-code:free` (heterogeneous; early heterogeneous rows
 still contain `poolside/laguna-s-2.1:free`, withdrawn by the provider, and are reported as such). The judge is always the
@@ -31,14 +31,18 @@ python3 scripts/create_results_macros.py        # Results_data.tex: tracks, pair
 python3 scripts/analyze_selection.py            # Selection_data.tex: recovery, pick shares
 python3 scripts/ablation_weights_offline.py     # Ablation_data.tex: weight ablations by replay
 python3 scripts/baselines_extra_offline.py      # Baselines_data.tex: additional selectors
-python3 scripts/judge_threshold_theory.py       # Theory_data.tex: N=3 threshold and measured accuracy
+python3 scripts/judge_threshold_theory.py       # Theory_data.tex: binary N=3 threshold and descriptive soft weights
 python3 scripts/judge_threshold_general.py      # ThresholdGeneral_data.tex: general N, correlated wrong answers
 python3 scripts/judge_threshold_extensions.py   # ThresholdExt_data.tex: N=7, wrong-answer structure, large-N bound, cost
-python3 scripts/judge_threshold_empirical.py    # ThresholdEmpiricalGeneral_data.tex: thresholds at measured rho
+python3 scripts/judge_threshold_empirical.py    # ThresholdEmpiricalGeneral_data.tex: model sensitivity at estimated collisions
 python3 scripts/create_manuscript_tables.py     # Figure_3_WorkedExample_data.tex (needs outputs/runs/)
 ```
 
 Run each from the repository root. Tracks whose output file is missing are skipped.
+The two GPQA files are local-only; without the original files, these commands do
+not reproduce all published rows. New live GPQA runs are not exact replay.
+The empirical soft weights are descriptive, not Bernoulli accuracies that certify
+the theorem. Only uncertainty in the collision estimate is bootstrapped there.
 
 ## Running a track
 

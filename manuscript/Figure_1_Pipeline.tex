@@ -19,8 +19,8 @@
 ]
 \node[anchor=west,font=\Large\bfseries] at (0,0) {OR-Select pipeline};
 \node[anchor=west,font=\small,text=black!70] at (0,-0.55)
-  {Only Stage 1 is stochastic; Stages 2--5 are deterministic given Stage 1's output.};
-\draw[black!25] (0,-0.88) -- (18.6,-0.88);
+  {Generation and judge calls may be stochastic; selection uses stored outputs.};
+\draw[black!25] (0,-0.88) -- (13.5,-0.88);
 
 \node[box,draw=orblue,anchor=north west] (gen) at (0,-1.35) {
   \textcolor{orblue}{\textbf{1. Generate}}\\[4pt]
@@ -28,27 +28,26 @@
 
 \node[box,draw=ororange,right=0.7cm of gen] (score) {
   \textcolor{ororange}{\textbf{2. Score}}\\[4pt]
-  Per-candidate confidence$_i \in [0,1]$ and cost$_i$ (token count).};
+  Judge confidence$_i \in [0,1]$ and cost$_i$ (word count).};
 
 \node[box,draw=orgray,right=0.7cm of score] (compare) {
   \textcolor{orgray}{\textbf{3. Compare}}\\[4pt]
   Pairwise judge $W[i,j]$, both orders, averaged (permutation self-consistency). Identical text short-circuits to $0.5$.};
 
-\node[box,draw=orblue,right=0.7cm of compare] (consist) {
+\node[box,draw=orblue,below=1.25cm of gen] (consist) {
   \textcolor{orblue}{\textbf{3b. Self-consistency}}\\[4pt]
   consistency$_i = |\{j: \text{text}_j = \text{text}_i\}| / N$. Zero API cost.};
 
 \node[box,draw=ororange,right=0.7cm of consist] (select) {
   \textcolor{ororange}{\textbf{4. Select}}\\[4pt]
-  Solve the integer program (Eq.~1) exactly with CP-SAT, one search worker. Exactly one winner.};
+  Optimize the integerized scores (Eq.~1) with CP-SAT, one search worker. Exactly one winner.};
 
 \draw[flow] (gen.east) -- (score.west);
 \draw[flow] (score.east) -- (compare.west);
-\draw[flow] (compare.east) -- (consist.west);
+\draw[flow] (compare.south) -- ++(0,-0.4) -| (consist.north);
 \draw[flow] (consist.east) -- (select.west);
-\draw[flow,dashed] (gen.north) |- ($(gen.north)+(0,0.55)$) -| (consist.north);
 
-\node[note,anchor=north] at ($(gen.south)!0.5!(select.south)+(0,-0.5)$)
-  {Same candidate set + same judge/score outputs $\Rightarrow$ same winner, independent of solver internals or execution order.};
+\node[note,anchor=north,text width=13cm] at ($(consist.south)!0.5!(select.south)+(0,-0.5)$)
+  {Replay fixes candidates and judge outputs; optimum ties may depend on the solver environment.};
 \end{tikzpicture}
 \end{document}

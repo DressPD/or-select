@@ -1,5 +1,5 @@
 \documentclass[preprint,11pt,authoryear]{elsarticle}
-\linespread{1.24}
+\linespread{1.5}
 
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -56,7 +56,7 @@
             country={Germany}}
 
 \begin{abstract}
-Sampling several answers from a large language model and choosing one buys accuracy at inference time, but the choosing rule is either majority vote, which fails when answers do not repeat, or a language-model judge whose verdicts are not reproducible. We cast selection as an integer program over a judge-derived pairwise matrix and a deterministic self-consistency term, so that the winner is exactly reproducible given the judge's outputs. The Copeland-style aggregate is a 5-approximation to the NP-hard Kemeny-optimal ranking, and we report the exact Kemeny--Young winner as a reference. We audit the method against self-consistency and greedy sampling on six benchmarks (\TotalProblems{} mathematics, science and knowledge problems), with paired exact tests. The audit overturns the assumption that a judge adds accuracy. The judge scores \RBOverallAcc\% on RewardBench. With homogeneous generation the method is indistinguishable from self-consistency (\HomogPooledB{} versus \HomogPooledC{} discordant problems of \HomogPooledN{}); with heterogeneous generation it is significantly worse (\HeteroPooledB{} versus \HeteroPooledC{} of \HeteroPooledN{}, \HeteroPooledP). The default cost term dominates quality in \CostDominatesK{} of \CostDominatesN{} replayed problems, and the judge concentrates picks on one generator (\PickShareCohere\%) that is no more accurate. No other judge-based selector we tried beats plurality voting. A closed-form threshold shows why: with three candidates of 80\% accuracy, a judge must prefer the correct answer in more than 80\% of mixed pairs, and we measure 49--56\% on every track with at least 70 mixed pairs. The result is a pre-deployment test for any judge-based selector, and we release the replayable protocol and data.
+Choosing among sampled language-model answers requires a selection rule whose reproducibility and accuracy can be assessed separately. We formulate selection as an integer program combining pairwise judge scores, confidence, self-consistency and cost, and compute an exact Kemeny--Young reference. The quality-only ranking inherits a known 5-approximation guarantee for weighted ranking disagreement, not answer correctness. Under an independent binary-comparison model, we derive the exact accuracy gain over plurality voting for three candidates and enumerate break-even thresholds for larger finite pools. At 80\% candidate accuracy, the three-candidate threshold is 80.35\% mixed-pair judge accuracy. We audit one free-tier judge, scoring \RBOverallAcc\% on RewardBench, on six benchmarks comprising \TotalProblems{} distinct problems. Paired exact tests detect no homogeneous-pool advantage over self-consistency (\HomogPooledB{} versus \HomogPooledC{} discordant problems of \HomogPooledN{}); the heterogeneous-pool selector performs worse (\HeteroPooledB{} versus \HeteroPooledC{} of \HeteroPooledN{}, \HeteroPooledP). Offline ablations expose an objective-scale mismatch, while removing the cost term does not establish an advantage. These findings concern the tested judge and configuration, not stronger judges generally. The theoretical thresholds characterize binary Copeland selection under explicit assumptions; averaged soft judge scores do not directly estimate their accuracy parameter. The contribution combines a finite-pool benchmark for judge reliability with an auditable selection protocol, an exact ranking reference and stored outputs for offline comparisons.
 \end{abstract}
 
 \begin{keyword}
@@ -67,239 +67,229 @@ Artificial intelligence in OR \sep Large language models in OR \sep Integer prog
 
 \section{Introduction}
 
-Large language models are sampled, not computed: even greedy decoding is
-not reproducible across runs or hardware because of GPU batch-invariance
-and floating-point non-associativity \citep{atil2024nondeterminism}. The usual response is to draw $N$
-candidate answers and pick one. Self-consistency
-\citep{wang2023selfconsistency} picks the majority final answer; it is
-well-defined only when candidates cluster, and on open-ended queries it
-degenerates to an arbitrary tie-break (in our open-ended pilot, zero of
-$N=5$ candidates matched exactly on every query). Universal
-self-consistency \citep{chen2023usc} and judge-based selection replace the
-vote by the choice of a large language model (LLM), at the price of a selection step that is itself a
-stochastic LLM call.
+Sampling several answers can increase the probability that a language model
+produces a correct answer without ensuring that a selector finds it.
+Self-consistency \citep{wang2023selfconsistency} votes over extracted final
+answers; when all answers differ, its result depends on the tie rule.
+A language-model judge can distinguish such answers, but introduces another
+potentially unstable and inaccurate component \citep{atil2024nondeterminism,landesberg2026bestofn}.
+We study selection over fixed candidate pools, separating agreement with
+judge preferences from correctness against ground truth.
 
-We do not try to make generation deterministic. We treat \emph{selection}
-over an already-sampled set as an optimization problem: an LLM judge
-produces a pairwise preference matrix, and an integer program combines it
-with a deterministic self-consistency signal, a confidence estimate and a
-cost penalty to pick exactly one winner. We call the resulting selector OR-Select. Given fixed candidates and fixed
-judge outputs, the winner is exactly reproducible. What is not
-automatically reproducible, or even accurate, is the judge; we therefore
-evaluate the selector against ground truth rather than assume that a
-principled aggregation rule translates into better answers
-\citep{landesberg2026bestofn}.
+The operational decision arises after generation has already incurred its
+cost: a system must return one of the available responses. A correct answer
+may be present even when the most frequent answer is wrong, while a larger
+pool may add only repeated errors. Conversely, when several independent
+draws agree on the correct answer, replacing their vote with a noisy judge
+can discard useful evidence. The relevant comparison is therefore between
+selection rules on the same candidates, rather than between separately
+generated responses. Checkable mathematics, science and knowledge questions
+provide ground truth for making that comparison.
 
-\paragraph{Contributions}
-\begin{enumerate}
-\item \textbf{Formulation and replayability.} An integer-programming
-  formulation of best-of-$N$ selection that treats self-consistency as one
-  deterministic term next to an LLM-judged pairwise term, together with a
-  storage format that makes every selection exactly replayable offline
-  (Section~\ref{sec:formal-model}).
-\item \textbf{Reference solutions.} The tractable Copeland-style aggregate
-  inherits the $5$-approximation guarantee of \citet{coppersmith2006ordering}
-  against the NP-hard Kemeny-optimal ranking; we additionally compute the
-  exact Kemeny--Young winner on every problem and report how often, and in
-  which direction, the two differ (Sections~\ref{sec:approx-guarantee} and
-  \ref{sec:kemeny-results}). The approximation result is not ours; its
-  empirical consequence for LLM judging is.
-\item \textbf{An audit protocol and open data.} Paired exact tests against
-  self-consistency, greedy and exact Kemeny--Young; a floor/oracle
-  \emph{recovery} metric that separates selector quality from how much
-  there was to select; valid/total coverage reporting with a flagged,
-  higher-cap second pass for truncated generations; a judge-only
-  validation on RewardBench; and offline weight ablations that cost no API
-  calls because the judge outputs are stored (Sections~\ref{sec:experiments}
-  and \ref{sec:results}).
-\item \textbf{Pairwise-accuracy thresholds.} A closed-form condition for $N=3$
-  (Theorem~\ref{thm:threshold}) for when a pairwise judge with Copeland aggregation beats
-  plurality voting; exact thresholds for $N\le7$, pair-dependent judges and correlated wrong
-  answers; a large-$N$ lower bound (Proposition~\ref{S-prop:lower}); all confronted with the measured
-  pairwise accuracy of the judge (Section~\ref{sec:threshold-results}).
-\item \textbf{Findings.} (a) The judge is only moderately reliable
-  (\RBOverallAcc\% on RewardBench). (b) With homogeneous generation,
-  judge-based selection does not beat majority vote. (c) With
-  heterogeneous generation it is significantly worse when pooled (not on
-  GPQA Diamond alone), and the mechanism is identifiable: a length-scale mismatch in the default objective plus a
-  generator-specific preference of the judge. (d) The exact Kemeny--Young
-  winner differs from the shipped selector's winner on
-  \KYTopOneDiffers{} of \KYTopOneN{} problems but is not more accurate.
-\end{enumerate}
+Two distinct optimization questions follow. The first is which ordering
+best represents the judge's pairwise preferences. The second is which
+selected answer is correct. An exact ranking solution answers the first
+question but need not answer the second. OR-Select makes the selection
+objective explicit, while a Kemeny--Young solution supplies a ranking
+reference. The probabilistic analysis then asks a separate question: under
+a specified model of correct and incorrect answers, how accurate must
+binary comparisons be for their Copeland winner to outperform voting?
 
-\paragraph{Outcome} The paper delivers a decision rule rather than another selector. Judge-based
-aggregation is widely assumed to beat voting, and the literature on correlated judge errors
-\citep{correlatederrors2026,kim2025correlated} and on the weak link between judge metrics and
-selection accuracy \citep{landesberg2026bestofn} gives reason to doubt it. We overturn the assumption
-with ground truth on six benchmarks and state the condition under which it would hold: a pairwise judge must
-exceed a computable accuracy threshold, which can be measured from stored judge outputs before a selector is
-deployed. The result applies wherever several sampled answers must be reduced to one: question answering,
-mathematics and science assistants, multi-model routing, and settings that require auditable, replayable choices.
+The paper makes three contributions. First, it derives an exact finite-pool
+condition under which binary pairwise judging with Copeland aggregation
+outperforms plurality voting: a closed form for $N=3$, enumeration for
+$N\le7$, and extensions to pair-dependent judges and colliding wrong answers
+(Section~\ref{sec:theory} and Online Supplement). Second, it combines a
+composite selector, OR-Select, with an exact Kemeny--Young reference and
+stored judge outputs for offline comparison (Section~\ref{sec:formal-model}).
+Third, it audits one free-tier judge on six
+ground-truth benchmarks using paired tests, recovery relative to available
+headroom and weight ablations (Sections~\ref{sec:experiments}--\ref{sec:results}).
+
+\paragraph{Outcome and use case}
+\label{sec:outcome}
+The tested selector has no detected advantage over voting with homogeneous
+generation and performs worse in the pooled heterogeneous condition.
+This does not establish that stronger judges cannot help. The threshold
+analysis quantifies the reliability needed by a specified \emph{binary}
+selector under its assumptions; it is not a universal deployment test for
+soft-score or composite selectors. For applications with checkable answers,
+the practical contribution is an audit: retain candidates and judge outputs,
+compare selectors on the same problems, and distinguish ranking fit from
+answer accuracy before replacing voting.
+
+An application need not adopt the particular default weights to use this
+protocol. It can store one candidate pool per problem, freeze the judge
+outputs, and compare alternative aggregation or cost policies without
+confounding them with new generations. Applications with a reliable final
+answer extractor can include plurality directly; open-ended applications
+need a separately justified grouping or evaluation rule. The distinction
+between these settings matters: exact textual disagreement is not itself
+evidence that responses differ in meaning or quality.
 
 \section{Related Work}
 \label{sec:related}
 
-\paragraph{Selection among sampled answers} Self-consistency
-\citep{wang2023selfconsistency} votes over extracted answers; universal
-self-consistency \citep{chen2023usc} lets the model pick the most consistent
-free-form response. Pairwise approaches are closest to ours: PAIRS
-\citep{liu2024pairs} finds that pairwise comparison plus rank aggregation beats asking
-an evaluator to score or select directly, LLM-Blender \citep{jiang2023llmblender} ranks
-several models' outputs by pairwise comparison, and LLM-PeerReview
-\citep{llmpeerreview2025} aggregates several judges by averaging or truth inference.
-Repeated sampling raises coverage far faster than selectors can exploit it, so the bottleneck
-is choosing the sample, not producing it \citep{brown2024monkeys,snell2024scaling}; verifier-based
-selection \citep{cobbe2021gsm8k,lightman2023letsverify} needs a trained model, whereas
-our setting is training-free. Our floor/oracle recovery metric
-(Section~\ref{sec:metrics}) makes the coverage-versus-selection gap explicit per problem.
+\paragraph{Answer selection and judges}
+Universal self-consistency \citep{chen2023usc}, PAIRS \citep{liu2024pairs}
+and LLM-Blender \citep{jiang2023llmblender} replace or supplement voting
+with model evaluations. Verifier-based selection uses trained reward models
+\citep{cobbe2021gsm8k,lightman2023letsverify}; our selector is training-free.
+Preference-graph ensembling and denoising also have recovery guarantees
+and response-selection applications \citep{hu2024pged}; graph aggregation
+itself is therefore established prior work.
+Positional bias affects judges \citep{zheng2023judging,wang2023notfair},
+as does self-preference \citep{panickssery2024selfpref}.
+We average input orders \citep{tang2024permutation}. Errors can be shared
+\citep{kim2025correlated}; benchmark judge scores need
+not predict within-prompt selection quality \citep{landesberg2026bestofn}.
+These findings motivate paired correctness evaluation.
 
-\paragraph{Judge reliability and correlated errors} LLM judges show positional
-bias \citep{zheng2023judging,wang2023notfair}, self-preference
-\citep{panickssery2024selfpref,wataoka2024selfpref} and other inconsistencies
-\citep{gu2024survey}; permutation self-consistency \citep{tang2024permutation}
-reduces the first by averaging over orderings, and we adopt its pairwise form.
-Adding judges or models does not remove the problem when errors are shared:
-nine judges carry about two effective votes, and established aggregators close at most
-11\% of the gap \citep{correlatederrors2026}; larger models make more correlated errors
-\citep{kim2025correlated}; agreement is a weak correctness signal on GPQA Diamond and AIME
-\citep{ding2026agree}; and a judge with moderate global correlation recovers only about a fifth
-of the gain of perfect selection \citep{landesberg2026bestofn}, whose recommendation to report
-within-prompt selection quality our recovery metric follows.
-\citet{llmjudgethemselves2025} find that Kemeny--Young aligns best with human rankings when
-aggregating peer evaluations into \emph{model} rankings; we use this as motivation for the
-Kemeny reference, not as evidence about answer selection.
+These approaches also make different uses of additional information.
+Universal self-consistency asks a model to identify agreement between
+free-form responses; pairwise ranking evaluates relations between
+responses; a trained verifier estimates correctness from task-specific
+supervision. They are not interchangeable baselines. Our experiments
+compare a training-free judge and stored-output selectors, and do not
+estimate the performance of a separately trained verifier. The
+coverage-versus-selection distinction in inference-time scaling
+\citep{snell2024scaling} motivates reporting both the
+availability of a correct answer and the fraction of that opportunity
+actually recovered.
 
-\paragraph{Rank aggregation and voting theory} The Kemeny--Young rule
-\citep{kemeny1959mathematics,young1978kemeny} is NP-hard to compute exactly
-\citep{bartholdi1989voting}, which motivates tractable surrogates
-\citep{dwork2001rank}; ordering by weighted wins is a 5-approximation
-\citep{coppersmith2006ordering}, the result Proposition~\ref{prop:copeland-approx} uses. It is the
-maximum-likelihood ranking under a Condorcet noise model in which every pairwise comparison is
-independently correct with the same probability above one half \citep{young1988condorcet}, which is
-exactly the judge model of Theorem~\ref{thm:threshold}; other rules are maximum-likelihood under
-other noise models \citep{conitzer2005common}, and sample complexity depends on rule and noise
-\citep{caragiannis2016noisy}. Condorcet's jury theorem weakens when votes are correlated
-\citep{ladha1992condorcet,dietrich2004jury}, a point applied to LLM ensembles
-\citep{lefort2024condorcet,correlatederrors2026}. For reward-model best-of-$N$ against majority
-voting, asymptotic and minimax analyses exist \citep{di2025bom,komiyama2025bestofinf}, a
-preference-graph method proves recovery when evaluators are accurate enough \citep{hu2024pged},
-and second-order information improves on plain voting \citep{ai2025beyondmv}. Our contribution is
-not the noise model but a finite-$N$, checkable condition on the measurable pairwise accuracy $q$
-under which the pairwise route beats plurality of answers, together with the measured values.
+\paragraph{Ranking and voting}
+The Kemeny--Young rule \citep{kemeny1959mathematics,young1978kemeny}
+is NP-hard \citep{bartholdi1989voting}; weighted-win ranking has a known
+5-approximation for disagreement \citep{coppersmith2006ordering}.
+Its likelihood interpretation under a noisy ordering model
+\citep{young1988condorcet,caragiannis2016noisy} is related to, but different from, our
+two-class correctness model with fair same-class comparisons.
+Recent analyses study reward-based selection against voting
+\citep{di2025bom,komiyama2025bestofinf} and heterogeneous, correlated
+ensembles \citep{ai2025beyondmv}. In particular,
+\citet{komiyama2025bestofinf} report voting outperforming judges.
+Our analysis instead fixes a binary pairwise rule and derives its exact
+finite-pool accuracy difference from plurality. This identifies the
+comparison reliability needed at a given candidate accuracy, rather than
+inferring selection quality from a ranking objective alone.
 
-\paragraph{Operational-research precedents} Three streams of this journal's
-literature meet in our problem. \emph{Exact and heuristic Kemeny aggregation}: exact and
-metaheuristic methods for the median ranking, including weak and partial rankings
-\citep{amodio2016kemeny,aledo2018rankagg,azzini2020kemeny}, and faster computation by a necessary
-condition for being a winner \citep{rico2023kemeny}. Our exact reference is a small integer program
-solved with the constraint-programming solver CP-SAT at $N\le6$ and we claim no faster solver; what we take from this literature is the
-separation of the \emph{winner} of a Kemeny aggregation from the full ranking, which
-Theorem~\ref{thm:threshold} and Section~\ref{sec:kemeny-results} make operational for LLM judges.
-\emph{Ensemble selection as optimization}: \citet{debock2020ensemble} and \citet{aktas2024clusterensemble}
-select which models to include in an ensemble; we optimize which answer to return for each problem, with a
-cost term that proves decisive (and harmful). \emph{Judgment and voting}: crowd and judgment aggregation
-\citep{brown2019wisdom,jaspersen2022judgment}, a machine-learning approach to voting rules
-\citep{burka2022voting} and human judgment in selecting among forecasts \citep{debaets2020judgment} treat
-``who or what picks among alternatives'' as an object of study, and fused LLMs have recently been applied to
-prediction tasks in this journal \citep{maarouf2025fused}. We found no paper in this journal that audits LLM
-answer selection against ground truth, and we make no claim that the ingredients (pairwise judging, Copeland
-aggregation, Kemeny--Young) are new. An audit on 31{,}900 ensemble subsets finds that simple voting beats the strongest
-member in about 10\% of size-3 subsets \citep{kim2026diversity}; ours holds the \emph{selector} to ground
-truth, with an exact Kemeny reference, replayable judge outputs and a closed-form accuracy threshold.
+The distinction from the closest inference-scaling analyses is specific.
+\citet{di2025bom} combine answer frequencies and reward information in a
+minimax analysis of pass-at-budget selection. \citet{komiyama2025bestofinf}
+study asymptotic ensemble performance and optimized model weights, and
+also compare practical selectors. \citet{ai2025beyondmv} use higher-order
+information for aggregation of heterogeneous, correlated predictions.
+Here the object is the finite tournament induced by binary comparisons:
+the three-candidate calculation is explicit, larger small pools are
+enumerated, and the empirical audit keeps candidate generation fixed
+when comparing decision rules.
+\citet{he2026minority} instead learn when to overturn a majority in
+three-agent debates, and also report a judge losing to voting. Their
+selective-intervention criterion concerns the precision of majority
+overrides, rather than the mixed-pair accuracy needed by a complete
+Copeland tournament. Negative judge results alone are not the distinction.
+
+\paragraph{Operational-research context}
+Exact Kemeny methods in this journal address median rankings and winner
+computation \citep{amodio2016kemeny,rico2023kemeny}; ensemble optimization
+selects constituent models \citep{debock2020ensemble,aktas2024clusterensemble}.
+Here the decision is which already-generated answer to return, with an
+exact ranking reference and an offline audit. The distinction is between
+optimizing ensemble membership before prediction and optimizing the
+returned answer after observing a candidate pool. Established ranking and
+optimization components provide the reference machinery; the finite-pool
+correctness comparison and its accompanying audit address the answer-level
+decision.
+
+Judgment aggregation and selection among forecasts provide a related OR
+perspective \citep{brown2019wisdom,jaspersen2022judgment,debaets2020judgment}:
+the selection mechanism is itself a decision object, not simply a final
+implementation detail. This perspective motivates examining the scale of
+the objective terms and testing the selected answer against ground truth,
+alongside the quality of the fitted preference ranking.
 
 \section{Method}
 
 \subsection{Pipeline}
 \label{sec:pipeline}
 
-Given a query, the pipeline runs five stages (Figure~\ref{fig:pipeline}).
+Figure~\ref{fig:pipeline} separates generation, judge calls and selection.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{Figure_1_Pipeline.pdf}
-\caption{The OR-Select pipeline. Generation (Stage 1) is the only stochastic
-stage; every later stage is deterministic given Stage 1's output and the
-judge's outputs. Stage 3b runs in parallel with Stage 3, from the same
-candidate texts, at zero additional API cost.}
+\caption{OR-Select. Generation and judge calls may be stochastic; aggregation
+and selection use their stored outputs. Self-consistency requires no API calls.}
 \label{fig:pipeline}
 \end{figure}
 
-\textbf{Generate.} Sample $N$ candidate answers, either from one model with
-$N$ distinct seeds or round-robined across several models for
-heterogeneity. Each candidate must satisfy a domain-specific validity
-predicate (for example, an extractable answer letter on GPQA): a
-non-empty completion can still be unusable. On failure the slot is
-resampled with a freshly varied seed, up to three times; a problem whose
-slot never yields a valid answer is reported as ungraded rather than
-scored on invalid text.
+Sample $N$ candidates from one model or a round-robin model pool.
+An invalid slot (for example, no extractable answer letter) is retried up
+to three times with varied seeds; persistent failures are reported as
+ungraded. Confidence $C_i\in[0,1]$ comes from a judge call, cost $c_i$ is
+word count, and consistency $K_i=|\{j:\text{text}_j=\text{text}_i\}|/N$
+counts exact full-text matches, unlike final-answer voting.
 
-\textbf{Score.} Obtain a per-candidate confidence
-$\text{confidence}_i \in [0,1]$ and a cost proxy $\text{cost}_i$, the
-candidate's length in whitespace-separated words.
+For each unordered pair, average the judge's forward score and the
+complement of its reverse score to obtain $W[i,j]\in[0,1]$; set
+$W[j,i]=1-W[i,j]$. This symmetrization mitigates order effects but does
+not guarantee unbiased judging. Identical texts after trimming skip the
+judge and receive $0.5$. At most $N(N-1)$ comparison calls are needed.
+The quality aggregate is $Q_i=(N-1)^{-1}\sum_{j\ne i}W[i,j]$.
 
-\textbf{Compare.} Build a pairwise preference matrix $W[i,j]$: for each
-unordered pair an LLM judge is asked twice, once per text order, and the
-two votes averaged, following permutation self-consistency
-\citep{tang2024permutation} to cancel positional bias
-\citep{zheng2023judging,wang2023notfair} (Figure~\ref{S-fig:bias-cancel}).
-The reverse entry is $W[j,i]=1-W[i,j]$, never re-judged. Pairs with
-byte-identical candidate text skip the judge and receive $W[i,j]=0.5$
-(Section~\ref{S-sec:seed-finding} explains why this matters beyond
-efficiency). Judge calls scale as $N(N-1)$ in the worst case, the dominant
-cost of the pipeline.
-
-\textbf{Self-consistency.} Compute
-$\text{consistency}_i = |\{j : \text{text}_j = \text{text}_i\}| / N$ by
-string comparison: zero API calls, and self-consistency voting
-\citep{wang2023selfconsistency} as one signal rather than the whole
-decision rule.
-
-\textbf{Select.} Solve the integer program below exactly with CP-SAT
-\citep{perron2023ortools}.
+The two agreement signals serve different purposes. $Q_i$ measures how
+strongly the judge prefers candidate $i$ to its competitors; $K_i$ measures
+literal repetition of its complete response. Two derivations that end in
+the same number can therefore contribute two votes to the self-consistency
+baseline while each has $K_i=1/N$ in the composite objective. Confidence
+is a separate pointwise judge assessment, not an observed correctness
+frequency. Keeping these quantities separate makes it possible to remove
+or reweight one without changing the saved comparisons.
 
 \subsection{Formal Model}
 \label{sec:formal-model}
 
-Let $x_i \in \{0,1\}$ indicate whether candidate $i$ is selected.
+Let $x_i$ indicate selection and $v_i$ denote validity. The selector solves
 
 \begin{equation}
-\max \sum_i x_i \left( w_1 \cdot \text{quality}_i + w_2 \cdot \text{confidence}_i + w_4 \cdot \text{consistency}_i - w_3 \cdot \text{cost}_i \right)
+\max \sum_i x_i\left(w_1Q_i+w_2C_i+w_4K_i-w_3c_i\right)
 \label{eq:selection-obj}
 \end{equation}
 \begin{align}
-\text{s.t.} \quad & \sum_i x_i = 1 \\
-& \text{quality}_i \geq \text{min\_quality} \quad \text{(optional)} \\
-& x_i \in \{0, 1\}
+\text{s.t.}\quad & \sum_i x_i=1,\qquad x_i\in\{0,1\}, \\
+& x_i\le v_i\quad\text{if some candidate is valid}, \\
+& x_i=0\quad\text{if }Q_i<\text{min\_quality}\quad\text{(optional)}.
 \end{align}
 
-$\text{quality}_i = \text{mean}_j\, W[i,j]$ is the Copeland-style aggregate:
-the mean weight by which candidate $i$ beats every other candidate.
-Candidates failing the validity predicate are excluded by a hard gate
-unless every candidate fails. The default weights
-$(w_1,w_2,w_4,w_3) = (1.0, 0.2, 0.3, 0.01)$ were set by inspection before
-any ground-truth run and not tuned. Note the units: $\text{quality}_i$ and
-$\text{confidence}_i$ lie in $[0,1]$, whereas $\text{cost}_i$ is a word
-count, so $w_3=0.01$ charges one full quality unit per hundred words of
-difference between candidates. Section~\ref{sec:cost-diagnosis} shows what
-this does on reasoning-length outputs.
+The default $(w_1,w_2,w_4,w_3)=(1,0.2,0.3,0.01)$ was fixed before
+ground-truth runs, without tuning. A hundred-word difference therefore
+costs one full quality unit. Without additional constraints, this
+one-hot program is simply an argmax; integer programming provides a common
+implementation for the eligibility constraints. CP-SAT \citep{perron2023ortools}
+maximizes scores rounded after multiplication by $10^4$, using one worker.
+Reproducibility is conditional on the stored inputs and solver environment;
+this does not establish a canonical optimum across solver versions.
 
-\paragraph{Replay} Each result row stores the candidate texts, the judge's
-confidence scores and the full pairwise matrix. The selection step can
-therefore be re-run exactly under any weights without API calls
-(Section~\ref{sec:ablations}); the shipped objective reproduces
-\AblationFidelityK{} of \AblationFidelityN{} stored winners.
+All terms are linear once the candidates have been scored. The validity
+constraint excludes invalid candidates if at least one valid candidate
+exists; an optional minimum-quality threshold excludes candidates below
+that threshold. Thus feasibility restrictions and preference weights have
+different roles. A low-cost response is not permitted to bypass an active
+validity restriction, while an eligible response can win through a
+combination of quality, confidence, consistency and cost. Reporting the
+component scales is consequently important even when the final
+optimization is computationally elementary.
 
-\paragraph{Worked example} One real open-ended run ($N=5$) is decomposed term by term in the
-Online Supplement (Table~\ref{S-tab:worked-example}, Figure~\ref{S-fig:worked-example}).
+Rows storing confidence and $W$ permit offline weight changes. The default
+replay reproduces \AblationFidelityK/\AblationFidelityN{} extracted final
+answers; this comparison is at the final-answer level. A worked example is
+in the Online Supplement (Table~\ref{S-tab:worked-example}).
 
 \subsection{Exact Kemeny--Young Baseline}
 \label{sec:kemeny-exact}
 
-Selecting a winner by $\text{quality}_i$ does not require the full ranking,
-but the Kemeny--Young rule \citep{kemeny1959mathematics,young1978kemeny}
-produces one, and computing it exactly gives a reference for the
-Copeland approximation. For distinct $i \neq j$ let $y_{ij}\in\{0,1\}$
-indicate that $i$ is ranked above $j$. The exact ranking solves
+For the ranking reference, let $y_{ij}=1$ mean that $i$ ranks above $j$.
+The Kemeny--Young program maximizes agreement with the same matrix:
 
 \begin{equation}
 \max \sum_{i \neq j} W[i,j]\, y_{ij}
@@ -311,65 +301,50 @@ indicate that $i$ is ranked above $j$. The exact ranking solves
 & y_{ij} \in \{0,1\}
 \end{align}
 
-Constraint~\eqref{eq:kemeny-antisym} forces a total order on every pair;
-\eqref{eq:kemeny-transitivity} eliminates 3-cycles, which is necessary and
-sufficient for a linear order. Objective~\eqref{eq:kemeny-obj} maximizes
-agreement with the judge's pairwise weights, equivalently minimizing total
-weighted pairwise disagreement, the quantity
-Proposition~\ref{prop:copeland-approx} bounds. Since $y_{ji}=1-y_{ij}$, the
-implementation (\texttt{or\_select/kemeny.py}) allocates one binary
-variable per unordered pair ($\binom{N}{2}$ variables, $O(N^3)$
-transitivity constraints). The problem is NP-hard in general
-\citep{bartholdi1989voting}; at $N\leq 6$ CP-SAT solves it exactly.
+Antisymmetry and the absence of 3-cycles enforce a linear order.
+The implementation uses $\binom{N}{2}$ binary variables, $O(N^3)$
+constraints and coefficients $\operatorname{round}(10^4(W[i,j]-W[j,i]))$.
+A 200{,}000-conflict budget replaces a wall-clock limit; a non-optimality
+flag distinguishes feasible from proven-optimal solutions. All
+\KYTopOneN{} stored reference solutions at $N\le6$ are flagged optimal
+for this integerized objective, not necessarily for unrounded weights.
 
-The reference solver runs with a fixed budget of CP-SAT conflicts rather than wall-clock
-time, so that ``same inputs $\Rightarrow$ same ranking'' holds even when the budget is
-exhausted; it then returns the best ranking found with an explicit non-optimality flag.
+The reference removes the composite selector's confidence, consistency and
+cost terms and uses all pairwise relations simultaneously. With cyclic
+preferences, its top-ranked candidate need not have the largest weighted
+win total. This permits an empirical distinction between losing
+information through aggregation and receiving unhelpful information from
+the judge. We compare returned answers, rather than treating a difference
+between rankings as an accuracy error. When two different candidates give
+the same extracted answer, they count as the same answer-level decision.
 
 \subsection{Approximation Guarantee}
 \label{sec:approx-guarantee}
 
-Ranking by $\text{quality}_i$ is exactly the weighted-out-degree
-(``weighted number of wins'') rule studied by
-\citet{coppersmith2006ordering}.
-
-\begin{proposition}[\citealp{coppersmith2006ordering}]
+\begin{proposition}[Weighted-win ranking]
 \label{prop:copeland-approx}
-Let $W[i,j]+W[j,i]=1$ for all pairs $i \neq j$. Then ranking candidates by
-non-increasing $\text{quality}_i = \text{mean}_j\,W[i,j]$ is a
-$5$-approximation to the exact Kemeny-optimal ranking, measured by total
-weighted pairwise disagreement, and the analysis is tight.
+Assume nonnegative pair weights with $W[i,j]+W[j,i]=1$.
+Ranking by decreasing $Q_i$ approximates minimum weighted disagreement
+within a factor of 5. This factor is tight.
 \end{proposition}
 
-The probability constraint holds by construction ($W[j,i]:=1-W[i,j]$), so
-the proposition applies without further assumptions. It bounds the
-disagreement of the \emph{full ranking}; it does not bound whether the
-top-ranked candidate equals the exact Kemeny winner, and the shipped
-objective adds confidence, consistency and cost terms to $\text{quality}_i$.
-We therefore measure the top-1 agreement empirically
-(Section~\ref{sec:kemeny-results}). Given fixed inputs the solve is exact:
-CP-SAT with a single search worker returns the same optimum regardless of
-machine or call order. This is true by construction; what we measure is
-whether the \emph{inputs} to the solve are stable and informative.
+The constructed matrix satisfies these conditions. This guarantee, from
+\citet{coppersmith2006ordering},
+covers the \emph{full quality-only ranking}, not top-1 correctness, agreement
+with the Kemeny winner, or the composite objective~\eqref{eq:selection-obj}.
 
 \section{When can a judge beat voting? Pairwise-accuracy thresholds}
 \label{sec:theory}
 
-The approximation guarantee of Section~\ref{sec:approx-guarantee} controls the
-cost of the \emph{full ranking} given the pairwise matrix; it says nothing about
-whether the top-ranked candidate is correct. The relevant quantity is the
-accuracy of the pairwise signal itself. We give a threshold for the setting
-of our homogeneous tracks.
-
-\paragraph{Model} Three candidates are each correct independently with
-probability $p$; wrong answers are pairwise distinct, so plurality voting
-selects a correct answer exactly when at least two candidates are correct (and,
-with one correct candidate, breaks a three-way tie uniformly). A judge
-compares each of the three pairs once. On a pair with exactly one correct
-candidate it prefers the correct one with probability $q$; on any other pair it
-chooses uniformly. Selection is the Copeland winner of the three comparisons
-with ties broken uniformly. This is the quality-only case ($w_2=w_3=w_4=0$) and
-therefore the most favourable to the judge.
+\paragraph{Model} Three candidates are independently correct with probability
+$p$, all correct candidates share the same final answer, and wrong answers
+are pairwise distinct. Plurality voting breaks answer ties uniformly.
+Conditional on the correctness labels, the judge's three \emph{binary}
+comparisons are independent: a mixed pair favors the correct candidate
+with probability $q$, and a same-class pair is a fair coin. Copeland
+selects the candidate with most wins, with an independent uniform tie-break.
+This quality-only model differs from the empirical selector's averaged
+soft scores and composite objective.
 
 \begin{theorem}[Pairwise-accuracy threshold]
 \label{thm:threshold}
@@ -378,25 +353,54 @@ voting is
 \[
 \Delta(p,q)\;=\;p(1-p)\Bigl[(1-p)(2q-1)(q+1)\;-\;p\,(3-2q)(1-q)\Bigr].
 \]
-Hence, for $p\in(0,1)$, the judge-based selector is strictly more accurate than voting
-if and only if $\frac{p}{1-p}<\frac{(2q-1)(q+1)}{(3-2q)(1-q)}$. In particular, (i) a judge at
+Hence, for $p\in(0,1)$ and $q<1$, the judge-based selector is strictly more accurate than voting
+if and only if $\frac{p}{1-p}<\frac{(2q-1)(q+1)}{(3-2q)(1-q)}$; at $q=1$ it is always more accurate. In particular, (i) a judge at
 chance ($q=\tfrac12$) selects with accuracy exactly $p$ and loses to voting by
-$p^{2}(1-p)$; (ii) the smallest winning $q^{*}(p)$ increases strictly from $\tfrac12$
+$p^{2}(1-p)$; (ii) the unique break-even accuracy $q^{*}(p)$ increases strictly from $\tfrac12$
 (as $p\to0$) to $1$ (as $p\to1$).
 \end{theorem}
 
-Table~\ref{tab:threshold} lists $q^{*}(p)$. The message is that the better the
-generators already are, the more accurate the judge must be before it adds
-anything: at $p=0.8$ the judge must prefer the correct answer in more than
-$80\%$ of mixed pairs. A judge helps most where voting is weakest, on weak
-generators or when correct answers are rare, which is also where a judge is
-hardest to build. The proof is in \ref{app:proof}; the closed form
-is checked against exhaustive enumeration of the comparison outcomes
-(\texttt{scripts/judge\_threshold\_theory.py}).
+\begin{proof}
+Conditional on exactly $k$ correct candidates, write $a_k$ for Copeland's
+correct-selection probability. Then $a_0=0$, $a_3=1$.
+With one correct candidate, winning both mixed comparisons succeeds;
+winning exactly one succeeds only through a three-way tie, giving
+$a_1=q^2+\tfrac13q(1-q)$. With two correct candidates, winning both
+mixed comparisons succeeds; a split gives a correct selection with
+probability $\tfrac12+\tfrac12\cdot\tfrac23=\tfrac56$, hence
+$a_2=q^2+\tfrac53q(1-q)$. Plurality's conditional probabilities are
+$(0,\tfrac13,1,1)$. Weighting by $\mathrm{Bin}(3,p)$ gives
+\[
+\Delta=3p(1-p)^2(a_1-\tfrac13)+3p^2(1-p)(a_2-1),
+\]
+which simplifies to the stated expression. At $q=\tfrac12$ it equals
+$-p^2(1-p)$. On $(\tfrac12,1)$ the ratio in the theorem increases
+continuously from zero to infinity: its numerator increases and its
+positive denominator decreases. Equating it to $p/(1-p)$ establishes
+uniqueness, monotonicity and the endpoint limits of $q^*$.
+\end{proof}
+
+At $p=0.8$, $q^*=0.803515\ldots$ (Table~\ref{tab:threshold}).
+The formula gives both the sign and size of the gain under the model;
+\texttt{scripts/judge\_threshold\_theory.py} checks it by exact enumeration.
+
+An explicit expression for the break-even point is
+\begin{equation}
+q^*(p)=\frac{2(1+2p)}{1+4p+\sqrt{9+8p-16p^2}}.
+\label{eq:threshold-root}
+\end{equation}
+It follows by setting $\Delta=0$ and rationalizing the relevant root of
+$2(1-2p)q^2+(1+4p)q-(1+2p)=0$; the expression also covers $p=1/2$.
+For $p=0.8$, plurality accuracy is $0.928$. A judge with $q=0.8$ yields
+$0.92672$, just below voting, while $q=0.9$ yields $0.96128$, a gain of
+$3.328$ percentage points. At $q=1$, the selector finds a correct candidate
+whenever one exists, reaching $0.992$. Thus the threshold is not a claim
+that judging cannot help: it identifies the reliability at which its
+benefit overtakes the information already supplied by answer repetition.
 
 \begin{table}[htbp]
 \centering
-\caption{Smallest pairwise judge accuracy $q^{*}$ at which the Copeland selector
+\caption{Break-even binary judge accuracy $q^{*}$ at which the Copeland selector
 ties plurality voting, as a function of the per-candidate accuracy $p$
 (Theorem~\ref{thm:threshold}, $N=3$).}
 \label{tab:threshold}
@@ -410,59 +414,76 @@ $p$ & $q^{*}(p)$ \\
 \end{tabular}
 \end{table}
 
-\begin{lemma}[Cost dominance]
-\label{lem:cost}
-Let $S_i=w_1Q_i+w_2C_i+w_4K_i-w_3c_i$ be the selection score of candidate $i$.
-If candidate $i^{\circ}$ has the smallest cost and, for every $j$,
-$w_3(c_j-c_{i^{\circ}})>w_1(Q_j-Q_{i^{\circ}})^{+}+w_2(C_j-C_{i^{\circ}})^{+}+w_4(K_j-K_{i^{\circ}})^{+}$,
-then every optimum of the selection program contains $i^{\circ}$ for any judge outputs
-$Q,C,K$ satisfying those bounds; the judge cannot change the winner.
-\end{lemma}
+\paragraph{Extensions and limits}
+The Online Supplement (Section~\ref{S-sec:s-threshold}) enumerates
+$N\le7$ and models wrong-answer collisions: each wrong candidate takes a
+shared attractor with probability $\rho$, otherwise a distinct answer.
+At $p=0.8,\rho=0$, the computed threshold rises from $0.804$ for $N=3$
+to $0.945$ for $N=7$; at $\rho=0.5$ it is approximately $0.82$ for
+$N=4,\ldots,7$. A monotone-coupling result bounds a pair-dependent
+judge using its \emph{minimum and maximum} mixed-pair accuracies, not their
+average (Corollary~\ref{S-cor:pairdep}). The supplement also gives a
+large-$N$ threshold lower bound and consistency regimes. Neither candidate
+independence nor uniform judge accuracy follows from a high aggregate
+benchmark score, and asymptotic voting consistency does not exclude
+finite-pool improvements by a stronger judge.
 
-Lemma~\ref{lem:cost} is elementary (compare $S_{i^{\circ}}$ with $S_j$ term by
-term) but it explains an empirical fact: with the shipped weights the cost term
-dominates the replayed rows (Section~\ref{sec:cost-diagnosis}), so the selector
-is in effect ``choose the shortest candidate'' and its accuracy equals that of
-the shortest-candidate rule (Table~\ref{S-tab:baselines}).
+The finite-pool computation conditions on the number $k$ of correct
+candidates. Let $a_{N,k}(q)$ denote the probability that a uniformly
+tie-broken Copeland winner is correct. Enumerating all binary tournament
+outcomes gives
+\begin{equation}
+A_J(N,p,q)=\sum_{k=0}^{N}\binom Nk p^k(1-p)^{N-k}a_{N,k}(q).
+\label{eq:judge-general}
+\end{equation}
+With distinct wrong answers, plurality succeeds whenever $k\ge2$ and
+with probability $1/N$ when $k=1$, so
+\begin{equation}
+A_V(N,p)=1-(1-p)^N-(N-1)p(1-p)^{N-1}.
+\label{eq:vote-general}
+\end{equation}
+The computed break-even point equates these two accuracies. This is
+exhaustive enumeration of the finite comparison model, not an estimate
+from the benchmark observations; numerical root finding locates the
+crossing to the reported precision. The supplement compares it with an
+independent Monte Carlo calculation.
 
-\paragraph{Beyond $N=3$, independent errors and a uniform judge}
-Three relaxations matter in practice. (a) \emph{Any $N$.} Let the judge
-compare every pair once and select the Copeland winner of the $N$ candidates.
-There is no closed form, but the accuracy is a finite sum over the
-$2^{N(N-1)/2}$ comparison outcomes, which we enumerate exactly for $N\le7$.
-(b) \emph{A pair-dependent judge.} Let $q_{ij}$ be the probability that the
-judge prefers the correct candidate $i$ to the wrong candidate $j$.
-(c) \emph{Correlated wrong answers.} A wrong candidate takes one shared
-``attractor'' answer with probability $\rho$ and otherwise a distinct answer;
-$\rho=0$ is the model above and $\rho=1$ makes all wrong answers coincide, as in
-four-option multiple choice. The judge is unaffected by $\rho$; plurality is
-hurt by it.
+Table~\ref{tab:threshold-n} illustrates the effect of wrong-answer
+collisions. Shared wrong answers strengthen the competing wrong vote,
+whereas with distinct wrong answers two correct candidates suffice for
+plurality to succeed. The collision model changes the voting calculation;
+its binary judge still uses the stipulated mixed-pair accuracy. Its
+parameter $\rho$ describes a common wrong answer, not arbitrary dependence
+between candidate correctness events.
 
-\paragraph{Results of the extensions} The Online Supplement (Section~\ref{S-sec:s-threshold}) gives
-the proofs and tables. Computed exactly for $N=3,\dots,7$ (Table~\ref{S-tab:threshold-n}),
-the threshold with distinct wrong answers \emph{rises} with $N$: at $p=0.8$ it goes
-from $0.804$ to $0.935$, and a large-$N$ lower bound (Proposition~\ref{S-prop:lower})
-shows that this is not an artefact of small $N$. With correlated wrong answers
-($\rho=0.5$) voting is weaker and the threshold is lower, about $0.82$ at
-$p=0.8$ for $N\ge4$. A pair-dependent judge is at least as accurate as voting when
-$q_{ij}\ge q^{*}$ on every mixed pair and at most as accurate when $q_{ij}\le q^{*}$
-(Corollary~\ref{S-cor:pairdep}, a monotone-coupling argument). The realistic
-threshold is therefore far from $\tfrac12$. For GPQA Diamond, whose wrong answers are
-heavily correlated, it falls from $0.787$ to $0.714$
-(Table~\ref{tab:threshold-emp-gen}); the measured $\hat q=0.536$ remains far below it.
-The exact enumeration agrees with an independent Monte Carlo simulation, and
-Corollary~\ref{S-cor:pairdep} held in \PairDepInside{} of \PairDepTrials{} random
-pair-dependent instances.
+\begin{table}[htbp]
+\centering
+\caption{Finite-pool break-even binary accuracy $q^*(p,N,\rho)$, computed
+by exhaustive tournament enumeration. A wrong candidate takes a shared
+wrong answer with probability $\rho$, otherwise a distinct wrong answer.}
+\label{tab:threshold-n}
+\small
+\begin{tabular}{rrrrr}
+\toprule
+ & \multicolumn{2}{c}{$\rho=0$} & \multicolumn{2}{c}{$\rho=0.5$} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+$N$ & $p=0.5$ & $p=0.8$ & $p=0.5$ & $p=0.8$ \\
+\midrule
+\ThresholdNRows
+\ThresholdNSevenRow
+\bottomrule
+\end{tabular}
+\end{table}
 
-For large $N$ the picture is a regime split rather than a threshold
-(Proposition~\ref{S-prop:regimes}): a better-than-chance judge can rescue a pool in which
-the single most popular answer is wrong, where plurality voting fails with
-certainty, but it cannot be expected to improve a pool in which the right answer
-already leads. This is the pairwise-judge analogue of the dichotomy established
-for reward-model best-of-$N$ and majority voting by \citet{di2025bom}; we claim
-consistency with it, not novelty. Our benchmark pools are in the right-majority
-regime (the shipped Nemotron generator is correct on 77--99\% of candidates, floor
-column of Table~\ref{tab:recovery}), which is why the judge cannot help.
+The pair-dependent extension uses a coupling rather than substituting an
+average accuracy. Hold the correctness labels and comparison random
+numbers fixed, and increase one mixed-pair accuracy. The only possible
+change gives a correct candidate one additional win and a wrong candidate
+one fewer win; the correct fraction of the top-score set cannot decrease.
+Applying this change successively bounds selection accuracy between the
+uniform-$q_{\min}$ and uniform-$q_{\max}$ cases. This provides a conservative
+comparison when such bounds are available, without requiring every mixed
+pair to have exactly the same reliability.
 
 \section{Experimental Protocol}
 \label{sec:experiments}
@@ -470,110 +491,73 @@ column of Table~\ref{tab:recovery}), which is why the judge cannot help.
 \subsection{Setup}
 \label{sec:setup}
 
-Unless noted otherwise, generation, scoring and judging use one
-free-tier hosted model, NVIDIA Nemotron-3.5-Lightning
-(\texttt{\seqsplit{nvidia/nemotron-3.5-lightning:free}} on OpenRouter).
-Judge and confidence calls run with reasoning disabled and a 256-token cap;
-a cut-off reply raises an error rather than being parsed. Generation is
-capped at 32{,}768 output tokens; a cut-off draw is resampled with fresh
-seeds, and a problem whose slot never completes is recorded as ungraded.
-Ungraded problems are retried in a flagged second pass at 65{,}536 tokens
-(clamped to each model's ceiling); we report accuracy with and without the
-rescued problems (Table~\ref{S-tab:extended}).
+The fixed judge is NVIDIA Nemotron-3.5-Lightning on OpenRouter
+(\texttt{\seqsplit{nvidia/nemotron-3.5-lightning:free}}), with reasoning
+disabled and a 256-token cap; truncated judge replies raise errors.
+Homogeneous pools contain $N=3$ Nemotron draws with distinct seeds.
+Heterogeneous pools contain $N=6$ draws, initially two each from Nemotron,
+Poolside Laguna-S~2.1 and Cohere North-Mini-Code. After Laguna's withdrawal,
+Xing4.0-29B filled its slots (\SelectionXingchenCands{} candidates);
+one early GPQA problem retains two LFM-2.5 candidates. This pool drift is
+reported, not treated as a fixed three-model experiment.
 
-\emph{Heterogeneous generation.} $N=6$ candidates are round-robined over
-three vendors' models: Nemotron-3.5-Lightning (NVIDIA), Laguna-S~2.1
-(Poolside) and North-Mini-Code (Cohere), two candidates per model, with
-the judge held fixed on Nemotron. Laguna-S~2.1 was withdrawn by the
-provider while the study ran. Problems graded before that keep their
-Laguna candidates; for problems generated afterwards its slot is filled
-by Xing4.0-29B (Xingchen; \SelectionXingchenCands{} candidates in total). The
-tables report how many graded problems still contain Laguna candidates
-(Table~\ref{S-tab:coverage}). One early GPQA problem also keeps two candidates
-from LFM-2.5 (2.6B), the first pool's third model.
+Generation uses a 32{,}768-token cap and varied-seed retries. A flagged
+second pass retries ungraded problems at 65{,}536 tokens, subject to model
+ceilings. Tables~\ref{S-tab:coverage}--\ref{S-tab:extended} report coverage,
+pool composition and accuracy with and without these rescued problems.
 
-\emph{Homogeneous generation.} $N=3$ candidates from Nemotron with distinct
-seeds.
+The main references are self-consistency (plurality over extracted final
+answers, candidate-order ties), the \emph{first sampled candidate} (not
+temperature-zero greedy decoding), and the Kemeny--Young top-ranked answer
+on the same matrix. Further offline selectors are listed in
+Section~\ref{sec:baselines}. Trained verifiers and universal
+self-consistency were not evaluated.
 
-\subsection{Baselines}
-
-\textbf{Self-consistency}: plurality vote over extracted final answers
-\citep{wang2023selfconsistency}, with ties broken by candidate order.
-\textbf{Greedy single-sample}: the first of the $N$ candidates, i.e.\ no
-ensembling. \textbf{Exact Kemeny--Young}: the winner of the exact ranking of
-Section~\ref{sec:kemeny-exact}, computed on the same pairwise matrix. Section~\ref{sec:baselines} adds further
-selectors: shortest and longest candidate, minimum-Bayes-risk selection with
-token-set Jaccard similarity, pointwise confidence argmax, a
-confidence-weighted vote, a knockout tournament over the pairwise matrix, and
-a Bradley--Terry fit (Borda over the pairwise matrix coincides with the
-Copeland quality). Reward-model or process-reward best-of-$N$
-\citep{cobbe2021gsm8k,lightman2023letsverify} and universal
-self-consistency \citep{chen2023usc} need a trained model or further live
-calls and were not run (Section~\ref{sec:future}).
-
-\subsection{Judge validation: RewardBench}
+\paragraph{Judge calibration}
 \label{sec:rewardbench-setup}
 
-Following \citeauthor{landesberg2026bestofn}'s caution that judge
-calibration does not predict selection accuracy, we first validate the judge
-in isolation on RewardBench \citep{rewardbench2025}: for each (prompt,
-chosen, rejected) triple, the identical forward+backward judge code path
-used in the pipeline must prefer \texttt{chosen}. The sample is $N=161$, the
-first 7 rows of each of 23 subsets (equal per-subset weighting, matching
-RewardBench's scoring), pre-registered before results were seen. The
-pre-registration treated accuracy in the range reported for capable
-general-purpose judges (roughly 70--90\%) as support for trusting the
-judge's quality signal.
+RewardBench \citep{rewardbench2025} uses the same forward/backward judging
+path: its combined score must favor the human-preferred answer. The
+pre-registered sample takes the first seven rows of each of 23 subsets
+($n=161$), not a random sample. Overall accuracy averages category means;
+the supplement also reports a micro-average and its Wilson interval.
 
 \subsection{Evaluation tracks}
 \label{sec:tracks}
 
-\textbf{B -- GSM8K} \citep{cobbe2021gsm8k}: 40 test problems, $N=3$ homogeneous
-and $N=6$ heterogeneous; the answer is the last number in the response,
-because reasoning models restate numbers from the problem before the final
-answer.
-\textbf{C -- MATH Level~5}: the 134 Level-5 problems of MATH-500
-\citep{hendrycks2021math,lightman2023letsverify}, exact-match on the
-\texttt{\textbackslash boxed\{\}} answer.
-\textbf{D -- AIME 2026}: 30 problems \citep{matharena2025aime}.
-\textbf{E -- GPQA Diamond}: 198 graduate-level multiple-choice questions
-\citep{rein2024gpqa}, exact-letter grading.
-\textbf{F -- AIME 2025}: the 30 problems of AIME~I and II 2025
-\citep{matharena2025aime}, homogeneous generation only. It predates the
-generator, so contamination is possible and the track is a robustness check,
-not an uncontaminated one.
-\textbf{G -- MMLU-Pro} \citep{wang2024mmlupro}: a deterministic 100-question
-sample of the test split (five consecutive questions at each of 20 evenly
-spaced offsets, independent of any model output; 12 of the 14 subjects occur),
-up to ten lettered options, exact-letter grading, homogeneous generation only.
-Tracks C--G are chosen because they are not saturated for the model used
-\citep{kim2025correlated,ding2026agree}. Track~A (three open-ended queries
-without ground truth) is reported only as a pilot illustration
-(Section~\ref{S-sec:pilot}).
+Six homogeneous tracks comprise \TotalProblems{} distinct problems:
+B, 40 GSM8K test items \citep{cobbe2021gsm8k}; C, all 134 Level-5 items
+of MATH-500 \citep{hendrycks2021math,lightman2023letsverify}; D, 30 AIME
+2026 problems \citep{matharena2025aime}; E, all 198 GPQA Diamond items
+\citep{rein2024gpqa}; F, 30 AIME 2025 problems; and G, 100 MMLU-Pro test
+items \citep{wang2024mmlupro}. B--E are repeated with heterogeneous pools
+on the same 402 problems, not additional independent benchmark items.
+MMLU-Pro samples five consecutive items at each of 20 evenly spaced
+offsets, covering 12 of 14 subjects. AIME 2025 may be contaminated because
+it predates the generator; it is a robustness check.
+
+GSM8K uses the last number; MATH uses normalized exact match of the last
+\texttt{\textbackslash boxed\{\}} answer; AIME uses the extracted integer;
+GPQA and MMLU-Pro use exact letters. String-based mathematics grading can
+reject equivalent expressions. The three-query open-ended pilot has no
+ground truth and is supplementary only (Section~\ref{S-sec:pilot}).
 
 \subsection{Metrics}
 \label{sec:metrics}
 
-\emph{Coverage.} Every table reports graded/total, where total is the
-benchmark size, never the number of rows attempted; ungraded problems are
-not silently dropped (Table~\ref{S-tab:coverage}).
-\emph{Paired tests.} For two selectors on the same graded problems we count
-discordant problems and report the exact two-sided McNemar (binomial) test,
-the test we pre-registered (the statistical treatment of paired model
-comparisons follows \citealp{miller2024errorbars}); pooled tests sum
-discordant counts over tracks. No multiplicity correction is applied: the
-pooled homogeneous and heterogeneous tests are the primary comparisons, and
-per-track $p$-values are descriptive.
-\emph{Headroom and recovery.} For each problem we score every candidate.
-The \emph{floor} is the mean candidate accuracy (a random pick), the
-\emph{oracle} is the fraction of problems with at least one correct
-candidate, and a selector's \emph{recovery} is
-$(\text{acc}-\text{floor})/(\text{oracle}-\text{floor})$
-\citep[cf.][]{landesberg2026bestofn}. Recovery shows how much of what could
-be gained a selector captures; negative values mean it does worse than a
-random pick.
-\emph{Offline ablations} (Section~\ref{sec:ablations}) replay the selection
-step on stored judge outputs; they are post hoc and exploratory.
+We report graded/benchmark-total coverage and exact two-sided McNemar tests
+on paired discordant problems \citep{fagerland2013mcnemar}; pooled tests sum
+discordances within each generation condition. The test form was
+pre-registered, but the added tracks and six-track homogeneous pooling were
+not; pooled findings, per-track comparisons and ablations are exploratory,
+without multiplicity correction. A non-significant test is not equivalence.
+
+The \emph{floor} is mean candidate accuracy (uniform random selection),
+not a performance lower bound; the \emph{oracle} is the proportion with
+at least one correct candidate. Recovery is
+$(\mathrm{acc}-\mathrm{floor})/(\mathrm{oracle}-\mathrm{floor})$
+\citep[cf.][]{landesberg2026bestofn}, reported only when headroom is positive.
+Negative recovery means worse than a random pick.
 
 \section{Results}
 \label{sec:results}
@@ -581,43 +565,26 @@ step on stored judge outputs; they are post hoc and exploratory.
 \subsection{Judge validation: RewardBench}
 \label{sec:rewardbench-results}
 
-Overall accuracy is \RBOverallAcc\% (mean of category means, $N=\RBN$,
-micro-average \RBMicroAcc\%, 95\% Wilson interval for the micro-average
-[\RBCILow\%, \RBCIHigh\%]), below the range the
-pre-registration treated as sufficient to trust the quality signal.
-Table~\ref{tab:rewardbench} gives the breakdown. Reasoning pairs, the
-category most relevant to Tracks B--G, reach \RBReasoningAcc\%
-(\RBReasoningCorrect/\RBReasoningRows); Chat Hard, which is adversarial,
-is at \RBChatHardAcc\%, below the 50\% chance level. When the judge is rotated across the
-three heterogeneous-pool models instead of being held fixed, overall
-accuracy is \RBXOverallAcc\% (N=\RBXN), indistinguishable from guessing; the
-pipeline therefore keeps the judge fixed.
-
-A length diagnostic on the same rows splits by whether the human-preferred
-response is the longer one: accuracy is \RBChosenLongerAcc\%
-(\RBChosenLongerK/\RBChosenLongerN, 95\% CI [\RBChosenLongerCILow\%,
-\RBChosenLongerCIHigh\%]) when it is, and \RBRejectedLongerAcc\%
-(\RBRejectedLongerK/\RBRejectedLongerN, [\RBRejectedLongerCILow\%,
-\RBRejectedLongerCIHigh\%]) when it is shorter; the intervals overlap, so
-this is a direction to watch rather than a proven bias.
-
-An earlier pilot, run on 2026-08-22 with a larger model
-(Nemotron-3-Ultra, since withdrawn by the provider) and a
-reasoning-enabled judge call, reported a higher figure (90.1\%). The judge
-call was changed to its reasoning-disabled, 256-token form on 2026-10-07
-because the reasoning-enabled calls were frequently cut off at the token cap
-(six of ten in a spot check). That pilot used a different model and judge
-configuration from every result below, and we do not rely on it.
+The fixed judge scores \RBOverallAcc\% overall, reaching
+\RBReasoningAcc\% on reasoning pairs (\RBReasoningCorrect/\RBReasoningRows).
+Rotating judges yields \RBXOverallAcc\%; this exploratory result informed
+retaining one fixed judge. Table~\ref{tab:rewardbench} separates the
+categories. This calibration evaluates agreement with human-preferred
+responses; it is not the binary correct-versus-wrong parameter of the
+threshold model. Micro-averaging, length diagnostics and configuration
+history appear in Section~\ref{S-sec:judge-diagnostics} of the Online
+Supplement.
 
 \begin{table}[htbp]
 \centering
-\caption{\texttt{judge\_fn} accuracy on RewardBench, by category ($N=\RBN$).}
+\caption{Fixed-judge RewardBench accuracy by category ($n=\RBN$).
+The overall score is the mean of category accuracies.}
 \label{tab:rewardbench}
 \begin{tabularx}{\textwidth}{Xrr}
 \toprule
 Category & Rows & Accuracy \\
 \midrule
-Reasoning (math-prm, 6 \texttt{hep-*} code subsets) & \RBReasoningRows & \RBReasoningAcc\% \\
+Reasoning (math-prm and six \texttt{hep-*} code subsets) & \RBReasoningRows & \RBReasoningAcc\% \\
 Chat & \RBChatRows & \RBChatAcc\% \\
 Chat Hard (adversarial LLMBar subsets) & \RBChatHardRows & \RBChatHardAcc\% \\
 Safety & \RBSafetyRows & \RBSafetyAcc\% \\
@@ -628,31 +595,16 @@ Safety & \RBSafetyRows & \RBSafetyAcc\% \\
 \subsection{Accuracy against the baselines}
 \label{sec:accuracy-results}
 
-Table~\ref{tab:tracks} and Figure~\ref{fig:accuracy} give accuracy on graded
-problems. With homogeneous generation (rows B--G) the three
-non-exact selectors are within a few problems of each other on every track.
-On GSM8K all candidates agree on all 40 problems, so no selector can
-differ; on MATH Level~5 self-consistency is ahead of OR-Select by two
-problems; on AIME 2026 OR-Select is ahead by one; on AIME 2025
-self-consistency is ahead by two; on GPQA Diamond and MMLU-Pro they tie.
-Table~\ref{tab:paired} makes the comparison paired: pooled over the six
-homogeneous tracks, OR-Select is right where self-consistency is wrong on
-\HomogPooledB{} problems and wrong where it is right on \HomogPooledC{}
-(\HomogPooledP, $n=\HomogPooledN$). There is no evidence of an advantage or
-a disadvantage.
-
-With heterogeneous generation (rows B$'$--E$'$) OR-Select falls behind on
-three of the four tracks:
-on MATH Level~5 it is right where self-consistency is wrong on 0 problems
-and wrong where it is right on \SCwinsMATHx{} (\AccORMATHx\% versus
-\AccSCMATHx\%), on AIME 2026 on 0 versus \SCwinsAIMEx{}, on GSM8K on 0 versus
-\SCwinsGSMx{}, and pooled over the four heterogeneous tracks on
-\HeteroPooledB{} versus \HeteroPooledC{} problems
-($n=\HeteroPooledN$, \HeteroPooledP). GPQA Diamond is the exception: there
-OR-Select is nominally ahead of self-consistency (right where it is wrong on
-10 problems, wrong where it is right on \SCwinsGPQAx{}; exact $p=0.454$), so the pooled
-harm is carried by MATH, AIME and GSM8K. All heterogeneous tracks are fully
-graded (Table~\ref{S-tab:coverage}).
+Tables~\ref{tab:tracks}--\ref{tab:paired} report accuracy and paired
+discordances. Across \HomogPooledN{} homogeneous problems, OR-Select
+alone is correct on \HomogPooledB{} and self-consistency alone on
+\HomogPooledC{} (\HomogPooledP): a difference of $-0.56$ percentage
+points, without a detected advantage. Across \HeteroPooledN{} heterogeneous
+problems the counts are \HeteroPooledB{} versus \HeteroPooledC{}
+(\HeteroPooledP), a $-5.47$-point difference. This loss comes from GSM8K,
+MATH and AIME 2026. Heterogeneous GPQA instead favors OR-Select numerically
+(10 versus \SCwinsGPQAx{} discordances, $p=0.454$), so the pooled result
+is not uniform across tasks.
 
 \begin{table}[htbp]
 \centering
@@ -664,21 +616,12 @@ selectors when they differ. Primed rows: heterogeneous generation.}
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{lrrrrr}
 \toprule
-Track & Graded/Total & Greedy & Self-cons.\ & OR-Select & Kemeny--Young \\
+Track & Graded/Total & First sample & Self-cons.\ & OR-Select & Kemeny--Young \\
 \midrule
 \TracksTableRows
 \bottomrule
 \end{tabular}}
 \end{table}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\textwidth]{Figure_4_Accuracy.pdf}
-\caption{Accuracy on graded problems by track and selector, from
-Table~\ref{tab:tracks}. ``-H'': heterogeneous generation. Coverage differs
-across bars (Table~\ref{S-tab:coverage}).}
-\label{fig:accuracy}
-\end{figure}
 
 \begin{table}[htbp]
 \centering
@@ -690,7 +633,7 @@ reverse) and the exact two-sided McNemar $p$-value.}
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{lrrrrrr}
 \toprule
-Track & vs.\ SC & $p$ & vs.\ greedy & $p$ & vs.\ Kemeny--Young & $p$ \\
+Track & vs.\ SC & $p$ & vs.\ first sample & $p$ & vs.\ Kemeny--Young & $p$ \\
 \midrule
 \PairedTableRows
 \bottomrule
@@ -700,20 +643,12 @@ Track & vs.\ SC & $p$ & vs.\ greedy & $p$ & vs.\ Kemeny--Young & $p$ \\
 \subsection{Headroom and recovery}
 \label{sec:recovery}
 
-Accuracy alone hides how much a selector could have gained
-(Table~\ref{tab:recovery}). On GSM8K there is none: floor and oracle
-coincide. On GPQA Diamond with homogeneous generation the oracle is
-\OracleGPQAh\% against a floor of \FloorGPQAh\%, so a perfect selector
-would add about ten points; both self-consistency and OR-Select capture
-16\% of that headroom. On heterogeneous MATH Level~5 and AIME 2026,
-self-consistency recovers most of the headroom while OR-Select scores
-\emph{below} the random-pick floor. The selector is not merely failing to
-help; in those heterogeneous pools it is anti-informative. Heterogeneous GPQA
-Diamond is the exception, where OR-Select recovers 35\% of the headroom
-against 26\% for self-consistency, a difference that is not significant
-(Table~\ref{tab:paired}). On the two added homogeneous tracks the two selectors
-recover the same share on MMLU-Pro (14\%), and OR-Select falls below the floor
-on AIME 2025.
+Table~\ref{tab:recovery} distinguishes saturation from failed selection.
+Homogeneous GSM8K has no headroom; homogeneous GPQA has roughly ten
+percentage points, of which both selectors recover 16\%.
+OR-Select falls below the random-pick floor on heterogeneous MATH and
+AIME 2026, whereas its numerical recovery advantage on heterogeneous GPQA
+is not statistically significant (Table~\ref{tab:paired}).
 
 \begin{table}[htbp]
 \centering
@@ -733,79 +668,31 @@ Track & Graded & Floor & SC & OR & Oracle & Rec.\ SC & Rec.\ OR \\
 \end{tabular}}
 \end{table}
 
-\subsection{Why heterogeneous selection fails: the judge prefers one generator}
+\subsection{Objective and selection diagnostics}
 \label{sec:selection-bias}
-
-Across the heterogeneous problems we know which model produced every
-candidate and which candidate OR-Select picked (Table~\ref{tab:selection}).
-With a uniform pool each model would be picked a third of the time. The
-judge picks the Cohere candidate in \PickShareCohere\% of problems although
-Cohere's candidates (\CandAccCohere\% correct) are as accurate as
-Nemotron's (\CandAccNemotron\%). It picks Nemotron, the judge's own model, in only
-\PickShareNemotron\% of problems, so the self-preference reported in the literature
-\citep{panickssery2024selfpref,wataoka2024selfpref} is not the explanation here.
-The picked Cohere candidates are right \PickAccCohere\% of the time, below
-the \CandAccCohere\% of Cohere's candidates in general: the preference
-selects a style, not correctness. The weakest model, Xing4.0-29B
-(\CandAccXingchen\% correct), is picked in \PickShareXingchen\% of problems with \PickAccXingchen\%
-accuracy, and Laguna-S (\CandAccLaguna\% correct) in \PickShareLaguna\% with \PickAccLaguna\%. The
-winner is the longest candidate in only \LongestPickHetPct\% of
-heterogeneous problems (chance \LongestPickHetChance\%) and
-\LongestPickHomPct\% of homogeneous problems (chance
-\LongestPickHomChance\%); on average it has \WinnerLenRatioHet{} (hetero.)
-and \WinnerLenRatioHom{} (homog.) times the mean candidate length.
-
-\begin{table}[htbp]
-\centering
-\caption{Heterogeneous pools, pooled over the four tracks
-(\SelectionRows{} graded problems). Candidates: all candidates generated by
-the model and their accuracy (\%). Picks: how often OR-Select selected that
-model's candidate, with share, and the accuracy of those picks (\%).}
-\label{tab:selection}
-\small
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{lrrrr}
-\toprule
-Model & Candidates & Cand.\ acc. & OR-Select picks & Pick acc. \\
-\midrule
-\SelectionTableRows
-\bottomrule
-\end{tabular}}
-\end{table}
-
-\subsection{Diagnosing the objective: scale and the judge's own signal}
 \label{sec:cost-diagnosis}
 \label{sec:ablations}
 
-Because every stored row carries the judge's outputs, we replay the
-selection step under other weights at no API cost
-(\AblationFidelityK/\AblationFidelityN{} stored winners are reproduced by
-the shipped objective, so the replay is faithful). Two facts follow.
+On replayable problems, the within-pool cost-term spread has median
+\CostSpreadMed{}, versus \QualitySpreadMed{} for quality, and exceeds
+the quality spread in \CostDominatesK/\CostDominatesN{} cases. This
+exposes a scale mismatch, not a proof that cost determines every winner:
+confidence, consistency, eligibility and score gaps also matter.
 
-\emph{The cost term dominates.} Within a problem, the spread of the cost
-term $w_3\cdot\text{cost}_i$ across candidates has median
-\CostSpreadMed{} against \QualitySpreadMed{} for the quality term, and
-exceeds it in \CostDominatesK{} of \CostDominatesN{} replayed problems. On
-reasoning-length outputs the default objective is, to a first
-approximation, ``pick the shortest valid candidate''.
+Table~\ref{tab:ablation} compares the default, no-cost, quality-only and
+plurality-plus-quality variants on identical replayable subsets. In
+heterogeneous pools, removing cost yields \AblHetNoCostAcc\% accuracy and
+quality-only selection \AblHetQOnlyAcc\%, against voting's
+\AblHetSCAcc\% ($n=\AblHetN$; exact $p$ \AblHetNoCostP{} and
+\AblHetQOnlyP{}, respectively). Thus the cost term is not the only
+limitation. These post-hoc results do not prove that the judge contains
+no useful correctness information.
 
-\emph{Removing it is not enough in heterogeneous pools.}
-Table~\ref{tab:ablation} replays four variants: the default; no cost term;
-Copeland quality alone; and plurality vote with Copeland quality as the
-tie-break. With homogeneous generation all variants are within about one
-point of self-consistency (the default and no-cost variants win
-\AblHomDefB{} and \AblHomNoCostB{} problems against self-consistency's
-\AblHomDefC{} and \AblHomNoCostC{}; $n=\AblHomN$). With heterogeneous
-generation the no-cost and quality-only variants recover only part of the
-gap (\AblHetNoCostAcc\% and \AblHetQOnlyAcc\% against self-consistency's
-\AblHetSCAcc\%, $n=\AblHetN$; exact McNemar $p$ \AblHetNoCostP{} and
-\AblHetQOnlyP{} respectively), and even using the judge only to break ties in a
-plurality vote does not beat plain voting (wins/losses
-\AblHetSCQB/\AblHetSCQC). The judge's pairwise signal thus carries no
-accuracy information beyond voting here, and it is harmful when candidates
-come from different models. These ablations are post hoc and exploratory;
-the primary comparison is the pre-registered one in
-Section~\ref{sec:accuracy-results}.
+OR-Select picks Cohere candidates in \PickShareCohere\% of heterogeneous
+problems, although their overall accuracy (\CandAccCohere\%) is similar to
+Nemotron's (\CandAccNemotron\%). This is a property of the \emph{composite
+selector}, not an isolated judge preference; length and other terms are
+confounded (Table~\ref{S-tab:selection}).
 
 \begin{table}[htbp]
 \centering
@@ -824,198 +711,88 @@ Track & Replayable & SC & Default & No cost & Quality only & SC+quality \\
 \end{tabular}}
 \end{table}
 
-\subsection{Additional selectors}
+\paragraph{Additional selectors}
 \label{sec:baselines}
 
-We also compared OR-Select's competitors beyond Section~\ref{sec:accuracy-results}:
-judge-free selectors (shortest and longest candidate, minimum-Bayes-risk selection with
-token-set Jaccard similarity), run on every graded problem, and judge-based selectors replayed
-on the problems whose judge outputs were stored (pointwise confidence argmax, a
-confidence-weighted vote, a knockout tournament over the pairwise matrix, and a
-Bradley--Terry fit). Each is paired with self-consistency on the same problems
-(Table~\ref{S-tab:baselines} in the Online Supplement). No selector beats plurality voting in either
-condition. The judge-free minimum-Bayes-risk selector and the confidence-weighted vote, itself a
-variant of voting, stay within a few problems of voting; the selectors that act on the
-judge's pairwise or pointwise output choose worse than voting in heterogeneous pools, as
-OR-Select does, and the trivial length rules are worse still. The common thread is the one of
-Section~\ref{sec:cost-diagnosis}: whatever signal the judge adds is not about correctness.
+Shortest/longest, token-Jaccard minimum-Bayes-risk, pointwise confidence,
+confidence-weighted voting, a knockout tournament and Bradley--Terry
+selection establish no significant improvement over plurality in the
+exploratory comparisons (Table~\ref{S-tab:baselines}). Minimum-Bayes-risk
+is numerically ahead in some pooled comparisons, without a significant advantage.
 
-\subsection{Measured pairwise accuracy against the thresholds}
+\paragraph{Soft-score diagnostics}
 \label{sec:threshold-results}
 
-We measure $\hat p$ (share of correct candidates) and $\hat q$ (the mean stored
-pairwise probability assigned to the correct candidate, over ordered pairs with
-exactly one correct candidate) on the stored judge outputs, and compare $\hat q$ with the
-exact threshold $q^{*}$ of Section~\ref{sec:theory}, first with distinct wrong answers
-($q^{*}_{0}$) and then with the measured wrong-answer correlation $\hat\rho$
-(Table~\ref{tab:threshold-emp-gen}). Only tracks with at least 20 mixed ordered pairs
-are shown: for homogeneous generation that is GPQA Diamond and MMLU-Pro (28 mixed pairs), because the other
-homogeneous tracks stored too few judgments containing a mixed pair.
+The mean stored weight assigned to the correct candidate on mixed pairs
+is $0.49$--$0.56$ on tracks with at least 70 such pairs. These are
+\emph{soft-score means}, not frequencies of correct binary decisions.
+They cannot be substituted for $q$ in Theorem~\ref{thm:threshold}; neither
+can an average establish the pairwise bounds of Corollary~\ref{S-cor:pairdep}.
+Table~\ref{S-tab:threshold-emp-gen} retains these descriptive measurements
+and model sensitivity calculations, with their sampling limitations.
 
-The measured $\hat q$ is far below every threshold. For GPQA Diamond the judge prefers the
-correct candidate in only $53.6\%$ of mixed comparisons against a required $78.7\%$
-($71.4\%$ once the very high wrong-answer correlation, $\hat\rho=0.88$, is allowed for); for MMLU-Pro
-the figures are $44.3\%$ against $83.6\%$ ($78.6\%$). On the
-heterogeneous tracks $\hat q$ lies between $0.49$ and $0.56$ on every track with at least 70 mixed
-pairs, which is at or near chance; GSM8K ($0.66$, 24 mixed pairs) has only three wrong
-pairs, so $\rho$ cannot be estimated, its threshold interval spans every possible $\rho$, and $\hat q$ is
-still below the lower end. This is the pairwise-level counterpart of the selection-level results above:
-the judge's signal about correctness is too weak for any selector built on it to beat voting. The model
-is stylized (independent candidates, one wrong-answer structure, one accuracy for all pairs), so we use
-it for the threshold comparison, not to predict accuracies. The replayable rows are the ones that stored judge
-outputs, not a random sample of problems (Section~\ref{sec:future}).
-
-
-\begin{table}[htbp]
-\centering
-\caption{Thresholds with measured wrong-answer correlation. ``Wrong pairs'': pairs of wrong candidates
-of the same problem with extracted answers; $\hat\rho$: square root of their agreement rate, with a 95\%
-problem-level bootstrap interval; $q^{*}_{0}$: exact threshold at $\rho=0$; $q^{*}_{\hat\rho}$: exact threshold at
-$\hat\rho$, with the values at the ends of the $\hat\rho$ interval; $\hat q$ is computed over the mixed ordered pairs. $^\ddagger$: fewer than 30 wrong pairs, so $\rho$
-is not estimated and the interval spans every possible value, from $\rho=1$ to $\rho=0$. Suffix H: heterogeneous
-($N=6$). $\hat q$ is below the lower end of every threshold interval.}
-\label{tab:threshold-emp-gen}
-\small
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{lrrrrrrrr}
-\toprule
-Track & $N$ & $\hat p$ & Wrong pairs & $\hat\rho$ [95\% CI] & Mixed pairs & $\hat q$ & $q^{*}_{0}$ & $q^{*}_{\hat\rho}$ \\
-\midrule
-\ThresholdEmpGenRows
-\bottomrule
-\end{tabular}}
-\end{table}
-
-\subsection{Exact Kemeny--Young reference}
+\subsection{Ranking reference and coverage}
 \label{sec:kemeny-results}
 
-Across the \KYTopOneN{} graded problems that have an exact Kemeny--Young
-solution, the shipped selector and the exact winner give different answers
-on \KYTopOneDiffers{}. The selector alone is right on \KYORwins{} and the exact winner alone on \KYKYwins{} problems, so the
-exact solution is not more accurate either (Table~\ref{tab:paired}, last
-columns). This is the empirical counterpart of
-Proposition~\ref{prop:copeland-approx}: the full-ranking guarantee does not
-control the top-1 winner, and in this setting neither aggregation rule
-helps because both consume the same weak pairwise signal.
+OR-Select and the integerized Kemeny--Young reference return different
+final answers on \KYTopOneDiffers/\KYTopOneN{} problems. OR-Select alone
+is correct on \KYORwins{} and Kemeny--Young alone on \KYKYwins{}
+(Table~\ref{tab:paired}); the exact ranking reference shows no detected
+accuracy advantage. Ranking optimality does not guarantee correctness.
 
-\subsection{Coverage and the higher-cap second pass}
+\paragraph{Coverage}
 \label{sec:coverage}
 
-Table~\ref{S-tab:coverage} reports coverage, which would also show problems that never
-produced a graded answer (truncated at the token cap after resampling,
-other failures, or not yet attempted); in the final data there are none, and
-every problem of every track is graded. The second pass at 65{,}536 tokens
-rescued the problems in Table~\ref{S-tab:extended}. These are the problems
-with the longest reasoning, and they are harder: including them lowers
-accuracy by between 0.3 and 15 points for either selector (the largest drops
-are on the 30-problem AIME tracks), without changing the direction of any
-comparison above.
-
-\subsection{Pilot illustration: open-ended queries}
-
-Three open-ended queries ($N=5$ each, no ground truth) were run in an earlier pilot
-(Online Supplement, Section~\ref{S-sec:pilot}). None of the 15 candidates was byte-identical to another, so
-self-consistency fell back to an arbitrary tie-break on every query, and OR-Select
-differed from both baselines on all three. With three queries and no ground truth this is
-an illustration, not evidence about quality.
+Every problem is ultimately graded (Table~\ref{S-tab:coverage}). Including
+the higher-cap rescued problems lowers selector accuracy by 0.3--15 points
+depending on track, without reversing the direction of the comparisons
+(Table~\ref{S-tab:extended}). These results describe the retry-conditioned
+generation protocol, not unrestricted independent draws.
 
 \section{Discussion}
 
-\subsection{What the audit shows}
+\paragraph{Interpretation}
+The audit supports evaluating the entire decision rule on fixed candidate
+pools: a ranking objective can fit judge preferences without improving
+correctness, and an unnormalized cost term can overshadow a bounded quality
+score. Stored outputs make these distinctions inspectable without new API
+calls. The theory separately quantifies the trade-off for independent binary
+comparisons. Connecting it to soft-score selection requires assumptions
+about score distributions and dependence, not merely a mean score.
 
-The method does what it is designed to do: selection is exactly reproducible and
-replayable, with an exact Kemeny--Young reference. It does not improve on majority
-vote, for four measured reasons. First, the judge is only moderately reliable and, at
-\RBChatHardAcc\% on adversarial pairs, poor where candidates are close. Second, the headroom is small
-on the saturated benchmarks (floor $\approx$ oracle on GSM8K, within two points on MATH Level~5).
-Third, where headroom exists (homogeneous GPQA Diamond) the judge's pairwise signal recovers no more of it
-than a vote does; on heterogeneous GPQA it recovers somewhat more, but not significantly so. Fourth, in
-heterogeneous pools the judge's preference for one generator and the objective's length-scale mismatch turn a
-neutral selector into a harmful one. This adds a within-pool, ground-truth measurement to the literature on
-correlated errors and on the weak link between judge metrics and selection accuracy
-\citep{correlatederrors2026,kim2025correlated,landesberg2026bestofn}.
-
-\paragraph{Why the judge cannot help, quantitatively} The threshold analysis of Section~\ref{sec:theory}
-turns the first three factors into one number. When generators are already accurate ($\hat p\approx0.8$) a pairwise judge
-must prefer the correct answer in roughly $70$--$95\%$ of mixed pairs, depending on $N$ and on how strongly wrong answers
-collide, before Copeland aggregation can match plurality voting; the measured value is $0.44$--$0.56$ (GSM8K, with three
-wrong pairs, $0.66$). A judge can pay off where the most popular answer is wrong
-(Proposition~\ref{S-prop:regimes}), which none of our benchmark pools is.
-
-\subsection{Outcome and where it applies}
-\label{sec:outcome}
-
-Three outcomes can be used directly. (i) \emph{A pre-deployment test.} Compute $\hat p$ and $\hat q$ from stored judge
-outputs and compare $\hat q$ with $q^{*}(\hat p,N,\hat\rho)$ (Table~\ref{tab:threshold-emp-gen}): a judge below the
-threshold should not replace the vote, whatever its benchmark score; every judge we measured is far below it.
-(ii) \emph{An auditable selector and protocol.} Winners are exactly reproducible from stored outputs, and the exact
-Kemeny--Young reference, paired tests and recovery metric let any selector be audited offline at no API cost.
-(iii) \emph{Design rules.} Keep the judge fixed rather than rotating it, put quality and cost on one scale, and check
-the judge's pick share per generator before mixing generators. These apply to selection among sampled answers with
-checkable final answers (question answering, mathematics and science assistants, multi-model routing, decision support
-that must be auditable), and the test transfers to any judge-based selector that yields pairwise outputs.
-
-\subsection{A non-determinism observation}
-
-In an earlier pilot on a different provider and model, three byte-identical candidates
-received judge scores of $0.375$, $0.50$ and $0.625$, although identical text must score
-$0.5$ by construction: direct evidence that the provider's \texttt{seed} parameter was not
-reliably honored (details and the extraction fallbacks in the Online Supplement,
-Section~\ref{S-sec:seed-finding}), in line with systematic run-to-run variation reported for
-nominally deterministic settings \citep{atil2024nondeterminism}. The exact-match
-short-circuit removes the failure mode for identical text but not for different texts that
-receive unstable scores, which remains open.
-
-
-\subsection{Scope and future research}
+\paragraph{Scope}
 \label{sec:future}
 
-Two points guide the reading of the results. The heterogeneous rows describe a mixed pool, because Laguna-S~2.1 was
-withdrawn during the study and one GPQA problem retains LFM-2.5 candidates (Table~\ref{S-tab:coverage}); and the AIME 2025
-and MMLU-Pro tracks and the six-track pooled test were added after the pre-registrations, with AIME 2025 possibly
-contaminated. The default weights were fixed before the ground-truth runs and not tuned. The results open five
-directions.
-
-\textbf{Stronger and more diverse judges.} Generation, scoring and judging here use one free-tier model. The protocol
-and threshold test are built to answer whether a stronger or more diverse judge crosses $q^{*}$; rotating weak judges does
-not.
-
-\textbf{Pools in which the vote is wrong.} The theory locates where a judge can pay off, namely pools whose most popular
-answer is wrong. None of our pools is of that kind; hard, adversarial or open-ended tasks, where voting is undefined or
-unreliable, are the natural next test.
-
-\textbf{Larger, pre-registered evaluations.} Larger samples (candidate sets of $N=3$--$6$ give few discordant problems on
-the homogeneous tracks), heterogeneous AIME 2025 and MMLU-Pro, and a fixed generator pool would tighten the estimates.
-
-\textbf{Theory.} Extending the thresholds beyond independent candidates, exact $N\le7$, a symmetric judge and the
-quality-only model, to skewed wrong-answer distributions and a joint cost--quality model, is open.
-
-\textbf{More selectors.} Reward-model and process-reward best-of-$N$ and universal self-consistency need a trained
-verifier or further live calls and can be added to the same audit.
+Only one free-tier fixed judge is evaluated in the main audit. Stronger
+judges, trained verifiers and other selection architectures may perform
+differently. Small discordant counts limit precision; the replay subset is
+not randomly sampled, and mixed-pair measurements are sparse on several
+tracks. Candidate-order voting ties can favor particular generators in the
+round-robin pool. The reported results describe the generation, extraction
+and retry protocols of Section~\ref{sec:experiments}. The theory assumes
+independent candidate correctness and
+conditionally independent comparisons; the wrong-answer collision model
+does not model general correlated errors.
 
 \section{Conclusion}
 
-We formulated best-of-$N$ answer selection as an exactly reproducible integer program over a pairwise matrix and a
-deterministic self-consistency term, inherited a 5-approximation guarantee against the NP-hard Kemeny-optimal ranking,
-and built an audit around it: exact Kemeny--Young reference, paired exact tests, headroom and recovery, and replayable
-judge outputs. On six ground-truth benchmarks the audit finds no accuracy benefit of judge-based selection over majority
-vote with a single generator, and a significant harm pooled over the heterogeneous tracks (carried by MATH, AIME and
-GSM8K; GPQA shows none), traced to a length-scale mismatch in the objective and a generator-specific judge preference
-rather than to nondeterminism. A threshold analysis shows why: the judge's measured pairwise accuracy sits far below the
-accuracy the aggregation would need. The practical lessons are to validate the judge on the configuration actually
-shipped, to report recovery against a floor and an oracle, and to keep judge outputs so that a selector can be audited
-without new API calls. Whether a stronger or more diverse judge makes selection pay off is the open question this protocol
-is built to answer.
+An exact finite-$N$ calculation specifies when binary Copeland selection
+beats plurality under a stylized model. A separate six-benchmark audit
+finds no detected homogeneous-pool advantage for the tested free-tier judge
+and a pooled heterogeneous-pool loss. The exact Kemeny reference and
+offline ablations distinguish ranking fit, objective design and answer
+accuracy. Together, the finite-pool calculation and stored-output audit
+separate the reliability needed by a specified selection rule from the
+performance observed for a particular judge configuration.
 
 \section*{Data and code availability}
-Code, stored run files (candidates, judge outputs and graded results) for every
-track except GPQA Diamond, generated tables and the pre-registration documents are
-archived on Zenodo \citep{dressino2026orselect} and developed at
-\url{https://github.com/DressPD/or-select}. The GPQA Diamond files embed
-the benchmark's password-gated question text, so they are not republished; they
-are regenerated by the released scripts, or available from the author on request.
-All numbers in Section~\ref{sec:results} are regenerated from the stored outputs by
-the scripts named at the top of the source (the GPQA rows need the local GPQA files).
+Code, tables, pre-registration documents and public run files are archived
+on Zenodo \citep{dressino2026orselect}. Development repository:
+\url{https://github.com/DressPD/or-select}.
+The public run archive excludes GPQA records containing password-gated
+question text; access to that benchmark follows its distribution conditions.
+The analysis scripts regenerate tables from stored runs and include the
+GPQA generation workflow.
 
 \section*{CRediT authorship contribution statement}
 Aris Dressino: Conceptualization, Methodology, Software, Validation, Formal analysis,
@@ -1027,11 +804,11 @@ The author declares no known competing financial interests or personal relations
 that could have appeared to influence the work reported in this paper.
 
 \section*{Declaration of generative AI and AI-assisted technologies in the manuscript preparation process}
-During the preparation of this work the author used Claude (Anthropic; Claude Code with
-Claude Sonnet 5.5) to write and refactor analysis code, to draft and edit manuscript text,
-to check bibliographic records against Crossref and arXiv, and to derive and numerically
-verify the results in Section~\ref{sec:theory} and the appendices. The language models named in
-the experiments (served through OpenRouter) are the objects of study, not writing tools.
+During preparation the author used Claude (Anthropic; Claude Code with
+Claude Sonnet 5.5) for analysis code, drafting, bibliographic checks and
+derivation and numerical verification of the theoretical results, and
+OpenCode (GPT-6.1 Sol) for critical review and editorial compression.
+The models served through OpenRouter are experimental subjects, not writing tools.
 After using these tools the author reviewed and edited the content as needed and takes
 full responsibility for the content of the publication.
 
@@ -1039,45 +816,6 @@ full responsibility for the content of the publication.
 This research did not receive any specific grant from funding agencies in the public,
 commercial, or not-for-profit sectors.
 
-
-\appendix
-\section{Proof of Theorem~\ref{thm:threshold}}
-\label{app:proof}
-
-Let $a_k(q)$ be the probability that the Copeland selector returns a correct candidate
-given that exactly $k$ of the three candidates are correct. Trivially $a_0=0$ and $a_3=1$.
-
-\emph{One correct candidate $C$, two wrong $W_1,W_2$.} $C$ beats each $W_i$ with probability
-$q$ and $W_1$ vs.\ $W_2$ is a fair coin. If $C$ wins both (probability $q^2$) its score is 2
-and it is the unique winner. If $C$ wins exactly one (probability $2q(1-q)$), say it beats $W_1$
-and loses to $W_2$, then $W_2$ is the unique winner when it also beats $W_1$ (probability
-$\tfrac12$); otherwise all three scores equal 1 and $C$ is chosen with probability $\tfrac13$.
-If $C$ loses both, its score is 0 and it is never chosen. Hence
-$a_1(q)=q^2+2q(1-q)\cdot\tfrac12\cdot\tfrac13=q^2+\tfrac13 q(1-q)$.
-
-\emph{Two correct candidates $C_1,C_2$, one wrong $W$.} $C_1$ vs.\ $C_2$ is a fair coin and
-each $C_i$ beats $W$ with probability $q$. If $W$ beats both (probability $(1-q)^2$) it has
-score 2 and wins. If $W$ beats exactly one, say $C_i$ (probability $2q(1-q)$), then $W$ has
-score 1 and $C_j$ has score $1+[C_j\text{ beats }C_i]$: if $C_j$ beats $C_i$ it wins alone;
-otherwise all three scores are 1 and a correct candidate is chosen with probability $\tfrac23$,
-giving $\tfrac12+\tfrac12\cdot\tfrac23=\tfrac56$. If $W$ beats neither, its score is 0 and a
-correct candidate is chosen. Hence $a_2(q)=q^2+\tfrac53 q(1-q)$.
-
-Plurality voting with distinct wrong answers has $v_0=0$, $v_1=\tfrac13$, $v_2=v_3=1$. With
-$k\sim\mathrm{Bin}(3,p)$,
-\[
-\Delta=3p(1-p)^2\bigl(a_1-\tfrac13\bigr)+3p^2(1-p)\bigl(a_2-1\bigr).
-\]
-Now $a_1-\tfrac13=\tfrac13(2q-1)(q+1)$ and $a_2-1=-\tfrac13(3-2q)(1-q)$, which gives the
-stated $\Delta(p,q)$. Positivity of $\Delta$ is equivalent to the stated inequality because
-$p(1-p)>0$. (i) At $q=\tfrac12$ the first term vanishes and $\Delta=-p^2(1-p)$; a chance-level
-judge picks uniformly, so its accuracy is $p$ and voting has accuracy $p+p^2(1-p)$.
-(ii) The right-hand side of the inequality, $g(q)=\frac{(2q-1)(q+1)}{(3-2q)(1-q)}$, is
-continuous and strictly increasing on $(\tfrac12,1)$ (numerator increasing from 0, denominator
-decreasing to 0), with $g(\tfrac12)=0$ and $g(q)\to\infty$ as $q\to1$. Therefore for each
-$p/(1-p)\in(0,\infty)$ there is a unique $q^{*}(p)\in(\tfrac12,1)$ with $g(q^{*})=p/(1-p)$;
-$q^{*}$ is strictly increasing in $p$ with $q^{*}\to\tfrac12$ as $p\to0$ and $q^{*}\to1$ as
-$p\to1$. \qed
 
 \bibliographystyle{apalike-ejor}
 \bibliography{refs}

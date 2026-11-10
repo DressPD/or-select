@@ -19,7 +19,7 @@
 ]
 \node[anchor=west,font=\Large\bfseries] at (0,0) {Permutation self-consistency};
 \node[anchor=west,font=\small,text=black!70] at (0,-0.55)
-  {Cancelling positional bias in a single pairwise judge call.};
+  {Averaging both input orders mitigates positional bias.};
 \draw[black!25] (0,-0.88) -- (14.6,-0.88);
 
 \node[box,draw=orblue,anchor=north west] (fwd) at (0,-1.5) {
@@ -37,20 +37,18 @@
 \node[box,draw=orgray,below=1.2cm of $(fwd.south)!0.5!(bwd.south)$] (avg) {
   \textbf{Averaged}\\[2pt]
   $W[A,B] = \dfrac{v + (1-v')}{2}$\\[2pt]
-  \footnotesize A position-bias term that inflates
-  one order and deflates the other cancels in the average.};
+  \footnotesize An equal additive position effect cancels;
+  arbitrary order effects need not.};
 
 \draw[flow] (fwd.south) -- ++(0,-0.3) -| (avg.north -| fwd) ;
 \draw[flow] (bwd.south) -- ++(0,-0.3) -| (avg.north -| bwd) ;
 
 \node[note,anchor=north west] at ($(avg.south)+(-3.6,-0.6)$) {
-  Special case: if $A$ and $B$ are byte-identical, the forward and\\
-  backward prompts are the literal same string, so a provider that\\
-  honors its seed parameter must return the same raw value $v$ for\\
-  both, giving $W[A,B]=(v+(1-v))/2=0.5$ by arithmetic identity, for\\
-  \emph{any} $v$. Section~6.1 reports a live case where this failed --\\
-  direct evidence the seed guarantee was not honored -- which is why\\
-  identical-text pairs skip the judge call and are assigned $0.5$
-  directly.};
+  If the two raw scores coincide, $v=v'$, their average is $0.5$.\\
+  Identical input text alone does not ensure identical API outputs.\\
+  A pilot recorded different scores on identical-text pairs; this\\
+  does not isolate seed handling as the cause. The implementation\\
+  skips judge calls when trimmed candidate texts match and assigns\\
+  $W[A,B]=0.5$ directly.};
 \end{tikzpicture}
 \end{document}

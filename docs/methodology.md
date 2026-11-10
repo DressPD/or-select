@@ -1,243 +1,109 @@
 # Methodology
 
-## Problem
+The authoritative analysis is `manuscript/main.tex` and its online supplement.
+This page describes the implemented pipeline, not a second set of results.
 
-LLM generation is inherently probabilistic — sampling from a token
-distribution, plus GPU batch-invariance and floating-point effects, means
-even `temperature=0` does not guarantee reproducible output. OR-Select does
-not attempt to make generation deterministic. It accepts N probabilistic
-candidate answers and makes the *choice* among them deterministic and
-auditable.
+## Two distinct questions
 
-## Related work
+1. Which ranking best fits the judge's preferences?
+2. Which returned answer is correct?
 
-**Aggregating multiple LLM judgments via OR/social-choice methods, not a
-single LLM call:**
-
-- Tang et al., *Found in the Middle: Permutation Self-Consistency Improves
-  Listwise Ranking in LLMs* (NAACL 2024) — the permutation self-consistency
-  technique used in `pairwise.py` is directly from this paper. Its own
-  "central ranking" aggregation step is itself a Kemeny-style consensus
-  operation, i.e. this citation already rests on OR/social-choice ground,
-  not just position-bias correction.
-- Liu et al., *Aligning with Human Judgement: The Role of Pairwise
-  Preference in LLM Evaluators (PAIRS)* (COLM 2024) — pairwise comparison
-  + rank aggregation outperforms asking an LLM to pick directly, on
-  long-form generation.
-- *LLM-PeerReview: Scoring, Reasoning, and Selecting the Best!* (2025) —
-  the closest prior art: multiple LLM judges score N candidates, aggregated
-  via a Dawid-Skene-style graphical truth-inference model. OR-Select
-  differs by aggregating via an integer program over a pairwise matrix plus
-  a deterministic self-consistency term, rather than an EM-based score
-  model.
-- *LLMs Judge Themselves: A Game-Theoretic Framework for Human-Aligned
-  Evaluation* (2025) — compares Borda, Copeland, and Kemeny-Young
-  aggregation of multiple LLM judges; Kemeny-Young best aligns with human
-  preference. `selection.py`'s Copeland-style `quality_i` is a Kemeny-Young
-  approximation, consistent with this finding.
-- Zheng et al., *Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena*
-  (NeurIPS 2023) — foundational LLM-as-judge paper; documents position bias
-  as a first-class judge failure mode, motivating the permutation
-  self-consistency step.
-
-**Cautions that materially bear on this design, not just background:**
-
-- *Nine Judges, Two Effective Votes: Correlated Errors Undermine LLM
-  Evaluation Panels* (2026) — a 9-judge panel carries roughly the
-  independent signal of 2 votes because models make correlated errors, and
-  better aggregation math closes at most 11% of that gap. This bears
-  directly on `--provider both`/`all`: whether OpenAI/Gemini/OpenRouter
-  judges are architecturally/training-data diverse enough to actually
-  reduce correlated error, versus just adding compute cost, is untested
-  here and should be treated as an open question, not an assumption.
-- Landesberg, *When LLM Judge Scores Look Good but Best-of-N Decisions
-  Fail* (2026) — judge calibration/agreement metrics do not predict actual
-  best-of-N selection accuracy. This is why the Hamlet/traffic/rent-vs-buy
-  runs earlier in this project, while illustrative of the pipeline
-  mechanics, do not constitute evidence of selection quality: there is no
-  ground truth to check the selection against. See the GSM8K benchmark
-  below for a design that does have ground truth.
+Kemeny optimization addresses the first question. Ground-truth grading addresses
+the second. An optimal ranking need not improve answer accuracy. Established
+ranking machinery is not itself the paper's proposed theoretical distinction;
+see [the dated prior-art comparison](novelty_audit.md).
 
 ## Pipeline
 
-1. **Generate** — sample N candidate answers (`or_select/generate.py`), same
-   model with different seeds or heterogeneous models for diversity.
-   `or_select/providers.py` wires this to real OpenAI and Gemini calls;
-   `--provider both` splits the N candidates across both, which is the
-   configuration used to validate that determinism holds independent of
-   which vendor produced a given candidate.
-2. **Score** — calibrated per-candidate confidence (`or_select/scoring.py`).
-3. **Compare** — build a pairwise win matrix `W[i, j]` via an LLM judge,
-   using permutation self-consistency: judge each pair in both orders and
-   average the two votes, to cancel positional bias (`or_select/pairwise.py`).
-   Each unordered pair is judged exactly once (2 calls: forward + backward);
-   the reverse entry `W[j, i]` is derived as `1 - W[i, j]` rather than
-   re-judged, since the two are exact complements by construction — this
-   halves the judge call count for a given N compared to judging every
-   ordered pair independently. Pairs with byte-identical (normalized) text
-   skip the judge call entirely and are assigned the exact `0.5/0.5` their
-   symmetry demands, rather than risking a live LLM call returning a
-   non-symmetric result for a comparison that isn't actually in question
-   (see "A concrete finding" below).
-3b. **Self-consistency** — compute a purely deterministic agreement score,
-   `consistency_i = (# candidates matching i's text) / N`
-   (`or_select/consistency.py`), with zero LLM calls.
-4. **Select** — solve a multi-objective integer program that picks exactly
-   one winner from quality, confidence, consistency, and cost
-   (`or_select/selection.py`).
+1. **Generate:** sample candidates, homogeneously or from a heterogeneous pool.
+   Distinct requested seeds do not establish independent model draws.
+2. **Score:** obtain per-candidate confidence from model calls. These scores
+   are not demonstrated to be calibrated probabilities. Cost is word count.
+3. **Compare:** for each unordered pair, request both text orders and average
+   consistently oriented soft preference weights. Define the reverse entry
+   by complement, so `W[i,j] + W[j,i] = 1`. Order averaging mitigates sensitivity;
+   it cancels equal additive position effects, not arbitrary judge bias.
+   Identical `text.strip()` values bypass live judging and receive 0.5 each.
+4. **Text consistency:** use the fraction of candidates with identical complete
+   answer text. This differs from the baseline's extracted-final-answer plurality.
+5. **Select:** maximize the composite score over eligible candidates.
 
-## Formal model
+Generation, scoring and live judging can all vary between runs. Stored outputs
+allow the subsequent decision to be re-evaluated without new model calls.
 
-Decision variable: `x_i in {0, 1}` for each candidate `i`, `1` if selected.
+## Composite selector
 
 ```text
-maximize   sum_i x_i * (w1*quality_i + w2*confidence_i
-                         + w4*consistency_i - w3*cost_i)
+quality_i = mean_{j != i} W[i,j]                 # singleton convention: 1
+score_i   = w_quality*quality_i + w_confidence*confidence_i
+            + w_consistency*consistency_i - w_cost*word_count_i
+
+maximize   sum_i x_i * round(10000 * score_i)
 subject to sum_i x_i = 1
-           quality_i >= min_quality        (optional gate)
-           x_i in {0, 1}
+           x_i in {0,1}
+           x_i = 0 if quality_i < min_quality  # optional gate
+           x_i = 0 if invalid and at least one valid candidate exists
 ```
 
-`quality_i` is the Copeland-style aggregate of the pairwise matrix: the mean
-weight by which candidate `i` beats every other candidate,
-`mean_j W[i, j]`. `consistency_i` is the deterministic self-consistency
-signal (`or_select/consistency.py`) — the fraction of candidates whose text
-matches `i`'s exactly, i.e. classic self-consistency voting expressed as an
-IP objective term rather than a standalone decision rule. It is optional
-(defaults to 0 contribution) and additive alongside the LLM-judged quality,
-not a replacement for it: consistency alone only captures agreement
-frequency, and degenerates to a flat `1/N` once candidates stop repeating
-(e.g. open-ended queries where every sample differs). Solved exactly with
-CP-SAT (`or_select/selection.py`), which is deterministic given fixed
-inputs: the same candidate set, pairwise matrix, and consistency scores
-always yield the same winner, regardless of solve order or machine.
+The one-hot formulation is an argmax, not a new optimization algorithm.
+The implementation uses a single CP-SAT worker. Coefficient rounding can
+create ties or change the optimum relative to unrounded scores. Neither a
+canonical candidate tie-break across solver versions nor a cross-platform
+identity guarantee is implemented. Replay requires the stored inputs, order,
+weights and solver environment.
 
-## Determinism guarantee
+## Kemeny reference
+
+`or_select/kemeny.py` separately fits a full ranking to the same matrix. One
+binary variable per unordered pair, antisymmetry and three-cycle constraints
+encode a linear order. CP-SAT maximizes agreement with coefficients
+`round(10000 * (W[i,j] - W[j,i]))`.
+
+The search uses one worker and a 200,000-conflict default budget rather than a
+wall-clock limit. It returns `(ranking, is_optimal)`; a feasible result without
+an optimality certificate is not an exact optimum. The 854 current stored
+benchmark rankings all carry `is_optimal=True` for this integerized objective.
+That does not certify the unrounded objective or a unique optimal ranking.
+
+The known weighted-win 5-approximation applies to disagreement of the **full
+quality-only ranking**, not top-answer correctness or the composite selector.
+
+## Binary theorem versus stored soft weights
+
+The finite-pool theory assumes independent candidate correctness with rate
+`p`, conditionally independent binary pairwise outcomes, common mixed-pair
+accuracy `q`, fair same-class comparisons and uniform independent tie-breaking.
+For three candidates with distinct wrong answers, its exact gain over plurality is
 
 ```text
-Same N candidates + same judge outputs -> same pairwise matrix
-                                        -> same quality scores
-                                        -> same IP solution
-                                        -> same winner
+Delta(p,q) = p*(1-p)*[(1-p)*(2*q-1)*(q+1) - p*(3-2*q)*(1-q)]
 ```
 
-The only non-deterministic stage is generation (Phase 1). Everything after
-it is reproducible *given fixed inputs* — but "given fixed inputs" is doing
-real work here, since scoring and judging are themselves LLM calls:
+At `p=0.8`, break-even accuracy is `q*=0.8035152756999545`. The formula also
+quantifies gain, not just its sign. The correlated-wrong-answer extension models
+a specific collision mechanism; it is not a general model of dependent errors.
 
-- **OpenAI, OpenRouter**: `or_select/providers.py` sends a `seed` derived
-  deterministically from the prompt content (`_stable_seed`) for every
-  score/judge call, so re-running the pipeline over an *unchanged* candidate
-  set requests the same seed each time. This is provider best-effort, not a
-  hard guarantee — vendors document `seed` as reducing, not eliminating,
-  run-to-run variance.
-- **Gemini**: the SDK path used here has no seed parameter, so
-  `gemini_score`/`gemini_judge` are not seeded at all. Re-running the
-  pipeline over the same candidates can get different confidence/judge
-  values from Gemini, which can change the winner even though the *solve*
-  itself is exact given whatever scores it receives.
+The actual pipeline averages soft preferences and adds confidence, consistency
+and cost. Its mean correct-directed weight is **not** the theorem's Bernoulli
+accuracy `q`. Neither RewardBench accuracy nor a mean soft score certifies the
+binary threshold for this composite selector. The supplement reports those
+score/collision values as separate descriptive sensitivity diagnostics.
 
-So the precise claim is: the selection step (Phase 4) is exactly
-reproducible given a fixed pairwise matrix and fixed scores. Whether the
-matrix and scores themselves are stable across runs depends on the
-provider.
+## Audit and baselines
 
-### A concrete finding
+Ground-truth tracks compare selectors on the same saved pools. Plurality uses
+extracted final answers and candidate-order tie-breaking. The legacy method
+key `greedy` means **first sampled answer**, not temperature-zero decoding.
+Additional offline baselines and weight ablations use the stored-judgment
+subset; not every benchmark row contains the inputs for a full replay.
 
-A live run against OpenRouter (`nvidia/nemotron-3-ultra-550b-a55b:free`, a model since withdrawn by the provider)
-produced 3 candidates with byte-identical text, which by construction
-should force every pairwise weight among them to exactly 0.5 (forward and
-backward calls are the literal same prompt, so `(v + (1-v))/2 = 0.5`
-regardless of what the model returns). The observed quality scores were
-0.375, 0.50, and 0.625 instead — direct empirical proof that `seed` is not
-reliably enforced by this provider/model in practice, not just a
-theoretical caveat. The exact-match short-circuit above closes this
-specific case entirely (identical text never reaches the judge, so it
-can't be corrupted by this failure mode) but does not address the general
-case: two candidates with *different* text can still get non-reproducible
-judge scores across runs, since a real semantic comparison still requires
-an LLM call.
+Weight-ablation fidelity checks equality of extracted final answers, not
+candidate identity or full text. The three open-ended pilot examples have no
+ground truth and illustrate mechanics only. Varying judge outputs on identical
+text demonstrate run variation, but do not alone isolate whether a provider
+ignored its seed. A change between forward-only and bidirectional runs also
+does not isolate positional bias from live-call variation.
 
-## Full ranking: exact Kemeny-Young (`or_select/kemeny.py`)
-
-Implemented as a separate module from the top-1 selector, not a replacement
-for it: `select_best` picks 1-of-N by a linear multi-objective score
-(quality + confidence + consistency - cost), while `solve_kemeny_ranking`
-answers a different question -- given only the pairwise judge matrix, what
-is the full consensus ranking that best agrees with every pairwise vote?
-`aggregate_quality`'s Copeland-style `quality_i` is a cheap approximation to
-this; `scripts/math_benchmark.py` grades a `kemeny_young` method alongside
-`or_select` on the same candidate pool and pairwise matrix (zero extra API
-cost) specifically to test whether the approximation costs anything.
-
-Formulation: binary variables `x_ij = 1` if candidate `i` is ranked above
-`j` (defined only for `i < j` in a fixed candidate order; `x_ji` is implied
-as `1 - x_ij`, making antisymmetry automatic), maximizing agreement with the
-pairwise weights subject to 3-cycle elimination
-(`x_ij + x_jk + x_ki <= 2` for every ordered triple) to rule out
-intransitive "rankings." This is the linear ordering problem -- NP-hard in
-general.
-
-**A measured limitation, and how it was resolved.** The LOP is easy when
-candidates have a real quality gradient (measured: N=20 solves in ~41ms)
-but can be very hard when the judge is close to indifferent -- pairwise
-weights clustered near 0.5, which is exactly what a genuinely uncertain LLM
-judge produces. Measured: N=20 with near-uniform noisy weights did not
-finish in 60+ seconds of unbounded search. Capping the solve with CP-SAT's
-`max_time_in_seconds` was rejected: a wall-clock budget would make "same
-inputs, same output" depend on which machine ran the query, silently
-breaking this repo's central determinism claim. Instead the solve is capped
-by `max_number_of_conflicts` -- CP-SAT's deterministic, machine-independent
-work counter -- and the function returns `(ranking, is_optimal)` so a
-budget-exhausted, merely-best-found ranking is never reported as the
-verified Kemeny consensus. Measured: even when the conflict budget is
-exhausted, repeated solves of the same input return the identical ranking
-every time (exact reproducibility preserved under truncation, not just
-under full convergence). See `or_select/kemeny.py`'s module docstring for
-the numbers.
-
-## Possible extensions (not implemented)
-
-- **Space reduction**: pre-solve pairs with near-unanimous votes
-  (`W[i,j] > 0.95`) before running the IP, to scale beyond N=10-20
-  candidates.
-- **Multi-objective terms**: diversity (penalize near-duplicate winners),
-  safety gating (hard constraint on a safety classifier score), uncertainty
-  weighting (down-weight judge votes with low confidence).
-- **Adaptive refinement**: use Bayesian optimization to propose a targeted
-  refinement of the current winner instead of stopping at top-1.
-
-## Baselines and benchmarks
-
-- **Majority/self-consistency voting alone** (no OR, no LLM judge — just
-  pick the mode of N samples), per Wang et al., *Self-Consistency Improves
-  Chain of Thought Reasoning in Language Models* (ICLR 2023). Distinct from
-  the `consistency_i` term in the formal model above: the baseline uses
-  agreement frequency as the *entire* decision rule, while OR-Select uses
-  it as one additive term in an IP alongside LLM-judged quality.
-- Single-sample greedy decoding (no ensemble at all).
-- Reranking with a single learned reward model (no pairwise judge) — see
-  PairRM / LLM-Blender (Jiang et al., ACL 2023) as a candidate `judge_fn`
-  replacement: a small, local, fixed-weight pairwise reward model that
-  sidesteps the provider-seed non-determinism documented above entirely.
-- Full Kemeny-Young ranking without permutation self-consistency (tests
-  whether position-bias correction matters).
-
-**Benchmarks with ground truth (`scripts/*_benchmark.py`):**
-
-- **GSM8K** (Wang et al., ICLR 2023's evaluation protocol) — grade-school
-  math word problems with a single correct numeric answer. This is the one
-  benchmark here where "OR-Select's winner is correct" is a checkable fact,
-  not a subjective judgment call, directly addressing the Landesberg
-  caution above. Small-N runs (5-10 problems, N=5) are cheap enough to run
-  against a free-tier provider.
-- **RewardBench** (Allen Institute for AI, NAACL 2025 Findings) — human-labeled
-  pairwise preferences used to validate `judge_fn` in isolation
-  (`scripts/reward_bench_benchmark.py`, pre-registration in
-  `docs/reward_bench_preregistration.md`).
-- **MATH Level 5, AIME 2026, AIME 2025, GPQA Diamond, MMLU-Pro** — the
-  remaining ground-truth tracks; see `docs/benchmark_results.md`.
-
-**Results, theory and audit** are in the manuscript (`manuscript/main.tex`): the
-threshold section gives the pairwise-accuracy conditions under which a judge-based selector can beat plurality voting,
-and the Results section the audit.
+Track inputs and regeneration commands: [benchmark results index](benchmark_results.md).
+Build prerequisites and release boundaries: [submission files](submission_files.md).
+Preregistration files preserve historical plans rather than current results.

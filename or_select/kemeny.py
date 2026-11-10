@@ -7,9 +7,9 @@ x_ij = 1 if i is ranked above j, defined only for i < j in a fixed candidate
 order (x_ji is implied as 1 - x_ij so antisymmetry is automatic); 3-cycle
 elimination constraints (x_ij + x_jk + x_ki <= 2 for every ordered triple)
 rule out intransitive solutions, which is necessary and sufficient for the
-result to be a valid linear order. NP-hard in general, but solved exactly by
-CP-SAT at the candidate-pool sizes (single/low-double-digit N) this pipeline
-targets.
+result to be a valid linear order. NP-hard in general; CP-SAT reports
+whether optimality was proved for the integerized objective. A feasible
+result at the conflict limit is not an exact optimum.
 
 `aggregate_quality`'s Copeland-style score in selection.py is a cheap
 approximation to this; this module answers whether the approximation
@@ -33,10 +33,10 @@ Bounding the search with a wall-clock `max_time_in_seconds` would silently
 break this repo's central determinism claim: the same inputs could yield a
 different (truncated-search) ranking depending on which machine or how
 loaded it was when the query ran. Instead this solves within a budget of
-CP-SAT *conflicts* -- a machine-independent, exactly reproducible resource
-count, not a duration -- so "same inputs -> same output" still holds even
-when the budget is exhausted before optimality is proven. When that
-happens, the best feasible ranking found is returned along with
+CP-SAT *conflicts* -- a work budget rather than a duration. This removes
+wall-clock stopping as a source of variation; it does not establish a
+canonical ranking across solver versions or environments. When the budget
+is exhausted, the best feasible ranking found is returned along with
 `is_optimal=False`, so a truncated search is never silently reported as the
 verified Kemeny consensus.
 """
@@ -62,7 +62,7 @@ def solve_kemeny_ranking(
     solver could prove the returned ranking is the true Kemeny consensus --
     it is then the best ranking found, not a verified one. The search is
     bounded by conflict count rather than wall-clock time so the result
-    stays exactly reproducible regardless of machine speed or load (see
+    does not stop according to machine speed or load (see
     module docstring).
     """
     if not candidates:

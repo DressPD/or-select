@@ -1,0 +1,115 @@
+{
+  "target_pages": 30,
+  "font_points": 11,
+  "line_spread": 1.5,
+  "previous_versions": {
+    "original_at_1_5_spacing": 41,
+    "overcompressed": 23
+  },
+  "builds": [
+    {
+      "command": "pdflatex -interaction=nonstopmode -halt-on-error main.tex",
+      "returncode": 0
+    },
+    {
+      "command": "bibtex main",
+      "returncode": 0
+    },
+    {
+      "command": "pdflatex -interaction=nonstopmode -halt-on-error supplement.tex",
+      "returncode": 0
+    },
+    {
+      "command": "bibtex supplement",
+      "returncode": 0
+    },
+    {
+      "command": "pdflatex -interaction=nonstopmode -halt-on-error main.tex",
+      "returncode": 0
+    },
+    {
+      "command": "pdflatex -interaction=nonstopmode -halt-on-error supplement.tex",
+      "returncode": 0
+    },
+    {
+      "command": "pdflatex -interaction=nonstopmode -halt-on-error main.tex",
+      "returncode": 0
+    },
+    {
+      "command": "pdflatex -interaction=nonstopmode -halt-on-error supplement.tex",
+      "returncode": 0
+    },
+    {
+      "command": "pdflatex -interaction=nonstopmode -halt-on-error main.tex",
+      "returncode": 0
+    },
+    {
+      "command": "pdflatex -interaction=nonstopmode -halt-on-error Cover_Letter_EJOR.tex",
+      "returncode": 0
+    }
+  ],
+  "main_pages": 29,
+  "main_warnings": [],
+  "supplement_pages": 10,
+  "supplement_warnings": [],
+  "Cover_Letter_EJOR_pages": 1,
+  "Cover_Letter_EJOR_warnings": [],
+  "missing_source_refs": [],
+  "highlights_characters": [
+    68,
+    77,
+    77,
+    74,
+    72
+  ],
+  "main_source_lines": {
+    "original": 1085,
+    "current": 815
+  },
+  "theory_root_check": 4.440892098500626e-16,
+  "page_map": {
+    "Introduction": [
+      2
+    ],
+    "Theorem 4.1": [
+      10,
+      12,
+      20
+    ],
+    "Proof.": [
+      11
+    ],
+    "RewardBench": [
+      1,
+      15,
+      16,
+      17
+    ],
+    "Table 4:": [
+      18
+    ],
+    "References": [
+      24
+    ]
+  },
+  "scope": "Editorial revision, restored exposition and removal of internal review TODOs. Experimental data and implementation unchanged.",
+  "numerical_gain_examples_exact": true,
+  "abstract_words": 206,
+  "internal_review_todos_in_submission_pdfs": {
+    "main": [],
+    "supplement": [],
+    "Cover_Letter_EJOR": []
+  },
+  "visual_pages_rendered": [
+    5,
+    10,
+    11,
+    14,
+    17,
+    22
+  ],
+  "visual_spot_checks": {
+    "final_main_pages": [10, 11, 14, 17, 22],
+    "notes": "Checked theorem statement, proof, explicit threshold root, finite-pool table, RewardBench table, discussion scope and data-access statement. Temporary render images removed after inspection."
+  }
+}

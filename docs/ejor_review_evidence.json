@@ -1,0 +1,203 @@
+{
+  "scope": "Baseline audit before editorial shortening; page counts and source locations do not describe the revised manuscript. See ejor_shortening_evidence.json for the revised build.",
+  "build": [
+    {
+      "command": "pdflatex",
+      "returncode": 0,
+      "messages": [
+        "Output written on main.pdf (35 pages, 541103 bytes)."
+      ]
+    },
+    {
+      "command": "bibtex",
+      "returncode": 0,
+      "messages": []
+    },
+    {
+      "command": "pdflatex",
+      "returncode": 0,
+      "messages": [
+        "Output written on main.pdf (35 pages, 541103 bytes)."
+      ]
+    },
+    {
+      "command": "pdflatex",
+      "returncode": 0,
+      "messages": [
+        "Output written on main.pdf (35 pages, 541103 bytes)."
+      ]
+    }
+  ],
+  "spacing_1_5_build_returncode": 0,
+  "spacing_1_5_pages": 41,
+  "main_pages": 35,
+  "page_map": {
+    "Pairwise-accuracy threshold": [
+      3,
+      10
+    ],
+    "Empirical": [
+      3,
+      10,
+      11,
+      23
+    ],
+    "Outcome and where": [
+      24
+    ],
+    "Limitations": [],
+    "Proof of": [
+      28
+    ],
+    "References": [
+      29
+    ]
+  },
+  "supplement_pages": 10,
+  "highlights": [
+    {
+      "chars": 73,
+      "text": "- Reproducible, exactly replayable answer selection as an integer program"
+    },
+    {
+      "chars": 71,
+      "text": "- Exact Kemeny-Young reference; Copeland aggregate is a 5-approximation"
+    },
+    {
+      "chars": 71,
+      "text": "- Six benchmarks overturn the assumption that judges beat majority vote"
+    },
+    {
+      "chars": 78,
+      "text": "- Closed form: at 80% answer accuracy a judge needs over 80% pairwise accuracy"
+    },
+    {
+      "chars": 71,
+      "text": "- A pre-deployment test tells when a judge can improve answer selection"
+    }
+  ],
+  "local_gpqa": {
+    "gpqa_benchmark.json": true,
+    "gpqa_heterogeneous.json": true
+  },
+  "macro_checks": [
+    {
+      "file": "Results_data.tex",
+      "identical": true,
+      "diff_preview": []
+    },
+    {
+      "file": "Selection_data.tex",
+      "identical": true,
+      "diff_preview": []
+    },
+    {
+      "file": "Ablation_data.tex",
+      "identical": true,
+      "diff_preview": []
+    },
+    {
+      "file": "Baselines_data.tex",
+      "identical": true,
+      "diff_preview": []
+    },
+    {
+      "file": "ThresholdEmpiricalGeneral_data.tex",
+      "identical": true,
+      "diff_preview": []
+    }
+  ],
+  "ky_status": {
+    "math_benchmark_full.json": {
+      "n": 134,
+      "keys": [
+        "answer",
+        "correct",
+        "is_optimal"
+      ],
+      "optimal_values": [
+        "True"
+      ]
+    },
+    "math_benchmark_heterogeneous.json": {
+      "n": 134,
+      "keys": [
+        "answer",
+        "correct",
+        "is_optimal"
+      ],
+      "optimal_values": [
+        "True"
+      ]
+    },
+    "aime_2026_benchmark.json": {
+      "n": 30,
+      "keys": [
+        "answer",
+        "correct",
+        "is_optimal"
+      ],
+      "optimal_values": [
+        "True"
+      ]
+    },
+    "aime_2026_heterogeneous.json": {
+      "n": 30,
+      "keys": [
+        "answer",
+        "correct",
+        "is_optimal"
+      ],
+      "optimal_values": [
+        "True"
+      ]
+    },
+    "gpqa_benchmark.json": {
+      "n": 198,
+      "keys": [
+        "answer",
+        "correct",
+        "is_optimal"
+      ],
+      "optimal_values": [
+        "True"
+      ]
+    },
+    "gpqa_heterogeneous.json": {
+      "n": 198,
+      "keys": [
+        "answer",
+        "correct",
+        "is_optimal"
+      ],
+      "optimal_values": [
+        "True"
+      ]
+    },
+    "aime_2025_benchmark.json": {
+      "n": 30,
+      "keys": [
+        "answer",
+        "correct",
+        "is_optimal"
+      ],
+      "optimal_values": [
+        "True"
+      ]
+    },
+    "mmlu_pro_benchmark.json": {
+      "n": 100,
+      "keys": [
+        "answer",
+        "correct",
+        "is_optimal"
+      ],
+      "optimal_values": [
+        "True"
+      ]
+    }
+  },
+  "abstract_words_source_expanded": 247,
+  "abstract_count_note": "Whitespace count after expanding numeric macros. Naive PDF count includes author footnotes and line-wrap artifacts; do not use it as abstract length.",
+  "temporary_build_copies": "Removed after audit; manuscript source unmodified."
+}
