@@ -1,4 +1,6 @@
-# OR-Select: Reproducible Best-of-N Answer Selection over LLM Ensembles
+# OR-Select
+
+**Pairwise Judging versus Voting for Language Model Answer Selection: Finite-Pool Theory and an Empirical Audit**
 
 A no-fine-tuning pipeline that turns N stochastic LLM answers into one auditable choice, plus the audit protocol and
 theory used to test whether the choice is *accurate*. Selection is cast as an integer program over a judge-derived
@@ -133,11 +135,14 @@ To cite the software and data, see `CITATION.cff`.
 
 ## Release and manuscript status
 
-`CITATION.cff` and DOI `10.5281/zenodo.24112045` identify the published **v1.0.0** archive, not every later working-tree
-revision. Local manuscript changes do not update that immutable archive or the remote repository automatically.
+Release **v1.1.0** contains the revised manuscript and online supplement; see the
+[GitHub release](https://github.com/DressPD/or-select/releases/tag/v1.1.0) and [release notes](CHANGELOG.md).
+`CITATION.cff` uses the verified all-versions concept DOI `10.5281/zenodo.24112044`, with the exact release URL and version.
+The article's dataset citation retains the original experimental archive DOI `10.5281/zenodo.24112045` (**v1.0.0**);
+the run files have not changed. Neither this git revision nor the new release overwrites that immutable archive.
 Current submission inventory: `docs/submission_files.md`. Online prior-art comparison and internal publication
 assessment: `docs/novelty_audit.md`. Historical preregistrations and stored run files remain unchanged.
 
 Citation coverage and source policy: [citation audit](docs/citation_audit.md).
-A new **v1.1.0** archive is recommended before submission; see the
-[release decision and prerequisites](docs/release_decision.md). A git push alone is not a new release.
+For source-package dependencies and author actions before journal upload, see the
+[manual submission checklist](docs/manual_submission_checklist.md).

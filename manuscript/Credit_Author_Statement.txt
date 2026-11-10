@@ -1,6 +1,6 @@
 CRediT Author Statement
 
-Manuscript title: Reproducible Answer Selection over Large Language Model Ensembles, with an Exact Kemeny Reference and a Ground-Truth Audit
+Manuscript title: Pairwise Judging versus Voting for Language Model Answer Selection: Finite-Pool Theory and an Empirical Audit
 
 Aris Dressino: Conceptualization, Methodology, Software, Validation, Formal analysis,
 Investigation, Data curation, Writing - original draft, Writing - review & editing,

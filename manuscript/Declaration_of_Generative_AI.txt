@@ -1,5 +1,5 @@
 Declaration of generative AI and AI-assisted technologies in the manuscript preparation process
 
-Manuscript title: Reproducible Answer Selection over Large Language Model Ensembles, with an Exact Kemeny Reference and a Ground-Truth Audit
+Manuscript title: Pairwise Judging versus Voting for Language Model Answer Selection: Finite-Pool Theory and an Empirical Audit
 
 During preparation the author used Claude (Anthropic; Claude Code with Claude Sonnet 5.5) for analysis code, drafting, bibliographic checks and derivation and numerical verification of the theoretical results, and OpenCode (GPT-6.1 Sol) for critical review and editorial compression. The models served through OpenRouter are experimental subjects, not writing tools. After using these tools the author reviewed and edited the content as needed and takes full responsibility for the content of the publication.

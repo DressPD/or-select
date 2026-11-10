@@ -1,0 +1,144 @@
+{
+  "date": "2026-11-10",
+  "version": "1.1.0",
+  "title": "Pairwise Judging versus Voting for Language Model Answer Selection: Finite-Pool Theory and an Empirical Audit",
+  "scope": "Local pre-release title/build checks, not Zenodo publication or scientific acceptance certification.",
+  "commands": [
+    {
+      "args": [
+        "pdflatex",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "main.tex"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "bibtex",
+        "main"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "pdflatex",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "supplement.tex"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "bibtex",
+        "supplement"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "pdflatex",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "main.tex"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "pdflatex",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "supplement.tex"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "pdflatex",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "main.tex"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "pdflatex",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "supplement.tex"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "pdflatex",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "main.tex"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "pdflatex",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "Cover_Letter_EJOR.tex"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "pdflatex",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "Submission_Title_Page.tex"
+      ],
+      "returncode": 0
+    }
+  ],
+  "pdfs": {
+    "main": {
+      "pages": 30,
+      "warnings": [],
+      "title_verified": true,
+      "sha256": "b77b384a0c3da3ecce9b46b8d70c4b93d418b5535b79a17721641e43caa759b7"
+    },
+    "supplement": {
+      "pages": 10,
+      "warnings": [],
+      "title_verified": true,
+      "sha256": "1095c753b2d3b852f8fdd155ee4e1f67ee75664a24a6c8d8d820497388d69449"
+    },
+    "Cover_Letter_EJOR": {
+      "pages": 1,
+      "warnings": [],
+      "title_verified": true,
+      "sha256": "9e9fcdfbd45418aa7a8582eb958588721710f709891de3a8fe60942f7ab9b0a7"
+    },
+    "Submission_Title_Page": {
+      "pages": 1,
+      "warnings": [],
+      "title_verified": true,
+      "sha256": "34742ad8593448b4204019552b83cfb8afc38a2dae4360a6182411ac6026717d"
+    }
+  },
+  "title_sources": [
+    "main.tex",
+    "supplement.tex",
+    "Cover_Letter_EJOR.tex",
+    "Submission_Title_Page.tex",
+    "Credit_Author_Statement.txt",
+    "Declaration_of_Competing_Interest.txt",
+    "Declaration_of_Generative_AI.txt"
+  ],
+  "live_model_calls": 0,
+  "all_nine_macro_hashes_unchanged": true,
+  "offline_tests_passed": 218,
+  "bibliography_style_bundled": false,
+  "zenodo_concept_doi": "10.5281/zenodo.24112044",
+  "original_dataset_version_doi": "10.5281/zenodo.24112045"
+}

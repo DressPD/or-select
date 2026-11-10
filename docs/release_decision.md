@@ -1,6 +1,8 @@
 # Release decision after v1.0.0
 
-Decision date: **10 November 2026**. Internal author/release guidance.
+Decision date: **10 November 2026**. Internal author/release guidance, prepared
+before publication. The author subsequently authorized publishing v1.1.0;
+execution and final metadata follow `CHANGELOG.md` and the GitHub release.
 
 ## Decision: archive a new version before submission
 
@@ -37,10 +39,12 @@ The verified all-versions concept DOI is
 [10.5281/zenodo.24112044](https://doi.org/10.5281/zenodo.24112044).
 
 Do not move the old tag, overwrite its archive or assign its version DOI to
-the new contents. `CITATION.cff` and the article currently retain the real,
-published v1.0.0 DOI; no unpublished v1.1.0 DOI has been invented.
+the new contents. The article retains the real v1.0.0 DOI for its unchanged
+original dataset. For v1.1.0, `CITATION.cff` uses the verified all-versions
+concept DOI together with an exact GitHub version/release URL. It does not
+mislabel the v1.0.0 version DOI as v1.1.0 or invent an unpublished DOI.
 
-## Before creating v1.1.0
+## Submission/archive follow-up
 
 1. Include a redistributable `apalike-ejor.bst` in the source bundle, or otherwise
    supply an author-approved portable bibliography dependency. The existing
@@ -51,10 +55,11 @@ published v1.0.0 DOI; no unpublished v1.1.0 DOI has been invented.
    distinguish permitted public data from local replay inputs.
 4. Finalize release metadata and notes for the new version. Historical
    preregistrations and original run files remain unchanged.
-5. Prefer opening a **new-version draft on the existing Zenodo deposit** and
-   reserving its real version DOI before tagging. With that reserved DOI,
-   update `CITATION.cff`, the dataset reference and cover letter, rebuild and
-   commit the final source/PDF set. Never invent or predict the DOI.
+5. The selected citation path for this release uses the already verified
+   **concept DOI plus exact GitHub version URL**, while preserving the original
+   dataset's v1.0.0 citation. No new DOI is reserved or invented by this workflow.
+   For any later version-specific citation, first obtain the real published or
+   reserved DOI from the existing Zenodo deposit and verify its version.
 6. Tag/release the approved commit and publish the matching archive. If relying
    on GitHub–Zenodo integration instead, confirm the integration's DOI/version
    workflow before publishing; do not assume it creates or updates a record
@@ -63,7 +68,8 @@ published v1.0.0 DOI; no unpublished v1.1.0 DOI has been invented.
    is an alternative citation only when intentionally citing the project across
    versions rather than identifying a particular reproducibility snapshot.
 
-This request authorized pushing the repository and deciding whether another
-release is needed. It did not ask to publish a new release. No new release or
-Zenodo deposit was created by this decision document. Packaging and archiving
-do not certify EJOR acceptance or scientific priority.
+The original request authorized only a push and release decision; the later
+request explicitly authorized publishing the new GitHub release. A GitHub
+release does not itself prove Zenodo has archived the version. Confirm the
+resulting record separately. Packaging and archiving do not certify EJOR
+acceptance or scientific priority.

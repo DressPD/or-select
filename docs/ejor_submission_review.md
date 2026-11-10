@@ -2,7 +2,9 @@
 
 **Internal working report — not part of the journal submission.**
 
-**Manuscript:** *Reproducible Answer Selection over Large Language Model Ensembles, with an Exact Kemeny Reference and a Ground-Truth Audit*
+**Manuscript at original review:** *Reproducible Answer Selection over Large Language Model Ensembles, with an Exact Kemeny Reference and a Ground-Truth Audit*
+
+**Current submission title:** *Pairwise Judging versus Voting for Language Model Answer Selection: Finite-Pool Theory and an Empirical Audit*
 
 **Review date:** 10 November 2026
 

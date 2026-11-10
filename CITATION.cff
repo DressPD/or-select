@@ -1,6 +1,6 @@
 cff-version: 1.2.0
-message: "If you use this software or data, please cite it as below."
-title: "OR-Select: Reproducible Best-of-N Answer Selection over LLM Ensembles, with an Exact Kemeny Reference and a Ground-Truth Audit"
+message: "Please cite this OR-Select release. The DOI identifies the project across versions; the release URL identifies v1.1.0."
+title: "Pairwise Judging versus Voting for Language Model Answer Selection: Finite-Pool Theory and an Empirical Audit"
 type: software
 authors:
   - family-names: Dressino
@@ -9,8 +9,9 @@ authors:
     affiliation: "TUM School of Management, Technical University of Munich"
 repository-code: "https://github.com/DressPD/or-select"
 license: MIT
-doi: 10.5281/zenodo.24112045
-version: "1.0.0"
+doi: 10.5281/zenodo.24112044
+url: "https://github.com/DressPD/or-select/releases/tag/v1.1.0"
+version: "1.1.0"
 date-released: "2026-11-10"
 keywords:
   - operations research

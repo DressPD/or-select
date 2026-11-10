@@ -1,7 +1,8 @@
 {
-  "title": "OR-Select: Reproducible Best-of-N Answer Selection over LLM Ensembles, with an Exact Kemeny Reference and a Ground-Truth Audit",
+  "title": "Pairwise Judging versus Voting for Language Model Answer Selection: Finite-Pool Theory and an Empirical Audit",
+  "version": "1.1.0",
   "upload_type": "software",
-  "description": "Code, stored run files and graded results for every track except GPQA Diamond, generated tables and historical pre-registration documents accompanying the manuscript. Stored judgments support offline selector replay where present. GPQA Diamond files embed password-gated question text and are not included; the released workflow can generate new runs with authorized benchmark access, not recreate the original stochastic outputs. The published v1.0.0 archive is distinct from later working-tree manuscript revisions.",
+  "description": "OR-Select v1.1.0: code, public stored runs, generated tables, revised manuscript and online supplement accompanying Pairwise Judging versus Voting for Language Model Answer Selection: Finite-Pool Theory and an Empirical Audit. Stored judgments support offline selector replay where present. Experimental records and selection behavior are unchanged. GPQA Diamond files embed password-gated question text and are not included; the released workflow can generate new runs with authorized benchmark access, not recreate the original stochastic outputs. This release does not overwrite the v1.0.0 archive.",
   "creators": [
     {
       "name": "Dressino, Aris",
