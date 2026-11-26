@@ -123,6 +123,20 @@ knockout-style pairwise selection with repeated comparisons has been given
 provable scaling laws \citep{chen2025provable}. Our setting differs in
 analysing complete finite tournaments against plurality voting and in
 auditing the resulting selectors against ground truth.
+
+Three studies in this journal frame our design. Best-of-$N$ selection
+against an imperfect proxy is vulnerable to reward hacking, and regularized
+and stochastic variants have been compared on alignment benchmarks
+\citep{ichihara2025bon}; our judge is such a proxy, which is why we score the
+selected answer against ground truth instead of against the judge. A
+systematic comparison of nine debiasing strategies for pairwise judges finds
+style bias far larger than position bias in its benchmarks
+\citep{soumik2026judging}; our order-averaging controls only position, so
+style effects remain untested here (Section~\ref{sec:future}). Finally,
+language models show low hypothetical and compositional consistency in
+multi-step reasoning \citep{chen2024twofailures}; the self-consistency we use
+as a baseline is the different, answer-agreement notion of voting
+\citep{wang2023selfconsistency}, and we do not claim it certifies reasoning.
 These findings motivate paired correctness evaluation.
 
 These approaches also make different uses of additional information.
@@ -745,7 +759,9 @@ about score distributions and dependence, not merely a mean score.
 
 Only one free-tier fixed judge is evaluated in the main audit. Stronger
 judges, trained verifiers and other selection architectures may perform
-differently. Small discordant counts limit precision; the replay subset is
+differently. Forward--reverse averaging addresses position bias; style bias,
+reported to be larger in other judge benchmarks \citep{soumik2026judging},
+is not controlled, and a debiasing comparison on this pool is left open. Small discordant counts limit precision; the replay subset is
 not randomly sampled, and mixed-pair measurements are sparse on several
 tracks. Candidate-order voting ties can favor particular generators in the
 round-robin pool. The reported results describe the generation, extraction
