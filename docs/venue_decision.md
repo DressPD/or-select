@@ -29,6 +29,16 @@ TMLR and a journal or conference must not be submitted in parallel (dual submiss
 `supplement_body.tex`; then `pdflatex`, `bibtex`, `pdflatex` x2 on `main_tmlr.tex`. The build uses
 `tmlr.sty` and `tmlr.bst` (TMLR style files, github.com/JmlrOrg/tmlr-style-file).
 
+## TMLR papers cited (journal reference verified on each arXiv page, 2026-11-27)
+- Chen et al., Two Failures of Self-Consistency in the Multi-Step Reasoning of LLMs (TMLR 2024, arXiv:2305.14279).
+- Ichihara et al., Evaluation of Best-of-N Sampling Strategies for Language Model Alignment (TMLR 2025, arXiv:2502.12668).
+- Soumik, Judging the Judges: Bias Mitigation Strategies in LLM-as-a-Judge Pipelines (TMLR 2026, arXiv:2604.23178).
+
+Only abstracts were read. The searches found no TMLR paper that directly compares pairwise judging with voting,
+so the manuscript positions itself against these three rather than claiming a prior TMLR line of work.
+Checked and rejected: arXiv:2412.11006 and arXiv:2510.00492 state no venue; arXiv:2311.17885 is JMLR, not TMLR;
+OpenReview rFqsgVXZYO could not be read.
+
 ## Before submitting on OpenReview (author actions)
 - Upload `submission/tmlr/main_tmlr.pdf` (anonymous) and the anonymized code/data archive; remove the
   GitHub URL and Zenodo DOI from anything uploaded.
