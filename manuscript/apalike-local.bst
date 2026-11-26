@@ -1,5 +1,5 @@
-% apalike-ejor: a local author-date adaptation for the OR-Select manuscript.
-% This is NOT an official EJOR/Elsevier style or a full APA implementation.
+% apalike-local: a local author-date adaptation for the OR-Select manuscript.
+% This is NOT an official journal style or a full APA implementation.
 % Adapted in 2026 from CTAN's apalike.bst (version 0.99a, 8-Dec-2010):
 % https://mirrors.ctan.org/biblio/bibtex/base/apalike.bst
 % Local changes: ampersand author separators; comma-separated article pages;
@@ -13,7 +13,7 @@
 % it is unmodified.  Modifications (and redistribution of modified versions)
 % are also permitted, but only if the resulting file is renamed.
 %
-% This modified file is renamed apalike-ejor.bst as required. Original portions
+% This modified file is renamed apalike-local.bst as required. Original portions
 % and local changes may be redistributed under the permission above; retain
 % this notice. Further modified versions must also be renamed.
 % Local adaptation copyright (c) 2026 DressPD, under that same permission.

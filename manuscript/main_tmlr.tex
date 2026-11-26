@@ -124,7 +124,7 @@ provable scaling laws \citep{chen2025provable}. Our setting differs in
 analysing complete finite tournaments against plurality voting and in
 auditing the resulting selectors against ground truth.
 
-Three studies in this journal frame our design. Best-of-$N$ selection
+Three peer-reviewed studies frame our design. Best-of-$N$ selection
 against an imperfect proxy is vulnerable to reward hacking, and regularized
 and stochastic variants have been compared on alignment benchmarks
 \citep{ichihara2025bon}; our judge is such a proxy, which is why we score the
@@ -183,8 +183,14 @@ selective-intervention criterion concerns the precision of majority
 overrides, rather than the mixed-pair accuracy needed by a complete
 Copeland tournament. Negative judge results alone are not the distinction.
 
-\paragraph{Operational-research context}
-Exact Kemeny methods in this journal address median rankings and winner
+\paragraph{Decision fusion and ensembles}
+Decision-level fusion combines the outputs of several classifiers or models,
+and large comparisons of aggregation rules show that no rule dominates
+\citep{campagner2023aggregation}. Recent work fuses language-model outputs by
+majority voting over small models \citep{cielen2026slm} and by rank fusion
+over prompt ensembles \citep{li2026dualprompt}; both fuse retrieval rankings
+or labels, not free-form final answers chosen by a pairwise judge.
+Exact Kemeny methods address median rankings and winner
 computation \citep{amodio2016kemeny,rico2023kemeny}; ensemble optimization
 selects constituent models \citep{debock2020ensemble,aktas2024clusterensemble}.
 Here the decision is which already-generated answer to return, with an

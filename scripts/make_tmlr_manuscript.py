@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Generate the anonymized TMLR submission source from the EJOR sources.
+"""Generate the anonymized TMLR submission source from the main manuscript sources.
 
-The EJOR manuscript (manuscript/main.tex) and its online supplement
+The main manuscript (manuscript/main.tex) and its online supplement
 (manuscript/supplement_body.tex) remain the single source of truth. This script
 writes manuscript/main_tmlr.tex, which
 

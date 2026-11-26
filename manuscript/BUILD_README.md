@@ -1,14 +1,14 @@
-# Building the EJOR submission sources
+# Building the manuscript sources
 
 Main entry point: **`main.tex`**. The online supplement entry point is
 **`supplement.tex`**. Cover-letter and title-page entry points are
-`Cover_Letter_EJOR.tex` and `Submission_Title_Page.tex`.
+`Cover_Letter.tex` and `Submission_Title_Page.tex`.
 
 ## Requirements
 
 Use a standard LaTeX installation with pdfLaTeX, BibTeX, and the packages
 requested in the source files. The document class and bibliography style
-are included locally: `elsarticle.cls` and **`apalike-ejor.bst`**.
+are included locally: `elsarticle.cls` and **`apalike-local.bst`**.
 No locally installed custom bibliography style, Python, API credentials,
 benchmark data or new model calls are required to compile these sources.
 
@@ -30,7 +30,7 @@ pdflatex -interaction=nonstopmode -halt-on-error supplement.tex
 pdflatex -interaction=nonstopmode -halt-on-error main.tex
 pdflatex -interaction=nonstopmode -halt-on-error supplement.tex
 pdflatex -interaction=nonstopmode -halt-on-error main.tex
-pdflatex -interaction=nonstopmode -halt-on-error Cover_Letter_EJOR.tex
+pdflatex -interaction=nonstopmode -halt-on-error Cover_Letter.tex
 pdflatex -interaction=nonstopmode -halt-on-error Submission_Title_Page.tex
 ```
 
@@ -42,8 +42,8 @@ files are conveniences, not substitutes for the editable sources: the complete
 sequence above was also checked starting without them. After editing labels or
 references, rebuild both documents rather than relying on stale generated files.
 
-For the initial EJOR submission, the portal requires a **PDF**, not LaTeX
-sources. Retain this ZIP for revision. When the portal requests editable LaTeX
+For the initial journal submission, the portal requires a **PDF**, not LaTeX
+sources. When the portal requests editable LaTeX
 sources, select `main.tex` as the main entry point. Upload the supplement for
 peer review at initial submission in its requested category. Inspect the PDF
 assembled by the portal. Keep the title page, highlights, cover letter, and
@@ -52,8 +52,8 @@ declarations in their requested categories; do not concatenate them into the art
 ## Redistribution and scope
 
 See `BIBLIOGRAPHY_STYLE.md` for the upstream source, local modifications and
-redistribution permission for `apalike-ejor.bst`. It is a local adaptation,
-not an official EJOR style. `elsarticle.cls` and `elsarticle-num-names.bst`
+redistribution permission for `apalike-local.bst`. It is a local adaptation,
+not an official journal style. `elsarticle.cls` and `elsarticle-num-names.bst`
 retain their own copyright and LaTeX Project Public License notices.
 The included `LICENSE` records the repository's MIT code license. Packaging
 does not relicense third-party material or assign a new journal publishing license.

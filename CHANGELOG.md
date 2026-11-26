@@ -1,8 +1,16 @@
 # OR-Select release notes
 
-## Unreleased — source-package completion
+## Unreleased — retarget to Information Fusion
 
-- Bundle a redistributable `apalike-ejor.bst` derived from public CTAN source,
+- Remove the earlier journal's cover letter, review/audit notes, source-package ZIP and delivery PDFs
+  (still in git history); rename the local bibliography style to `apalike-local.bst`.
+- Retarget `main.tex` to Information Fusion: journal macro, keywords, a decision-fusion related-work
+  paragraph with three verified Information Fusion citations; add `Cover_Letter.tex`.
+- Add the anonymous TMLR build (parked) and three verified TMLR citations; see `docs/venue_decision.md`.
+
+## Earlier — source-package completion
+
+- Bundle a redistributable `apalike-local.bst` derived from public CTAN source,
   with retained permission, renamed file and documented changes. The installed
   custom file was not accessed. Bibliographies remain byte-identical.
 - Add `submission/ejor-source-package.zip`, license notices, build instructions,
@@ -57,7 +65,7 @@ Manuscript, bibliography and reproducibility-documentation revision.
   mismatches. Latest title-release build checks are in `docs/release_audit.json`.
 - GPQA question-containing originals are not redistributed. Public generated
   tables are present, but complete regeneration needs authorized original inputs.
-- TeX compilation requires `apalike-ejor.bst`, installed in the validation
+- TeX compilation requires `apalike-local.bst`, installed in the validation
   environment but not bundled. See the submission checklist before uploading
   an editable source package.
 - Automatic Zenodo archiving is verified: record `24115542`, version `1.1.0`,

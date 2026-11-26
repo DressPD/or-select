@@ -1,0 +1,25 @@
+\documentclass[11pt]{letter}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\signature{Aris Dressino}
+\address{TUM School of Management \\ Technical University of Munich \\ Arcisstra{\ss}e 21 \\ 80333 Munich, Germany \\ aris.dressino@tum.de}
+\longindentation=0pt
+
+\begin{document}
+
+\begin{letter}{The Editors \\ \emph{Information Fusion}}
+
+\opening{Dear Editors,}
+
+Please find enclosed our manuscript, \textbf{``Pairwise Judging versus Voting for Language Model Answer Selection: Finite-Pool Theory and an Empirical Audit,''} for consideration in \emph{Information Fusion}.
+
+The paper studies decision-level fusion of sampled language-model answers: when should a pairwise judge replace plurality voting (self-consistency) as the fusion rule? It derives the exact accuracy comparison between binary Copeland selection and plurality voting for three independently generated candidates, with finite-pool extensions, and pairs it with a composite selector, an exact integerized Kemeny--Young reference and a stored-output ground-truth audit.
+
+On six benchmarks (532 distinct problems), the tested free-tier judge configuration has no statistically detected homogeneous-pool advantage over voting and lower pooled heterogeneous-pool accuracy. Offline ablations identify an objective-scale mismatch and compare alternative selectors on the same saved comparisons. The findings concern the tested judge and configuration, not stronger judges in general. Code, public stored runs and tables are archived on Zenodo (DOI 10.5281/zenodo.24112045), with data-access conditions described in the manuscript.
+
+The work is original, is not under consideration elsewhere and has not been published previously. The author declares no competing interests.
+
+\closing{Sincerely,}
+
+\end{letter}
+\end{document}
