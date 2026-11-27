@@ -148,7 +148,10 @@ def select(row, kind):
     pool = [i for i in valid if str(ans[i]) in leaders]
     tie = len(leaders) > 1
     hyb = copeland(pool) if tie else min(pool)
-    return hyb, cop, tie
+    # unordered pairs the judge must compare: Rule H only inside the tied pool, Copeland over every valid candidate
+    pairs_h = len(pool) * (len(pool) - 1) // 2 if tie else 0
+    pairs_c = len(valid) * (len(valid) - 1) // 2
+    return hyb, cop, tie, pairs_h, pairs_c
 
 
 def audit():
@@ -161,8 +164,9 @@ def audit():
             if "error" in row or row.get("judge_version") != "short-answer" or not row.get("judgments"):
                 continue
             ok = [bool(th.CORRECT[kind](th.EXTRACT[kind](c["text"]), row["ground_truth"])) for c in row["candidates"]]
-            hyb, cop, tie = select(row, kind)
+            hyb, cop, tie, pairs_h, pairs_c = select(row, kind)
             rec = {
+                "pairs_h": pairs_h, "pairs_c": pairs_c,
                 "hyb": ok[hyb], "cop": ok[cop], "sc": bool(row["self_consistency"]["correct"]),
                 "ors": bool(row["or_select"]["correct"]) if isinstance(row.get("or_select"), dict) and "correct" in row["or_select"] else None,
                 "tie": tie, "opp": tie and any(ok[i] for i in range(len(ok))),
@@ -202,6 +206,10 @@ def main() -> None:
                 L.append(rf"\def\Hyb{tag}{name}{{{val}}}")
             L.append(rf"\def\Hyb{tag}PSC{{{fp(p1)}}}")
             L.append(rf"\def\Hyb{tag}PCop{{{fp(p2)}}}")
+            share = 100 * sum(x["pairs_h"] for x in r) / sum(x["pairs_c"] for x in r)
+            L.append(rf"\def\Hyb{tag}CallShare{{{share:.1f}}}")
+            L.append(rf"\def\Hyb{tag}CallSaved{{{100 - share:.1f}}}")
+            print(f"   judge comparisons: Rule H uses {share:.1f}% of those Copeland-everywhere needs")
     L.append(r"\def\HybridAuditRows{" + "\n".join(out) + "}")
     DEST.write_text("\n".join(L) + "\n")
     print("wrote", DEST)

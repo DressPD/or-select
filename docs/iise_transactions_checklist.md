@@ -9,12 +9,12 @@ before upload.
 |---|---|
 | Original article, English | Pass |
 | Order: title, abstract, keywords, main text with introduction and conclusion, acknowledgments, declaration of interest, references; figures and tables inline | Pass: Figure 1 and all main tables inline; no acknowledgments (blind); data, interest, funding and AI statements precede the references |
-| At most about 30 pages, 11 pt, 1 inch margins, single column, 1.5 spacing, including references, tables and figures | Pass: `main_iise.pdf` is 25 pages at 1.5 spacing with the references also at 1.5 |
+| At most about 30 pages, 11 pt, 1 inch margins, single column, 1.5 spacing, including references, tables and figures | Pass: `main_iise.pdf` is 26 pages at 1.5 spacing with the references also at 1.5 |
 | 11 pt, 1 inch margins, 1.5 spacing also for appendices | Pass: the supplement uses the same settings (14 pages) |
 | No footnotes | Pass: none in either file |
 | American spelling | Pass after the check: one British form ("analysing") fixed; a keyword search found no others |
 | Double quotation marks | Pass: LaTeX double quotes only |
-| Unstructured abstract of 200 words | Pass: 184 words, single paragraph |
+| Unstructured abstract of 200 words | Pass: 191 words, single paragraph |
 | At most 10 keywords | Pass: 6 |
 | Double-blind review | Pass: manuscript, supplement and the LaTeX zip contain no author, affiliation, repository or DOI strings (searched in the PDF text, the sources, the bibliography and the `.bbl` files); the author's own archive record is filtered out of the zipped `refs.bib` |
 | LaTeX: upload the PDF as "Manuscript - anonymous", plus sources as a single zip marked "LaTeX Source Files" | Ready: `submission/iise/main_iise.pdf` and `iise-latex-source.zip` (22 files; rebuilt from the zip in a clean directory) |

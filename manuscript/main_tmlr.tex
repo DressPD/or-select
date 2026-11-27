@@ -37,7 +37,7 @@
 \maketitle
 
 \begin{abstract}
-Choosing among sampled language-model answers is a decision problem: take the most frequent answer, or let a pairwise judge decide. In a finite-pool model we first derive the exact accuracy gain of binary Copeland selection over plurality voting and its break-even judge accuracy (80.35\% at 80\% candidate accuracy for three candidates). When problems differ in difficulty, the threshold depends on an effective-odds ratio of difficulty moments, not on pooled accuracy. Second, we prove that voting first and judging only on ties is Bayes-optimal and never worse than either rule, so it has no break-even threshold. Third, we audit one free-tier judge, scoring \RBOverallAcc\% on RewardBench, on six benchmarks of \TotalProblems{} problems. Paired exact tests find no homogeneous-pool advantage over self-consistency (\HomogPooledB{} versus \HomogPooledC{} discordant problems of \HomogPooledN{}); judging everywhere performs worse in heterogeneous pools (\HeteroPooledB{} versus \HeteroPooledC{} of \HeteroPooledN{}, \HeteroPooledP). Vote-first selection removes that loss (\HybHetBCop{} versus \HybHetCCop{} discordant problems) but, because exact ties are rare, adds no detectable gain over voting. Each problem's own difficulty predicts the observed gap better than pooled accuracy. Findings concern the tested judge, not stronger judges.
+Choosing among sampled language-model answers is a decision problem: take the most frequent answer, or let a pairwise judge decide. In a finite-pool model we first derive the exact accuracy gain of binary Copeland selection over plurality voting and its break-even judge accuracy (80.35\% at 80\% candidate accuracy for three candidates). When problems differ in difficulty, the threshold depends on an effective-odds ratio of difficulty moments, not on pooled accuracy. Second, we prove that voting first and judging only on ties is Bayes-optimal and never worse than either rule, so it has no break-even threshold. Third, we audit one free-tier judge, scoring \RBOverallAcc\% on RewardBench, on six benchmarks of \TotalProblems{} problems. Paired exact tests find no homogeneous-pool advantage over self-consistency (\HomogPooledB{} versus \HomogPooledC{} discordant problems of \HomogPooledN{}); judging everywhere performs worse in heterogeneous pools (\HeteroPooledB{} versus \HeteroPooledC{} of \HeteroPooledN{}, \HeteroPooledP). Vote-first selection removes that loss (\HybHetBCop{} versus \HybHetCCop{} discordant problems) with only \HybHetCallShare\% of the judge comparisons, but, because exact ties are rare, adds no detectable gain over voting. Each problem's own difficulty predicts the observed gap better than pooled accuracy. Findings concern the tested judge, not stronger judges.
 \end{abstract}
 
 \section{Introduction}
@@ -215,6 +215,16 @@ returned answer after observing a candidate pool. Established ranking and
 optimization components provide the reference machinery; the finite-pool
 correctness comparison and its accompanying audit address the answer-level
 decision.
+
+\paragraph{Selection and aggregation in industrial engineering}
+\emph{IISE Transactions} has published work on aggregating pairwise comparisons to
+find the top-ranked alternatives under an experimentation budget
+\citep{mahpouya2026topk}, on optimization-based ensembles of classifiers
+\citep{atsiz2026ensemble} and on adaptive sequential selection procedures
+\citep{tsai2024quantile}. Those settings choose among alternatives measured with
+noise. Here the alternatives are already-generated language-model answers, the
+measurements are binary judge comparisons that each carry a price, and the
+question is when a costly comparison should replace a free vote.
 
 Judgment aggregation and selection among forecasts provide a related OR
 perspective \citep{brown2019wisdom,jaspersen2022judgment,debaets2020judgment}:
@@ -572,7 +582,12 @@ enumeration for $N\le4$ in exact rational arithmetic and for $N=5,6$ in floating
 point confirms optimality and dominance. For example, at $N=6$, $p=0.3$ and
 $q=0.8$ the accuracies of plurality, Copeland and Rule~H are $63.0\%$, $70.7\%$
 and $77.1\%$ (Table~\ref{tab:hybrid-theory}). The result is a design principle
-for fusion: spend judge calls only where votes are uninformative. It is proved
+for fusion: spend judge calls only where votes are uninformative. It is also a
+cost statement. Rule~H compares only when all $N$ answers differ, which in the model
+happens with probability $P(k\le1)=(1-p)^N+Np(1-p)^{N-1}$ and then needs $\binom N2$
+comparisons, so its expected number of comparisons is $\binom N2\,P(k\le1)$ against
+$\binom N2$ for Copeland on every problem; at $N=3$ and $p=0.6$ this is $0.35$ of the
+comparisons. The result is proved
 only for distinct wrong answers; when wrong answers collide, a wrong repeated
 answer can outvote a lone correct one, Rule~H inherits that failure, and a
 Copeland-based rule can recover it (Table~\ref{tab:threshold-n}).
@@ -889,7 +904,11 @@ problems, $p=\HybHetPSC$) and $\HybHomHyb\%$ against $\HybHomSC\%$ in homogeneou
 pools ($\HybHetBCop$ versus $\HybHetCCop$ discordant problems, $p=\HybHetPCop$) and indistinguishable
 in homogeneous pools ($\HybHomBCop$ versus $\HybHomCCop$). Using the judge only on ties thus removes
 the heterogeneous-pool penalty of judging everywhere, but with the tested judge it adds no
-detectable accuracy over voting, as expected when its binary accuracy is near chance. The stored
+detectable accuracy over voting, as expected when its binary accuracy is near chance. Its practical
+benefit is cost: because the judge is consulted only on ties, Rule~H needs $\HybHomCallShare\%$
+(homogeneous) and $\HybHetCallShare\%$ (heterogeneous) of the pairwise comparisons that Copeland on
+every problem requires, avoiding $\HybHomCallSaved\%$ and $\HybHetCallSaved\%$ of judge comparisons at
+voting-level accuracy. The stored
 voting baseline breaks ties by candidate order, and the judged subset is not a random sample;
 GPQA Diamond is not part of this audit because its stored outputs are not in the public archive.
 

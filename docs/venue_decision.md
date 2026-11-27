@@ -13,13 +13,27 @@ new results before retargeting (see below). Current target: **IISE Transactions 
   difficulty-aware threshold, not only an audit; that serves the "strong methodological focus". It does not by itself supply a
   classic engineering motivation: the introduction draws the analogy with redundant inspection with adjudication, but fit is a
   risk. No LLM-selection paper in IISE Transactions was found (the search tool covers journal archives poorly).
+- Past IISE Transactions papers (Crossref index, articles since 2021; titles and metadata only, full texts are paywalled):
+  - No article title contains "language model"; the AI content is GANs and deep learning for manufacturing, one editorial on
+    AI/ML for manufacturing, and applications. **There is no LLM precedent in the journal**, so the topic is new to it.
+  - Nearest neighbours are selection, ranking and sequential-decision papers: Mahpouya et al. 2026 (top-k rank from aggregated
+    pairwise comparisons, 49 references, 20 pp), Atsiz et al. 2026 (optimization-based classifier ensembles), Tsai et al. 2024
+    (adaptive sequential quantile selection), Liu et al. 2023 (similarity-based sampling with binary outcomes), Steimle et al.
+    2021 (multi-model Markov decision processes). These are cited in the related work.
+  - Norms from a sample of 100 articles since 2024: median 46 references (middle half 38 to 54), median 16 printed pages
+    (middle half 15 to 18). The blind build has 51 references and 26 manuscript pages (about 13 to 15 printed).
+  - Structure: the available metadata does not show section layouts; the paper keeps the usual introduction, related work,
+    model and theory, experiments, discussion and conclusion, with proofs in the online supplement.
+- Fit evidence added for the journal's engineering orientation: Rule H needs only 6.7% (homogeneous) and 4.3% (heterogeneous)
+  of the judge comparisons that judging everywhere needs, at voting-level accuracy, and the introduction links it to
+  redundant inspection with adjudication on disagreement.
 - Requirements: the instructions-for-authors text supplied by the author (updated 2026-10-20), checked in
   `docs/iise_transactions_checklist.md`: about 30 pages including references, 11 pt, 1 inch margins, 1.5 spacing for everything
   including appendices, no footnotes, American spelling, abstract of 200 words, at most 10 keywords, double-blind review,
   LaTeX allowed (anonymous PDF plus one zip of sources), data availability statement, generative-AI declaration, CRediT,
   biographical note. The linked pre-submission checklist, reproducibility-report template and reference guide were not
   available to me and must be read before upload.
-- Build status: `main_iise.pdf` is 25 pages, abstract 184 words, no identifying strings; supplement 14 pages;
+- Build status: `main_iise.pdf` is 25 pages, abstract 191 words, no identifying strings; supplement 14 pages;
   `submission/iise/iise-latex-source.zip` rebuilds in a clean directory.
 
 ## Alternatives, in order (Elsevier / Taylor & Francis only)
