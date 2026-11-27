@@ -155,7 +155,7 @@ Citation coverage and source policy: [citation audit](docs/citation_audit.md).
 The manuscript is prepared for **Expert Systems with Applications** (Elsevier). The comparison of past publications by
 journal, the ranking evidence and the ordered alternatives are in [`docs/venue_decision.md`](docs/venue_decision.md); the
 requirement check (the journal's guide was not available, so partly unverified) is in
-[`docs/eswa_checklist.md`](docs/eswa_checklist.md). The package is in [`submission/eswa/`](submission/eswa/), built with
+[`docs/eswa_checklist.md`](docs/eswa_checklist.md). The double-anonymized package is in [`submission/eswa/`](submission/eswa/) (`anonymous/` and `author_files/`), built with
 `scripts/package_elsevier.py` (see [`manuscript/BUILD_README.md`](manuscript/BUILD_README.md)); the cover letter is
 `manuscript/Cover_Letter.tex`. A blind IISE Transactions build (`submission/iise/`) and an anonymous TMLR build
 (`submission/tmlr/`) are kept as alternatives. Journal-specific packages from the first target were removed and remain in

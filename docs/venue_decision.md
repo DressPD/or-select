@@ -2,7 +2,7 @@
 
 A first submission was desk-rejected for fit and novelty; its journal-specific files were removed (they remain in git
 history). The target is restricted to **Elsevier and Taylor & Francis journals**. After comparing past publications,
-the current target is **Expert Systems with Applications (Elsevier)**. Publication cannot be guaranteed anywhere; this
+the recommended first target is **Expert Systems with Applications (Elsevier)**, see the decision analysis below. Publication cannot be guaranteed anywhere; this
 ordering maximizes topical fit and precedent, then rating.
 
 ## Evidence: recent papers by journal (Crossref scan, titles only, articles since 2024)
@@ -28,16 +28,41 @@ query), so read them as relative signals.
 | IISE Transactions | T&F | 0 | 0 | none (no title with "language model" since 2021) |
 | Computers & OR, Computers & Industrial Engineering | Elsevier | 0 | 0 | none |
 
-## Why Expert Systems with Applications first
-- Most LLM-titled papers of the OR/AI candidates and an OR-style precedent (LLM-driven group consensus decision-making),
-  cited in the related work.
-- Elsevier's own transfer suggestions after the first rejection listed it at impact factor 9.4, CiteScore 17.0, first
-  decision in about 5 days (figures from that email; not independently checked). VHB Rating 2024: B.
-- Single-anonymized review (Elsevier default; not confirmed for this journal), so no blind build is needed.
-- Caveats: **its guide for authors was not available** (ScienceDirect refuses automated access): confirm page limit,
-  reference style, highlights and any cover-letter questions before upload (`docs/eswa_checklist.md`). The journal
-  publishes a very large volume, so selectivity per paper is uncertain; the scope is applications of intelligent systems,
-  and the paper is theory plus an audit with a null result on one weak judge.
+## Decision analysis (guides for Expert Systems with Applications, Information Fusion and IISE Transactions were supplied)
+
+Priority order set by the author: get published, in a journal that matters, ideally with an OR identity. Acceptance odds
+cannot be computed; the ranking uses observable proxies (topical precedent, scope match, how hard the guide's demands are
+to meet with this paper, readiness). 1 is weak, 5 is strong; judgements, not measurements.
+
+| Criterion | ESWA | Information Fusion | IISE Transactions |
+|---|---|---|---|
+| Recent LLM precedent (scan) | 5 (43 LLM-titled, 5 with selection terms, a consensus decision-making paper) | 4 (31, 3) | 1 (0) |
+| Scope match with the guide's own words | 3 (design, testing and management of intelligent systems, practical guidelines; but the examples are application domains and none is evaluated) | 5 ("decision fusion", "multi-classifier/decision systems"; algorithms and theory welcome) | 2 (methodology motivated by real engineering problems; only an analogy to inspection) |
+| Demands the paper cannot meet | Low: no length limit; asks for application relevance | High: cover letter must show comparison with state of the art (5 references) and public datasets; "novelty" bar; 35-page limit (38 now) | Medium: 30 pages (26 ok), engineering motivation |
+| Review model and readiness | Double anonymized, package built and rebuilt in a clean directory | Single anonymized; needs trimming to 35 pages and a numeric-style build; cover-letter answers rewritten | Double blind; build exists but is stale (old title) |
+| Standing | Impact factor 9.4, CiteScore 17.0 (journal page); VHB B | Impact factor reported 15 to 17 (aggregators, unverified); no VHB entry | VHB A; impact factor not checked |
+| OR identity | Low | Low | High |
+| Speed of a first answer | Elsevier data shows about 5 days to first decision | Unknown | Unknown |
+
+Reading: Information Fusion is the best match for the topic as the guide words it, but it sets the highest bar and the
+paper is weakest exactly where that bar bites (no state-of-the-art baselines such as universal self-consistency or a trained
+verifier, one weak judge, a null result). ESWA has the most precedent and the lowest compliance burden, and its stated
+mission (practical guidelines for building intelligent systems) is what the new narrative supplies; its weakness is that
+reviewers may ask for a real application domain. IISE Transactions has the best rating among the OR journals but no
+precedent and a weak scope match, so it is the highest-risk first attempt.
+
+**Recommendation:** submit to **Expert Systems with Applications first**; if it is rejected, adapt to the reviewers'
+comments and move to **Information Fusion** (after trimming), then Knowledge-Based Systems. Keep IISE Transactions as a
+stretch only if you want an OR-journal identity and can accept a likely scope rejection. This is a bet on the highest
+chance of a first acceptance, not a claim of acceptance.
+
+**What would change the recommendation:**
+- A stronger-judge run and one real application domain (for example a risk-assessment or decision-support question set)
+  would lift every journal; with them, Information Fusion becomes a reasonable first choice.
+- If the editors at ESWA desk-reject for lack of an application, that decision arrives fast and costs little.
+
+Caveats on the evidence: the scan counts titles only and is a lower bound; impact factors other than ESWA's are unverified;
+the guides for Knowledge-Based Systems, Applied Soft Computing and Information Sciences were not available.
 
 ## Alternatives, in order
 1. Information Fusion (Elsevier) - guide verified earlier: research article 10-35 pages, at most 50 references, seven
@@ -64,13 +89,17 @@ Computing have no VHB entry. ABS/AJG and Clarivate JCR need logins and were not 
 - One weak free-tier judge underlies every empirical claim; a stronger-judge run (paid, needs approval) is the largest gap.
 
 ## Builds and packages
-- `manuscript/main.tex` (elsarticle, author-year, `apalike-local.bst`) is the Elsevier source; `scripts/package_elsevier.py`
-  writes `submission/eswa/` (PDFs, highlights, declarations, figures, source zip rebuilt in a clean directory).
-- IISE: `scripts/make_iise_manuscript.py` and `scripts/package_iise.py` write the blind build in `submission/iise/`.
-- TMLR: `scripts/make_tmlr_manuscript.py`; parked (not an Elsevier or T&F journal).
+- `manuscript/main.tex` (elsarticle, author-year, `apalike-local.bst`) is the shared source. ESWA is double anonymized:
+  `scripts/make_eswa_manuscript.py` writes the anonymous manuscript and supplement, and `scripts/package_elsevier.py`
+  writes `submission/eswa/anonymous/` and `submission/eswa/author_files/` (source zip rebuilt in a clean directory).
+- IISE: `scripts/make_iise_manuscript.py` and `scripts/package_iise.py` write the blind build in `submission/iise/`;
+  regenerate and rebuild it (the title changed since it was packaged).
+- TMLR: `scripts/make_tmlr_manuscript.py`; parked (not an Elsevier or T&F journal); also stale after the title change.
+- Information Fusion: no separate build; it needs the numeric style (`elsarticle-num-names.bst`), a trim from about 38 to
+  35 pages, and a cover letter with its seven required answers.
 
 ## Before submitting to Expert Systems with Applications (author actions)
-- Read the live guide for authors; adapt reference style, length and any declarations; the cover letter has no
-  journal-specific questions because none were verified.
-- Enter the CRediT roles, funding, competing-interest and generative-AI statements as the portal asks (texts are in `submission/eswa/`).
-- Decide on the stronger-judge run before submission if possible.
+- Complete the declarations tool and upload the anonymous files and the author files as separate items
+  (`docs/eswa_checklist.md`); enter the archive DOI and CRediT roles in the form.
+- Adjust the reference style by hand if the editors insist on exact APA 7.
+- Decide on the stronger-judge run, and ideally add one real application domain, before submission.
