@@ -16,9 +16,20 @@ Decision: **Information Fusion (Elsevier)**.
     Information Fusion 90 (2023), 241-252, doi:10.1016/j.inffus.2022.09.015.
 - Only abstracts and metadata were checked. No Information Fusion paper on pairwise-judge-versus-voting answer
   selection was found, so the paper must still make its own case; this is a fit, not a precedent.
-- The journal is a high-impact venue, but its impact-factor figures conflict across third-party sources
-  (13.7 to 23.1); check Journal Citation Reports before quoting one. Its author guide could not be fetched:
-  confirm page limits, highlights, graphical-abstract and anonymization rules on the publisher page before upload.
+- Ranking evidence (checked 2026-11-27):
+  - VHB Rating 2024: **not listed**. The full general journal catalogue (`catalogue_journals.pdf`, 1,202 lines) has no
+    entry for Information Fusion (ISSN 1566-2535 or 1872-6305), while it lists Decision Support Systems and INFORMS J. Computing.
+    The Information Systems area list also has no entry. A journal outside VHB gets no VHB credit.
+  - ABS/AJG 2024: **not verified**. The official guide needs a Chartered ABS login, and the aggregator lists I could open
+    contain no entry. AJG covers business and management journals, so absence is plausible, but that is an inference.
+  - Clarivate JCR: **not verified directly**. Impact factors need a JCR subscription (institutional login), and the Master
+    Journal List is a script-driven page. Aggregators agree the journal is Q1 in Computer Science, Artificial Intelligence
+    but disagree on the factor (about 15.5 for 2024, about 17.4 for 2025, one site 23.1).
+  - SCImago (Scopus-based, via a search-result snippet; the site blocks scripts): SJR 4.128 for 2024, Q1 in Hardware and
+    Architecture, Information Systems, Signal Processing and Software.
+  - Consequence: strong in AI/computer science, not credited by the VHB list. Check your institution's own list and
+    pull the JCR record through the library before relying on any number.
+- Its author guide is checked in `docs/information_fusion_checklist.md` (guide text supplied by the author).
 
 ## Alternatives, in order (Elsevier / Taylor & Francis only)
 1. Decision Support Systems (Elsevier, VHB 2024: B) - decision-support framing; no LLM-judging precedent found.
@@ -28,7 +39,8 @@ Decision: **Information Fusion (Elsevier)**.
 4. Artificial Intelligence (Elsevier) - top-tier; would need a larger novelty contribution than this audit has.
 
 Rankings (VHB Rating 2024, verified from area lists): EJOR A, INFORMS J. Computing A, Decision Support Systems B,
-Omega B, Computers & OR B, JORS B. Information Fusion's VHB and ABS/AJG classes were not verified.
+Omega B, Computers & OR B, JORS B, Expert Systems with Applications B, Information Sciences C (Information Systems list).
+Information Fusion has no VHB entry; its ABS/AJG class was not verified.
 Do not submit to two venues in parallel.
 
 ## Parked: TMLR
