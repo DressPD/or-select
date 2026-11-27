@@ -1,9 +1,40 @@
 # Venue decision (updated 2026-11-27): Elsevier and Taylor & Francis OR/AI journals
 
 A first submission was desk-rejected for fit and novelty; its journal-specific files were removed (they remain in git
-history). The target is restricted to **Elsevier and Taylor & Francis journals**. After comparing past publications,
-the recommended first target is **Expert Systems with Applications (Elsevier)**, see the decision analysis below. Publication cannot be guaranteed anywhere; this
-ordering maximizes topical fit and precedent, then rating.
+history). Publication cannot be guaranteed anywhere.
+
+## Reassessment (2026-11-27, supersedes the ESWA-first recommendation further down)
+
+The earlier recommendation of Expert Systems with Applications was wrong for this paper: its guide lists application
+domains (finance, risk assessment, information retrieval and so on) and the paper evaluates none. What the paper is: a
+decision-theoretic result (vote-first is Bayes-optimal in a finite-pool model), a break-even theory with a difficulty-aware
+version, a cost measurement and a reproducible audit with a null result on one weak judge. It belongs where aggregation
+theory or evaluation methodology is reviewed, not where applications are.
+
+Second scan (Crossref titles since 2023; JMLR and TMLR could not be measured because of proxy errors; IP&M returned no records):
+
+| Journal | Publisher | LLM-titled | LLM + vote/judge terms | Voting/aggregation titles without LLM | Reading |
+|---|---|---|---|---|---|
+| Social Choice and Welfare | Springer | 0 | 0 | 34 | voting theory home; no LLM; audience wants axioms |
+| Annals of Operations Research | Springer | 1 | 0 | 30 | OR plus voting theory; VHB B |
+| Pattern Recognition | Elsevier | 22 | 4 | 38 | classifier combination, voting, crowdsourcing; closest methods audience in Elsevier |
+| Machine Learning | Springer | 29 | 4 | 13 | LLM plus majority voting items |
+| Journal of Artificial Intelligence Research | AAAI Press | 15 | 2 | 7 | LLM benchmarks and voting theory in one venue |
+| Artificial Intelligence | Elsevier | 16 | 0 | 3 | computational social choice; very selective; VHB B |
+| Mathematical Social Sciences | Elsevier | 0 | 0 | 11 | voting theory; no LLM |
+| Operations Research Letters | Elsevier | 0 | 0 | 3 | short theory letters; VHB B |
+| Intl. J. of Approximate Reasoning | Elsevier | 4 | 0 | 7 | rank aggregation and consensus |
+| Autonomous Agents and Multi-Agent Systems | Springer | 3 | 0 | 5 | judgment aggregation, majority |
+| TMLR | JMLR org | n/a | n/a | n/a | not measurable here; three on-topic TMLR papers verified earlier; accepts papers on soundness of claims, not novelty |
+
+No journal publishes the intersection (LLM answer selection with voting theory): the topic is open but also unproven. The
+paper's own weaknesses decide the outcome more than the venue: elementary theory, a null empirical result, one weak
+judge, and only 11 exact-tie problems per group, which limits what the vote-first audit can show.
+
+**Within Elsevier and Taylor & Francis**, in order of fit: Pattern Recognition, Information Fusion (guide verified;
+needs trimming and a stronger bar), Mathematical Social Sciences and Operations Research Letters (theory-only versions),
+Artificial Intelligence (stretch). **If the restriction can be lifted**, TMLR gives the best odds for this paper, followed
+by JAIR and Machine Learning; Annals of OR and Social Choice and Welfare suit a theory-only version.
 
 ## Evidence: recent papers by journal (Crossref scan, titles only, articles since 2024)
 `LLM-titled` counts papers whose title names language models; `selection terms` counts those whose title also has
