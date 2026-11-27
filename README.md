@@ -152,8 +152,14 @@ Citation coverage and source policy: [citation audit](docs/citation_audit.md).
 
 ### Target journal
 
-The manuscript is prepared for **Information Fusion** (Elsevier); the venue decision, rationale and
-alternatives are in [`docs/venue_decision.md`](docs/venue_decision.md). Build the PDFs as described in
-[`manuscript/BUILD_README.md`](manuscript/BUILD_README.md). The cover letter is `manuscript/Cover_Letter.tex`.
-Journal-specific submission packages from earlier targets have been removed; they remain in git history.
-An anonymous double-blind build for TMLR is parked under `submission/tmlr/` and is not the current target.
+The manuscript is prepared for **IISE Transactions** (Taylor & Francis, double-blind); the venue decision,
+rationale and alternatives (Information Fusion first among them) are in [`docs/venue_decision.md`](docs/venue_decision.md)
+and the requirement check in [`docs/iise_transactions_checklist.md`](docs/iise_transactions_checklist.md).
+Generate and build the blind sources with `scripts/make_iise_manuscript.py` as described in
+[`manuscript/BUILD_README.md`](manuscript/BUILD_README.md); PDFs are in [`submission/iise/`](submission/iise/).
+The cover letter is `manuscript/Cover_Letter.tex`. Journal-specific packages from earlier targets have been removed;
+they remain in git history. An anonymous TMLR build is parked under `submission/tmlr/`.
+
+Two results beyond the original threshold theorem are computed offline from the stored runs:
+`scripts/difficulty_mixture.py` (break-even judge accuracy under varying problem difficulty) and
+`scripts/hybrid_rule.py` (vote-first, judge-on-ties rule: optimality check and stored-run audit).

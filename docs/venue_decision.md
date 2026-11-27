@@ -1,59 +1,61 @@
-# Venue decision (updated 2026-11-27): Elsevier and Taylor & Francis journals only
+# Venue decision (updated 2026-11-27): Elsevier and Taylor & Francis OR journals
 
-A first submission was desk-rejected for fit and novelty and its journal-specific files have been removed
-(they remain in git history). The author then restricted the target to **Elsevier and Taylor & Francis journals**.
-Decision: **Information Fusion (Elsevier)**.
+A first submission was desk-rejected for fit and novelty; its journal-specific files were removed (they remain in git
+history). The target is restricted to **Elsevier and Taylor & Francis journals**, and the paper was strengthened with two
+new results before retargeting (see below). Current target: **IISE Transactions (Taylor & Francis)**.
 
-## Why Information Fusion
-- Scope covers decision-level fusion and multi-classifier systems (per the publisher's journal page);
-  sampling several answers and fusing them by voting or a pairwise judge is that problem.
-- It has recently published closely related fusion work, verified through Crossref (ScienceDirect pages refuse automated fetches):
-  - Cielen, De Bock and Florès, Exploring zero-shot SLM ensembles as an alternative to LLMs for sentiment analysis,
-    Information Fusion 126 (2026), 103666, doi:10.1016/j.inffus.2025.103666.
-  - Li, Nie, Huang, Lv and Zhou, Dual-layer prompt ensembles for LLM-based query expansion and rank fusion,
-    Information Fusion 131 (2026), 104160, doi:10.1016/j.inffus.2026.104160.
-  - Campagner, Ciucci and Cabitza, Aggregation models in ensemble learning: a large-scale comparison,
-    Information Fusion 90 (2023), 241-252, doi:10.1016/j.inffus.2022.09.015.
-- Only abstracts and metadata were checked. No Information Fusion paper on pairwise-judge-versus-voting answer
-  selection was found, so the paper must still make its own case; this is a fit, not a precedent.
-- Ranking evidence (checked 2026-11-27):
-  - VHB Rating 2024: **not listed**. The full general journal catalogue (`catalogue_journals.pdf`, 1,202 lines) has no
-    entry for Information Fusion (ISSN 1566-2535 or 1872-6305), while it lists Decision Support Systems and INFORMS J. Computing.
-    The Information Systems area list also has no entry. A journal outside VHB gets no VHB credit.
-  - ABS/AJG 2024: **not verified**. The official guide needs a Chartered ABS login, and the aggregator lists I could open
-    contain no entry. AJG covers business and management journals, so absence is plausible, but that is an inference.
-  - Clarivate JCR: **not verified directly**. Impact factors need a JCR subscription (institutional login), and the Master
-    Journal List is a script-driven page. Aggregators agree the journal is Q1 in Computer Science, Artificial Intelligence
-    but disagree on the factor (about 15.5 for 2024, about 17.4 for 2025, one site 23.1).
-  - SCImago (Scopus-based, via a search-result snippet; the site blocks scripts): SJR 4.128 for 2024, Q1 in Hardware and
-    Architecture, Information Systems, Signal Processing and Software.
-  - Consequence: strong in AI/computer science, not credited by the VHB list. Check your institution's own list and
-    pull the JCR record through the library before relying on any number.
-- Its author guide is checked in `docs/information_fusion_checklist.md` (guide text supplied by the author).
+## Why IISE Transactions
+- VHB Rating 2024: **A** (OR area list). It is the best-ranked Elsevier/T&F OR-engineering journal whose scope plausibly
+  covers the paper: its Data Analytics and Machine Learning department asks for data-driven decision-making, and its scope
+  spans industrial engineering, statistics, computer science and OR (journal scope page, search snippet).
+- The paper now has a decision-theoretic result with an actionable rule (vote first, judge only on ties) and a
+  difficulty-aware threshold, not only an audit. This is a fit argument, not a precedent: no LLM-selection paper in IISE
+  Transactions was found (the search tool covers journal archives poorly).
+- Requirements used (Overleaf IISE template text plus a 2021 checklist snippet; the checklist PDF itself returned HTTP 403,
+  so **re-read the live instructions**): at most about 30 pages from title page to references, 11 pt, 1 inch margins,
+  1.5/double spacing, abstract single paragraph (checklist snippet: at most 200 words), double-blind review with a blind
+  manuscript, no footnotes, figures and tables inline, appendices as supplemental online material,
+  order title, abstract, keywords, text, acknowledgments, declaration of interest, references, appendices;
+  natbib author-year (`chicago` in the template; the repo uses its own `apalike-local.bst`).
+- Build status: `main_iise.pdf` is 25 pages, abstract about 190 words, no identifying strings; supplement 12 pages.
 
 ## Alternatives, in order (Elsevier / Taylor & Francis only)
-1. Decision Support Systems (Elsevier, VHB 2024: B) - decision-support framing; no LLM-judging precedent found.
-2. Expert Systems with Applications (Elsevier) - broad applied-AI scope, lower selectivity, open-access fee applies.
-3. Journal of the Operational Research Society (Taylor & Francis, VHB 2024: B) - published a generative-AI-and-OR
-   special issue (closed 2025-03-31); the open healthcare issue (deadline 2027-01-15) does not fit.
-4. Artificial Intelligence (Elsevier) - top-tier; would need a larger novelty contribution than this audit has.
+1. Information Fusion (Elsevier) - best topic fit (decision-level fusion; three related 2026/2023 papers verified through
+   Crossref), but not in the VHB catalogue, 35-page / 50-reference limits, and the guide requires seven cover-letter answers.
+   Its build is the elsarticle `main.tex` (numeric style needs `elsarticle-num-names.bst`).
+2. Operations Research Letters (Elsevier, VHB B) - a theory-only letter (about 8 pages) from the finite-pool results.
+3. Computers & Operations Research (Elsevier, VHB B), Decision Support Systems (Elsevier, VHB B), JORS (T&F, VHB B).
+4. Discrete Applied Mathematics (Elsevier, VHB A) only for a pure theory paper.
 
-Rankings (VHB Rating 2024, verified from area lists): EJOR A, INFORMS J. Computing A, Decision Support Systems B,
-Omega B, Computers & OR B, JORS B, Expert Systems with Applications B, Information Sciences C (Information Systems list).
-Information Fusion has no VHB entry; its ABS/AJG class was not verified.
-Do not submit to two venues in parallel.
+VHB Rating 2024 (OR/IS area lists, verified): EJOR A, INFORMS J. Computing A, IISE Transactions A, Discrete Applied
+Mathematics A, Operations Research Letters B, C&OR B, Omega B, JORS B, IJPR B, Decision Support Systems B,
+Expert Systems with Applications B. Information Fusion has no VHB entry. ABS/AJG and Clarivate JCR need logins and were
+not verified. Do not submit to two venues in parallel.
 
-## Parked: TMLR
-An anonymous double-blind build (`manuscript/main_tmlr.tex`, generated by `scripts/make_tmlr_manuscript.py`,
-PDF in `submission/tmlr/`) is kept in sync but is not the target because TMLR is not an Elsevier or T&F journal.
-Three TMLR papers are cited in the related work (journal reference verified on arXiv): Chen et al. 2024,
-Ichihara et al. 2025, Soumik 2026.
+## New results added in this revision (all offline, zero API calls)
+- A (`scripts/difficulty_mixture.py`): with per-problem accuracy p ~ F, the Copeland-minus-plurality gap is
+  A(q)m1 - B(q)m2, so the break-even depends on F only through r_F = E[p^2(1-p)] / E[p(1-p)^2]. At mean accuracy 0.8 the
+  break-even ranges from 0.706 (kappa=1) to 0.804 (single p). On the homogeneous judged rows (n=130, AIME 2025 and
+  MMLU-Pro) the own-k prediction of the Copeland-minus-plurality gap is -2.2 points against -1.3 observed, while the pooled-p
+  model predicts -10.3. Plug-in check on small samples; q-hat on MMLU-Pro is below one half.
+- B (`scripts/hybrid_rule.py`): vote first, judge only on ties is Bayes-optimal in the model for every N and q >= 1/2 and weakly
+  dominates plurality and Copeland (verified by exact enumeration for N=3,4 and in floats for N=5,6; proof in the
+  supplement). On stored runs it matches voting (hom. 84.1 vs 84.1, het. 92.0 vs 92.5; discordant 1/1 and 1/2) and beats Copeland-everywhere
+  in heterogeneous pools (92.0 vs 85.5; discordant 14/1, p<0.001). Exact vote ties are rare (11 of 164 and 11 of 200 problems),
+  so it adds no detectable gain over voting with the tested judge.
+
+## Parked builds
+- `manuscript/main_tmlr.tex` (TMLR, double-blind) is kept in sync but TMLR is neither Elsevier nor T&F.
+- Three TMLR papers and three Information Fusion papers are cited in the related work (journal references verified on
+  arXiv and Crossref respectively; abstracts and metadata only).
 
 ## Build
-`manuscript/BUILD_README.md` lists the pdfLaTeX/BibTeX sequence for `main.tex`, `supplement.tex` and `Cover_Letter.tex`.
+`scripts/make_iise_manuscript.py` generates `manuscript/main_iise.tex` and `supplement_iise.tex` from `main.tex`
+and `supplement.tex`; see `manuscript/BUILD_README.md` for the pdfLaTeX/BibTeX sequence.
 
 ## Before submitting (author actions)
-- Read the Information Fusion guide for authors and adapt: article type, length, highlights (`manuscript/highlights.txt`),
-  graphical abstract if requested, declaration statements.
-- Decide on the paid Decision-1 judge test; a stronger judge result would make the paper more than a single-weak-judge audit.
-- Submit through Editorial Manager with `main.pdf`, `supplement.pdf`, the cover letter and the title page.
+- Read the live IISE Transactions instructions; confirm length, abstract limit, reference style, the right department, and how
+  the supplement and blind files are uploaded. See `docs/iise_transactions_checklist.md`.
+- Upload the blind manuscript (`main_iise.pdf`), the blind supplement, the title page with author details, and the cover letter.
+- Provide an anonymized code and data archive; remove the GitHub URL and Zenodo DOI from anything uploaded.
+- Decide on the paid stronger-judge run; every empirical claim rests on one weak judge.

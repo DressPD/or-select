@@ -34,6 +34,13 @@ pdflatex -interaction=nonstopmode -halt-on-error Cover_Letter.tex
 pdflatex -interaction=nonstopmode -halt-on-error Submission_Title_Page.tex
 ```
 
+### Blind IISE Transactions sources
+
+`python3 ../scripts/make_iise_manuscript.py` writes `main_iise.tex` and `supplement_iise.tex` (anonymous, 11 pt,
+1 inch margins, 1.5 spacing) from `main.tex` and `supplement.tex`. Build them with the same alternating
+`pdflatex`/`bibtex` sequence, substituting `main_iise` and `supplement_iise`. The numerical macros
+(`Mixture_data.tex`, `Hybrid_data.tex`) come from `scripts/difficulty_mixture.py` and `scripts/hybrid_rule.py`.
+
 Both documents reference each other with the `xr` package. The alternating
 passes resolve those references. The upload ZIP also includes generated
 `main.aux`, `supplement.aux`, `main.bbl`, and `supplement.bbl` from the verified

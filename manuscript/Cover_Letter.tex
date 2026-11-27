@@ -1,33 +1,23 @@
 \documentclass[11pt]{letter}
 \usepackage[T1]{fontenc}
 \usepackage[margin=1in]{geometry}
-\usepackage{enumitem}
 \signature{Aris Dressino}
 \address{TUM School of Management \\ Technical University of Munich \\ Arcisstra{\ss}e 21 \\ 80333 Munich, Germany \\ aris.dressino@tum.de}
 \longindentation=0pt
 
 \begin{document}
 
-\begin{letter}{The Editors \\ \emph{Information Fusion}}
+\begin{letter}{The Editors \\ \emph{IISE Transactions}}
 
 \opening{Dear Editors,}
 
-Please find enclosed our manuscript, \textbf{``Pairwise Judging versus Voting for Language Model Answer Selection: Finite-Pool Theory and an Empirical Audit,''} submitted as a research article to \emph{Information Fusion}.
+Please find enclosed our manuscript, \textbf{``Pairwise Judging versus Voting for Language Model Answer Selection: Finite-Pool Theory and an Empirical Audit,''} for consideration in \emph{IISE Transactions}. The manuscript is anonymized for double-blind review; author details are on the separate title page.
 
-\textbf{Aim and fit.} Sampling several answers from a language model and returning one is a decision-level fusion problem: the fusion rule is either plurality voting (self-consistency) or a pairwise judge. The paper derives exactly when a binary pairwise rule beats plurality for three candidates, enumerates break-even thresholds for larger finite pools, and audits a judge-based selector against ground truth. This falls under multi-classifier and decision systems and decision-level fusion.
+Sampling several answers from a language model and returning one is a data-driven decision problem with a cost: take the most frequent answer, or pay for a pairwise judge. The paper contributes (i) an exact finite-pool break-even judge accuracy for binary Copeland selection against plurality voting; (ii) a result for problems of differing difficulty: the break-even is governed by an effective-odds ratio of difficulty moments, not pooled accuracy, and the per-problem prediction is checked on stored judgments; (iii) a proof that voting first and judging only on ties is Bayes-optimal in the model and never worse than either rule, so it has no break-even threshold; and (iv) a ground-truth audit of one free-tier judge on six public benchmarks (532 problems) with paired exact tests, stored outputs for offline replay, and an exact Kemeny--Young reference.
 
-\textbf{Answers to the journal's cover-letter questions.}
-\begin{enumerate}[leftmargin=*,itemsep=2pt]
-\item \emph{State of the art.} Yes. The audit compares against self-consistency voting (Wang et al., 2023), the standard decision-level fusion baseline, and against additional stored-output selectors. Five key references: Wang et al. (2023, self-consistency); Chen et al. (2023, universal self-consistency); Jiang et al. (2023, LLM-Blender); Komiyama et al. (2025, best-of-infinity ensembling); Ai et al. (2025, beyond majority voting). Trained verifiers and universal self-consistency are not run as baselines; the manuscript states why they are not interchangeable with a training-free judge.
-\item \emph{Public datasets.} Commonly used: GSM8K, MATH-500, AIME, GPQA Diamond, MMLU-Pro and RewardBench. All six answer-selection benchmarks (532 distinct problems) and RewardBench for judge validation are used.
-\item \emph{Validation measures.} Accuracy against ground truth, paired exact tests on discordant problems, Wilson intervals, and judge accuracy on RewardBench. All are applied; a weighted-ranking agreement measure is reported separately and not treated as correctness.
-\item \emph{Main claim and significance for this community.} The pairwise judge helps only above an explicit judge-accuracy threshold that depends on candidate accuracy and pool size (80.35\% mixed-pair accuracy at 80\% candidate accuracy for three candidates). This gives practitioners a testable condition for choosing a judge over voting as the fusion rule, instead of assuming it helps.
-\item \emph{Evidence.} For the tested free-tier judge there is no detected homogeneous-pool advantage over self-consistency (10 versus 13 discordant problems of 532), and the heterogeneous-pool selector is worse (10 versus 32 of 402, $p<0.001$). The findings concern the tested judge and configuration, not stronger judges in general.
-\item \emph{Closest related work.} Komiyama et al. (2025) and Di et al. (2025) on voting versus reward-based selection; Ai et al. (2025) on aggregation of heterogeneous correlated outputs; Landesberg (2026) on judge scores versus best-of-$N$ decisions. The manuscript states the difference: a finite complete pairwise tournament compared exactly with plurality, plus a ground-truth audit.
-\item \emph{Prior publication.} No part of this work has been published, including as a conference paper. Code, public stored runs and tables are archived on Zenodo (DOI 10.5281/zenodo.24112045).
-\end{enumerate}
+The empirical findings are deliberately narrow: the tested judge shows no detected advantage over self-consistency in homogeneous pools and performs worse when judging everywhere in heterogeneous pools; vote-first selection removes that loss but adds no detectable gain over voting because exact vote ties are rare. They concern the tested judge and configuration, not stronger judges. Code, public stored runs and tables are archived on Zenodo, with data-access conditions described in the manuscript.
 
-The manuscript is not under consideration elsewhere. The author declares no competing interests.
+No part of this work has been published, and the manuscript is not under consideration elsewhere. The author declares no competing interests.
 
 \closing{Sincerely,}
 

@@ -26,6 +26,8 @@
 \input{ThresholdEmpiricalGeneral_data.tex}
 \input{ThresholdExt_data.tex}
 \input{Figure_3_WorkedExample_data.tex}
+\input{Mixture_data.tex}
+\input{Hybrid_data.tex}
 
 
 \title{Pairwise Judging versus Voting for Language Model Answer Selection: Finite-Pool Theory and an Empirical Audit}
@@ -35,7 +37,7 @@
 \maketitle
 
 \begin{abstract}
-Choosing among sampled language-model answers requires a selection rule whose reproducibility and accuracy can be assessed separately. We formulate selection as an integer program combining pairwise judge scores, confidence, self-consistency and cost, and compute an exact Kemeny--Young reference. The quality-only ranking inherits a known 5-approximation guarantee for weighted ranking disagreement, not answer correctness. Under an independent binary-comparison model, we derive the exact accuracy gain over plurality voting for three candidates and enumerate break-even thresholds for larger finite pools. At 80\% candidate accuracy, the three-candidate threshold is 80.35\% mixed-pair judge accuracy. We audit one free-tier judge, scoring \RBOverallAcc\% on RewardBench, on six benchmarks comprising \TotalProblems{} distinct problems. Paired exact tests detect no homogeneous-pool advantage over self-consistency (\HomogPooledB{} versus \HomogPooledC{} discordant problems of \HomogPooledN{}); the heterogeneous-pool selector performs worse (\HeteroPooledB{} versus \HeteroPooledC{} of \HeteroPooledN{}, \HeteroPooledP). Offline ablations expose an objective-scale mismatch, while removing the cost term does not establish an advantage. These findings concern the tested judge and configuration, not stronger judges generally. The theoretical thresholds characterize binary Copeland selection under explicit assumptions; averaged soft judge scores do not directly estimate their accuracy parameter. The contribution combines a finite-pool benchmark for judge reliability with an auditable selection protocol, an exact ranking reference and stored outputs for offline comparisons.
+Choosing among sampled language-model answers is a decision problem: take the most frequent answer, or let a pairwise judge decide. In a finite-pool model we first derive the exact accuracy gain of binary Copeland selection over plurality voting and its break-even judge accuracy (80.35\% at 80\% candidate accuracy for three candidates). When problems differ in difficulty, the threshold depends on an effective-odds ratio of difficulty moments, not on pooled accuracy. Second, we prove that voting first and judging only on ties is Bayes-optimal and never worse than either rule, so it has no break-even threshold. Third, we audit one free-tier judge, scoring \RBOverallAcc\% on RewardBench, on six benchmarks of \TotalProblems{} problems. Paired exact tests find no homogeneous-pool advantage over self-consistency (\HomogPooledB{} versus \HomogPooledC{} discordant problems of \HomogPooledN{}); judging everywhere performs worse in heterogeneous pools (\HeteroPooledB{} versus \HeteroPooledC{} of \HeteroPooledN{}, \HeteroPooledP). Vote-first selection removes that loss (\HybHetBCop{} versus \HybHetCCop{} discordant problems) but, because exact ties are rare, adds no detectable gain over voting. Each problem's own difficulty predicts the observed gap better than pooled accuracy. Findings concern the tested judge, not stronger judges.
 \end{abstract}
 
 \section{Introduction}
@@ -68,14 +70,20 @@ reference. The probabilistic analysis then asks a separate question: under
 a specified model of correct and incorrect answers, how accurate must
 binary comparisons be for their Copeland winner to outperform voting?
 
-The paper makes three contributions. First, it derives an exact finite-pool
+The paper makes five contributions. First, it derives an exact finite-pool
 condition under which binary pairwise judging with Copeland aggregation
 outperforms plurality voting: a closed form for $N=3$, enumeration for
 $N\le7$, and extensions to pair-dependent judges and colliding wrong answers
-(Section~\ref{sec:theory} and Appendix). Second, it combines a
-composite selector, OR-Select, with an exact Kemeny--Young reference and
-stored judge outputs for offline comparison (Section~\ref{sec:formal-model}).
-Third, it audits one free-tier judge on six
+(Section~\ref{sec:theory} and Appendix). Second, it shows that when
+problems differ in difficulty the threshold is governed by an effective-odds
+ratio of difficulty moments, not by pooled accuracy, and tests the resulting
+per-problem prediction on stored judgments (Sections~\ref{sec:mixture} and
+\ref{sec:mixture-results}). Third, it proves that voting first and judging only on
+ties is Bayes-optimal in the model and weakly dominates both plurality and
+Copeland, and audits that rule on stored runs (Sections~\ref{sec:hybrid} and
+\ref{sec:hybrid-results}). Fourth, it combines a composite selector, OR-Select,
+with an exact Kemeny--Young reference and stored judge outputs for offline
+comparison (Section~\ref{sec:formal-model}). Fifth, it audits one free-tier judge on six
 ground-truth benchmarks using paired tests, recovery relative to available
 headroom and weight ablations (Sections~\ref{sec:experiments}--\ref{sec:results}).
 
@@ -485,6 +493,97 @@ uniform-$q_{\min}$ and uniform-$q_{\max}$ cases. This provides a conservative
 comparison when such bounds are available, without requiring every mixed
 pair to have exactly the same reliability.
 
+\subsection{Problems of differing difficulty}
+\label{sec:mixture}
+
+Theorem~\ref{thm:threshold} treats $p$ as common to all problems. In a
+benchmark, difficulty varies: many problems are solved by every candidate or
+by none, and only intermediate problems separate the rules. Let $p$ be drawn
+per problem from a distribution $F$, with candidates and comparisons following
+the model given $p$. Write $A(q)=(2q-1)(q+1)$ and $B(q)=(3-2q)(1-q)$, so that the
+single-$p$ gap of Theorem~\ref{thm:threshold} is
+$A(q)\,p(1-p)^2-B(q)\,p^2(1-p)$.
+
+\begin{theorem}[Effective-odds threshold]
+\label{thm:mixture}
+Let $m_1=\mathbb{E}_F[p(1-p)^2]>0$ and $m_2=\mathbb{E}_F[p^2(1-p)]$. The accuracy of
+Copeland minus that of plurality is $\Delta_F(q)=A(q)\,m_1-B(q)\,m_2$. It is positive
+if and only if $A(q)/B(q)>r_F:=m_2/m_1$, so the break-even accuracy $q^*_F\in(\tfrac12,1]$
+is the unique root of $A/B=r_F$ and increases with $r_F$.
+\end{theorem}
+
+The pooled threshold of Theorem~\ref{thm:threshold} is the special case
+$F=\delta_{\bar p}$, where $r_F=\bar p/(1-\bar p)$. Dispersion changes $r_F$, so two
+benchmarks with the same mean accuracy can have different break-even
+judges; Table~\ref{tab:mixture} gives Beta examples. A problem set needs no
+parametric $F$: if problem $i$ has $k_i$ of 3 candidates correct, the
+conditional accuracy of Copeland is $a_{k_i}(q)$ (closed forms in the proof of
+Theorem~\ref{thm:threshold}) and that of plurality is $0,\tfrac13,1,1$ for $k_i=0,\dots,3$.
+Averaging over the observed $k_i$ gives a prediction that uses the
+problems' own difficulty (Section~\ref{sec:mixture-results}).
+
+\begin{table}[htbp]
+\centering
+\caption{Break-even binary accuracy $q^*_F$ when $p\sim\mathrm{Beta}$ with mean $\bar p$
+and concentration $\kappa$ (smaller $\kappa$ means more dispersed difficulty);
+the last column is the single-$p$ threshold at $\bar p$.}
+\label{tab:mixture}
+\small
+\begin{tabular}{rrrrrr}
+\toprule
+$\bar p$ & $\kappa=1$ & $\kappa=2$ & $\kappa=5$ & $\kappa=20$ & $p\equiv\bar p$ \\
+\midrule
+\MixtureThresholdRows
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Vote first, judge only on ties}
+\label{sec:hybrid}
+
+The model says more than a threshold. Because correct candidates share an
+answer and wrong answers are distinct, any repeated answer is certainly
+correct. A judge can only help when all $N$ answers differ. Rule~H returns a
+most-voted answer and, if several answers tie, runs binary Copeland on the
+comparisons among the tied candidates only.
+
+\begin{theorem}[Vote-first fusion is optimal]
+\label{thm:hybrid}
+Under the model, for any $N\ge 2$ and $q\ge\tfrac12$, Rule~H attains the maximum
+accuracy among all rules that observe the answer partition and the
+comparison outcomes, namely
+$P(k\ge2)+N\,p(1-p)^{N-1}\,a^{(N)}(q)$, where $a^{(N)}(q)\ge 1/N$ is the probability
+that Copeland selects the lone correct candidate among $N$ distinct answers. Hence
+Rule~H is at least as accurate as plurality and as Copeland for every $p$
+and $q\ge\tfrac12$: it has no break-even threshold.
+\end{theorem}
+
+The proof (Appendix) is a Bayes argument: when all answers differ, the
+posterior of a candidate being the only correct one is proportional to
+$q^{w}(1-q)^{N-1-w}$, increasing in its number of wins $w$. Exhaustive
+enumeration for $N\le4$ in exact rational arithmetic and for $N=5,6$ in floating
+point confirms optimality and dominance. For example, at $N=6$, $p=0.3$ and
+$q=0.8$ the accuracies of plurality, Copeland and Rule~H are $63.0\%$, $70.7\%$
+and $77.1\%$ (Table~\ref{tab:hybrid-theory}). The result is a design principle
+for fusion: spend judge calls only where votes are uninformative. It is proved
+only for distinct wrong answers; when wrong answers collide, a wrong repeated
+answer can outvote a lone correct one, Rule~H inherits that failure, and a
+Copeland-based rule can recover it (Table~\ref{tab:threshold-n}).
+
+\begin{table}[htbp]
+\centering
+\caption{Model accuracy (\%) of plurality, Copeland and Rule~H (exact enumeration).}
+\label{tab:hybrid-theory}
+\small
+\begin{tabular}{rrrrrr}
+\toprule
+$N$ & $p$ & $q$ & Plurality & Copeland & Rule~H \\
+\midrule
+\HybridTheoryRows
+\bottomrule
+\end{tabular}
+\end{table}
+
 \section{Experimental Protocol}
 \label{sec:experiments}
 
@@ -731,6 +830,79 @@ can an average establish the pairwise bounds of Corollary~\ref{cor:pairdep}.
 Table~\ref{tab:threshold-emp-gen} retains these descriptive measurements
 and model sensitivity calculations, with their sampling limitations.
 
+\subsection{Difficulty-aware prediction}
+\label{sec:mixture-results}
+
+On the homogeneous problems with stored judge outputs and at least ten mixed
+pairs ($n=\MixPooledN$, AIME 2025 and MMLU-Pro; GSM8K has no stored judgments and
+MATH Level 5 and AIME 2026 have too few mixed pairs), the binary mixed-pair
+accuracy is $\MixPooledQ\%$. Using each problem's own number of correct
+candidates $k_i$ and this $q$, the model predicts binary-Copeland accuracy
+$\MixPooledPredCop\%$; the observed value is $\MixPooledObsCop\%$ (bootstrap
+interval for observed minus predicted, re-estimating $q$ in each resample:
+$[\MixPooledErrLo,\MixPooledErrHi]$ points). A pooled-$p$ prediction under the
+single-$p$ binomial model gives $\MixPooledNaiveCop\%$. The two agree on Copeland but not on plurality: observed plurality
+accuracy is $\MixPooledObsVote\%$, the own-$k$ model gives $\MixPooledPredVote\%$ and the pooled-$p$ model
+$\MixPooledNaiveVote\%$, because the binomial model puts too little mass on problems solved by
+none or one candidate. The resulting gap prediction (Copeland minus plurality, in points)
+is $\MixPooledGapPred$ with own $k_i$ against $\MixPooledGapNaive$ pooled, for an observed
+$\MixPooledGapObs$ (Table~\ref{tab:mixture-emp}). The sample is small and $q$ is estimated on the
+same rows, so this is a plug-in consistency check, not out-of-sample validation;
+MMLU-Pro's binary $q$ lies below one half on 28 mixed pairs.
+
+\begin{table}[htbp]
+\centering
+\caption{Observed and predicted binary-Copeland accuracy (\%) and the Copeland-minus-plurality
+gap (points). Pred.\ ($k_i$) uses each problem's own number of correct candidates;
+Pred.\ ($\bar p$) uses the single-$p$ binomial model at the pooled accuracy.}
+\label{tab:mixture-emp}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lrrrrrrrrr}
+\toprule
+ & & & & \multicolumn{3}{c}{Copeland accuracy} & \multicolumn{3}{c}{Gap} \\
+\cmidrule(lr){5-7}\cmidrule(lr){8-10}
+Track & $n$ & $\hat p$ & $\hat q$ & Obs. & $k_i$ & $\bar p$ & Obs. & $k_i$ & $\bar p$ \\
+\midrule
+\MixtureEmpiricalRows
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Vote-first fusion on stored runs}
+\label{sec:hybrid-results}
+
+Rule~H is computed offline on every graded problem with stored judge outputs
+($\HybHomN$ homogeneous and $\HybHetN$ heterogeneous problems; Table~\ref{tab:hybrid-audit}).
+Exact vote ties are rare: $\HybHomTies$ and $\HybHetTies$ problems, of which only
+$\HybHomOpp$ and $\HybHetOpp$ contain a correct candidate. Rule~H therefore tracks voting:
+$\HybHetHyb\%$ against $\HybHetSC\%$ in heterogeneous pools ($\HybHetBSC$ versus $\HybHetCSC$ discordant
+problems, $p=\HybHetPSC$) and $\HybHomHyb\%$ against $\HybHomSC\%$ in homogeneous pools
+($\HybHomBSC$ versus $\HybHomCSC$, $p=\HybHomPSC$). Against Copeland alone it is better in heterogeneous
+pools ($\HybHetBCop$ versus $\HybHetCCop$ discordant problems, $p=\HybHetPCop$) and indistinguishable
+in homogeneous pools ($\HybHomBCop$ versus $\HybHomCCop$). Using the judge only on ties thus removes
+the heterogeneous-pool penalty of judging everywhere, but with the tested judge it adds no
+detectable accuracy over voting, as expected when its binary accuracy is near chance. The stored
+voting baseline breaks ties by candidate order, and the judged subset is not a random sample;
+GPQA Diamond is not part of this audit because its stored outputs are not in the public archive.
+
+\begin{table}[htbp]
+\centering
+\caption{Rule~H on stored runs. Ties: problems where several answers tie for most votes; Opp.:
+ties containing a correct candidate. Accuracy in \%. Discordant counts are problems won by
+Rule~H and lost by the comparator, with the exact two-sided McNemar $p$ in parentheses.}
+\label{tab:hybrid-audit}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lrrrrrrr}
+\toprule
+Track & $n$ & Ties/Opp. & Vote & Copeland & Rule H & H vs.\ vote & H vs.\ Copeland \\
+\midrule
+\HybridAuditRows
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsection{Ranking reference and coverage}
 \label{sec:kemeny-results}
 
@@ -779,9 +951,14 @@ does not model general correlated errors.
 \section{Conclusion}
 
 An exact finite-$N$ calculation specifies when binary Copeland selection
-beats plurality under a stylized model. A separate six-benchmark audit
+beats plurality under a stylized model; with varying difficulty the
+break-even accuracy is set by an effective-odds ratio rather than pooled
+accuracy, and a vote-first rule that judges only on ties is optimal in the model
+and has no break-even threshold. A separate six-benchmark audit
 finds no detected homogeneous-pool advantage for the tested free-tier judge
-and a pooled heterogeneous-pool loss. The exact Kemeny reference and
+and a pooled heterogeneous-pool loss; on stored runs, vote-first selection
+removes that loss but, because exact ties are rare and the judge is near
+chance, adds no detectable accuracy over voting. The exact Kemeny reference and
 offline ablations distinguish ranking fit, objective design and answer
 accuracy. Together, the finite-pool calculation and stored-output audit
 separate the reliability needed by a specified selection rule from the
@@ -1018,6 +1195,40 @@ diverges as $q\uparrow1$ (it is at least $\tfrac12\ln\frac1{1-q}$), so $q_\Lambd
 $N$, and by Lemma~\ref{lem:monotone} it is nonincreasing as $q$ decreases, so it is negative for every $q\le q_\Lambda-\epsilon$. Hence
 $q^{*}(p,N)>q_\Lambda-\epsilon$ for large $N$. \qed
 
+\section{Proofs for the difficulty-mixture and vote-first results}
+\label{sec:s-new-proofs}
+
+\emph{Theorem~\ref{thm:mixture}.} By Theorem~\ref{thm:threshold} the accuracy gap for a fixed $p$ is
+$\Delta(p,q)=p(1-p)\bigl[(1-p)(2q-1)(q+1)-p(3-2q)(1-q)\bigr]=A(q)\,p(1-p)^2-B(q)\,p^2(1-p)$.
+Selection and comparison randomness are conditionally independent of $F$ given $p$, so the mixture gap is
+$\mathbb{E}_F\Delta(p,q)=A(q)\,m_1-B(q)\,m_2$ by linearity. On $(\tfrac12,1]$, $A$ is strictly increasing
+from $A(\tfrac12)=0$ to $A(1)=2$, and $B$ is strictly decreasing from $B(\tfrac12)=1$ to $B(1)=0$, so
+$A/B$ increases strictly from $0$ to $\infty$. Since $m_1>0$, the gap is positive iff $A/B>m_2/m_1=r_F$, the root is
+unique, and it increases with $r_F$. At $q=\tfrac12$ the gap is $-B(\tfrac12)m_2\le0$, so the root is
+in $(\tfrac12,1]$. \qed
+
+\emph{Theorem~\ref{thm:hybrid}.} Let $c\in\{0,1\}^N$ be the correctness vector, $k=\sum_i c_i$, and let the observation be
+the answer partition together with the $\binom N2$ comparison outcomes $o$. Correct candidates share one answer and wrong
+answers are distinct, so the partition shows a repeated answer iff $k\ge2$, and then the repeated answer is held exactly by the
+correct candidates. (a) If a repeated answer is present, any candidate holding a most-voted answer is correct with
+probability one, so no rule can do better, and Rule~H attains this. (b) If all answers are distinct, then $k\in\{0,1\}$. For
+candidate $i$, the joint probability that $i$ is the only correct candidate and $o$ occurs is
+$p(1-p)^{N-1}\,q^{w_i}(1-q)^{N-1-w_i}\,2^{-\binom{N-1}2}$, where $w_i$ is the number of wins of $i$ in the $N-1$ mixed pairs it
+belongs to, because the remaining pairs are fair coins. For $q>\tfrac12$ this is strictly increasing in $w_i$, and for
+$q=\tfrac12$ it does not depend on $i$. The Bayes rule therefore picks a candidate with the most wins, with uniform tie
+breaking; the number of wins of $i$ equals its Copeland score, because the pairs among the other candidates do not
+involve $i$. This is exactly Copeland on all $N$ candidates, which coincides with Rule~H when the tied set is all of them.
+Hence Rule~H is Bayes-optimal with accuracy $P(k\ge2)+Np(1-p)^{N-1}a^{(N)}(q)$, where $a^{(N)}(q)$ is the probability
+that the lone correct candidate is selected. At $q=\tfrac12$ symmetry gives $a^{(N)}=1/N$, and by Lemma~\ref{lem:monotone}
+$a^{(N)}$ is nondecreasing in $q$, so $a^{(N)}(q)\ge1/N$ for $q\ge\tfrac12$. Plurality scores $1$ when $k\ge2$ and $1/N$
+when $k=1$ (uniform choice among $N$ distinct answers), so Rule~H is at least as accurate. Copeland scores at most $1$ when
+$k\ge2$ and equals Rule~H when $k\in\{0,1,N\}$, so Rule~H is also at least as accurate as Copeland. \qed
+
+\emph{Numerical confirmation.} \texttt{scripts/hybrid\_rule.py} enumerates all correctness vectors and comparison outcomes,
+computes the maximum over rules of the posterior-weighted accuracy, and asserts equality with the Rule~H accuracy in exact
+rational arithmetic for $N=3,4$ over a grid of $p$ and $q\ge\tfrac12$; for $N=5,6$ it asserts dominance over plurality and
+Copeland in floating point. \texttt{scripts/difficulty\_mixture.py} checks the mixture closed form against numerical integration
+over Beta densities.
 
 \section{Additional selectors}
 \label{sec:s-baselines}
