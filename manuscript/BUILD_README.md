@@ -38,8 +38,11 @@ pdflatex -interaction=nonstopmode -halt-on-error Submission_Title_Page.tex
 
 `python3 ../scripts/make_iise_manuscript.py` writes `main_iise.tex` and `supplement_iise.tex` (anonymous, 11 pt,
 1 inch margins, 1.5 spacing) from `main.tex` and `supplement.tex`. Build them with the same alternating
-`pdflatex`/`bibtex` sequence, substituting `main_iise` and `supplement_iise`. The numerical macros
-(`Mixture_data.tex`, `Hybrid_data.tex`) come from `scripts/difficulty_mixture.py` and `scripts/hybrid_rule.py`.
+`pdflatex`/`bibtex` sequence, substituting `main_iise` and `supplement_iise`; the bibliography style is `chicago.bst`.
+The numerical macros (`Mixture_data.tex`, `Hybrid_data.tex`) come from `scripts/difficulty_mixture.py` and
+`scripts/hybrid_rule.py`. Then `python3 ../scripts/package_iise.py` copies the PDFs to `submission/iise/`, converts the
+figures to EPS and writes `iise-latex-source.zip`, the single anonymous source zip that IISE Transactions asks for
+(the author's own archive record is removed from the zipped `refs.bib`).
 
 Both documents reference each other with the `xr` package. The alternating
 passes resolve those references. The upload ZIP also includes generated

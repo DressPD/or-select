@@ -87,6 +87,13 @@ comparison (Section~\ref{sec:formal-model}). Fifth, it audits one free-tier judg
 ground-truth benchmarks using paired tests, recovery relative to available
 headroom and weight ablations (Sections~\ref{sec:experiments}--\ref{sec:results}).
 
+Operationally, vote-first selection has the structure of redundant inspection
+with adjudication on disagreement: several inexpensive assessments are combined
+by majority, and a costlier arbiter is consulted only when they fail to agree.
+Here each judge call has a price, so the question of when an additional
+comparison is worth buying is a measurement-allocation decision under costly
+information, and Theorem~\ref{thm:hybrid} states when this structure is optimal.
+
 \paragraph{Outcome and use case}
 \label{sec:outcome}
 The tested selector has no detected advantage over voting with homogeneous
@@ -129,7 +136,7 @@ Judges have also been benchmarked as test-time-scaling selectors
 with calibrated vote distributions \citep{dadkhahi2025calibrated}, and
 knockout-style pairwise selection with repeated comparisons has been given
 provable scaling laws \citep{chen2025provable}. Our setting differs in
-analysing complete finite tournaments against plurality voting and in
+analyzing complete finite tournaments against plurality voting and in
 auditing the resulting selectors against ground truth.
 
 Three peer-reviewed studies frame our design. Best-of-$N$ selection

@@ -6,18 +6,21 @@ new results before retargeting (see below). Current target: **IISE Transactions 
 
 ## Why IISE Transactions
 - VHB Rating 2024: **A** (OR area list). It is the best-ranked Elsevier/T&F OR-engineering journal whose scope plausibly
-  covers the paper: its Data Analytics and Machine Learning department asks for data-driven decision-making, and its scope
-  spans industrial engineering, statistics, computer science and OR (journal scope page, search snippet).
+  covers the paper. The journal publishes "papers with a strong methodological focus motivated by real problems that impact
+  engineering practice", in four focused issues (Design and Manufacturing; Data Science, Quality and Reliability;
+  Operations Engineering and Analytics; Supply Chain and Logistics).
 - The paper now has a decision-theoretic result with an actionable rule (vote first, judge only on ties) and a
-  difficulty-aware threshold, not only an audit. This is a fit argument, not a precedent: no LLM-selection paper in IISE
-  Transactions was found (the search tool covers journal archives poorly).
-- Requirements used (Overleaf IISE template text plus a 2021 checklist snippet; the checklist PDF itself returned HTTP 403,
-  so **re-read the live instructions**): at most about 30 pages from title page to references, 11 pt, 1 inch margins,
-  1.5/double spacing, abstract single paragraph (checklist snippet: at most 200 words), double-blind review with a blind
-  manuscript, no footnotes, figures and tables inline, appendices as supplemental online material,
-  order title, abstract, keywords, text, acknowledgments, declaration of interest, references, appendices;
-  natbib author-year (`chicago` in the template; the repo uses its own `apalike-local.bst`).
-- Build status: `main_iise.pdf` is 25 pages, abstract about 190 words, no identifying strings; supplement 12 pages.
+  difficulty-aware threshold, not only an audit; that serves the "strong methodological focus". It does not by itself supply a
+  classic engineering motivation: the introduction draws the analogy with redundant inspection with adjudication, but fit is a
+  risk. No LLM-selection paper in IISE Transactions was found (the search tool covers journal archives poorly).
+- Requirements: the instructions-for-authors text supplied by the author (updated 2026-10-20), checked in
+  `docs/iise_transactions_checklist.md`: about 30 pages including references, 11 pt, 1 inch margins, 1.5 spacing for everything
+  including appendices, no footnotes, American spelling, abstract of 200 words, at most 10 keywords, double-blind review,
+  LaTeX allowed (anonymous PDF plus one zip of sources), data availability statement, generative-AI declaration, CRediT,
+  biographical note. The linked pre-submission checklist, reproducibility-report template and reference guide were not
+  available to me and must be read before upload.
+- Build status: `main_iise.pdf` is 25 pages, abstract 184 words, no identifying strings; supplement 14 pages;
+  `submission/iise/iise-latex-source.zip` rebuilds in a clean directory.
 
 ## Alternatives, in order (Elsevier / Taylor & Francis only)
 1. Information Fusion (Elsevier) - best topic fit (decision-level fusion; three related 2026/2023 papers verified through

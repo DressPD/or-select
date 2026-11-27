@@ -1,24 +1,44 @@
-# IISE Transactions submission check (2026-11-27)
+# IISE Transactions: instructions-for-authors check (2026-11-27)
 
-Sources: the Overleaf "A Template for IISE Transactions" text (IISE Senior Editors, about four years old) and a search
-snippet of the 2021 pre-submission checklist. The checklist PDF and the Taylor & Francis instructions page returned HTTP 403
-to automated access, so none of this is confirmed against the live instructions. **Re-read them before upload.**
+Checked against the instructions text supplied by the author (page "Updated October 20, 2026"). The page links to a
+Pre-submission Checklist, a Post-acceptance Checklist, a Reproducibility Report template and a reference guide; **those four
+documents were not available to me**, and the page warns that non-compliant papers may be desk rejected, so read them
+before upload.
 
-| Requirement (as found) | Status |
+| Requirement in the instructions | Status |
 |---|---|
-| About 30 pages maximum, title page to references | Pass: `main_iise.pdf` is 25 pages |
-| 11 pt, 1 inch margins, 1.5/double spacing | Pass: article class, `geometry` 1in, `setstretch{1.5}` (template says 1.5; checklist text says double: confirm) |
-| Abstract: single paragraph, snippet says at most 200 words | Pass: 184 words |
-| Keywords after the abstract | Pass: 6 keywords |
-| Double-blind: blind manuscript without author information | Pass: no author, affiliation, DOI or repository strings (checked in the PDF text of the manuscript and the supplement) |
-| No footnotes; figures and tables inline | Pass: tables and Figure 1 inline; the other figures are in the supplement |
-| Order: title, abstract, keywords, text, acknowledgments, declaration of interest, references, appendices | Pass; no acknowledgments section (blind) |
-| Appendices as supplemental online material | Pass: `supplement_iise.pdf` (12 pages), also blind |
-| natbib author-year (template uses `chicago`) | Partly: `chicago.bst` is not available here; uses the repo's `apalike-local.bst` author-year style. Confirm the required style |
-| Cover letter | `manuscript/Cover_Letter.tex`; no specific questions were found for this journal |
-| Title page with author details (separate from blind file) | `manuscript/Submission_Title_Page.tex` |
-| Data availability, generative-AI statement | Present in the blind manuscript; requirements for this journal not found, but Taylor & Francis policy asks for AI-use disclosure |
+| Original article, English | Pass |
+| Order: title, abstract, keywords, main text with introduction and conclusion, acknowledgments, declaration of interest, references; figures and tables inline | Pass: Figure 1 and all main tables inline; no acknowledgments (blind); data, interest, funding and AI statements precede the references |
+| At most about 30 pages, 11 pt, 1 inch margins, single column, 1.5 spacing, including references, tables and figures | Pass: `main_iise.pdf` is 25 pages at 1.5 spacing with the references also at 1.5 |
+| 11 pt, 1 inch margins, 1.5 spacing also for appendices | Pass: the supplement uses the same settings (14 pages) |
+| No footnotes | Pass: none in either file |
+| American spelling | Pass after the check: one British form ("analysing") fixed; a keyword search found no others |
+| Double quotation marks | Pass: LaTeX double quotes only |
+| Unstructured abstract of 200 words | Pass: 184 words, single paragraph |
+| At most 10 keywords | Pass: 6 |
+| Double-blind review | Pass: manuscript, supplement and the LaTeX zip contain no author, affiliation, repository or DOI strings (searched in the PDF text, the sources, the bibliography and the `.bbl` files); the author's own archive record is filtered out of the zipped `refs.bib` |
+| LaTeX: upload the PDF as "Manuscript - anonymous", plus sources as a single zip marked "LaTeX Source Files" | Ready: `submission/iise/main_iise.pdf` and `iise-latex-source.zip` (22 files; rebuilt from the zip in a clean directory) |
+| Author details on a cover page: full names, affiliations, ORCID, corresponding author email | Ready: `Submission_Title_Page.pdf`; upload as the author-details file |
+| CRediT roles | Enter in the portal (single author); the text is in `Credit_Author_Statement.txt` |
+| Funding details | Pass: statement in the manuscript |
+| Disclosure statement | Pass: "no competing interests" statement present; suggested wording is "The authors report there are no competing interests to declare" |
+| Generative-AI declaration | Pass: statement describes the tools and the review by the author |
+| Biographical note of at most 200 words per author | Pass: short note on the title page |
+| Data availability statement with persistent identifier or access route | Partly: the blind manuscript says the identifier is given in the submission form (needed to keep review blind); enter the archive DOI there. Data policy is "share on reasonable request" |
+| Figures: 1200 dpi line art; PS, JPEG, TIFF or Word accepted, EPS and PS preferred | Ready: the figures are vector PDFs; EPS copies are in `submission/iise/figures/` |
+| Tables editable | Pass |
+| SI units | Not applicable |
+| Supplemental material is published via Figshare | Optional: `supplement_iise.pdf` is the online supplement |
+| Reference style per the T&F reference guide | **Unverified:** the guide was not provided. The build uses `chicago.bst` with natbib, as the IISE LaTeX template does; check against the reference guide |
+| Reproducibility Report (template linked) | **Unverified:** not provided; ask whether it is required at submission |
+| Scope: strong methodological focus motivated by real problems that impact engineering practice | Risk, see below |
 
-Author actions: pick the correct department (likely Data Analytics and Machine Learning, or Operations Engineering and
-Analytics) after reading the department statements; prepare an anonymized archive; remove the GitHub URL and Zenodo DOI
-from anything uploaded; decide on the paid stronger-judge run.
+Journal focus (from the instructions): four focused issues: Design and Manufacturing; **Data Science, Quality and
+Reliability**; Operations Engineering and Analytics; Supply Chain and Logistics. The most plausible home is Data Science,
+Quality and Reliability. The paper's motivation is language-model answer selection, not a classic industrial-engineering
+problem; the introduction now draws the analogy with redundant inspection with adjudication on disagreement, but a reviewer
+may still ask why this belongs in an industrial-engineering journal.
+
+Author actions: read the four linked documents; enter the archive DOI, CRediT roles and the corresponding author in the
+portal; upload the anonymous PDF and the LaTeX zip as separate file types; keep the cover letter and title page out of the
+anonymous files.
