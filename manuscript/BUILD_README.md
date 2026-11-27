@@ -42,9 +42,9 @@ files are conveniences, not substitutes for the editable sources: the complete
 sequence above was also checked starting without them. After editing labels or
 references, rebuild both documents rather than relying on stale generated files.
 
-For the initial journal submission, the portal requires a **PDF**, not LaTeX
-sources. When the portal requests editable LaTeX
-sources, select `main.tex` as the main entry point. Upload the supplement for
+Information Fusion requires the editable LaTeX sources at submission; a PDF alone is not
+accepted. Upload the full source set (all .tex, figures, macro files, `elsarticle-num-names.bst`)
+and select `main.tex` as the main entry point. Upload the supplement for
 peer review at initial submission in its requested category. Inspect the PDF
 assembled by the portal. Keep the title page, highlights, cover letter, and
 declarations in their requested categories; do not concatenate them into the article.
