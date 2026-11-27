@@ -152,13 +152,14 @@ Citation coverage and source policy: [citation audit](docs/citation_audit.md).
 
 ### Target journal
 
-The manuscript is prepared for **IISE Transactions** (Taylor & Francis, double-blind); the venue decision,
-rationale and alternatives (Information Fusion first among them) are in [`docs/venue_decision.md`](docs/venue_decision.md)
-and the requirement check in [`docs/iise_transactions_checklist.md`](docs/iise_transactions_checklist.md).
-Generate and build the blind sources with `scripts/make_iise_manuscript.py` as described in
-[`manuscript/BUILD_README.md`](manuscript/BUILD_README.md); PDFs are in [`submission/iise/`](submission/iise/).
-The cover letter is `manuscript/Cover_Letter.tex`. Journal-specific packages from earlier targets have been removed;
-they remain in git history. An anonymous TMLR build is parked under `submission/tmlr/`.
+The manuscript is prepared for **Expert Systems with Applications** (Elsevier). The comparison of past publications by
+journal, the ranking evidence and the ordered alternatives are in [`docs/venue_decision.md`](docs/venue_decision.md); the
+requirement check (the journal's guide was not available, so partly unverified) is in
+[`docs/eswa_checklist.md`](docs/eswa_checklist.md). The package is in [`submission/eswa/`](submission/eswa/), built with
+`scripts/package_elsevier.py` (see [`manuscript/BUILD_README.md`](manuscript/BUILD_README.md)); the cover letter is
+`manuscript/Cover_Letter.tex`. A blind IISE Transactions build (`submission/iise/`) and an anonymous TMLR build
+(`submission/tmlr/`) are kept as alternatives. Journal-specific packages from the first target were removed and remain in
+git history.
 
 Two results beyond the original threshold theorem are computed offline from the stored runs:
 `scripts/difficulty_mixture.py` (break-even judge accuracy under varying problem difficulty) and

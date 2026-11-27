@@ -1,78 +1,76 @@
-# Venue decision (updated 2026-11-27): Elsevier and Taylor & Francis OR journals
+# Venue decision (updated 2026-11-27): Elsevier and Taylor & Francis OR/AI journals
 
 A first submission was desk-rejected for fit and novelty; its journal-specific files were removed (they remain in git
-history). The target is restricted to **Elsevier and Taylor & Francis journals**, and the paper was strengthened with two
-new results before retargeting (see below). Current target: **IISE Transactions (Taylor & Francis)**.
+history). The target is restricted to **Elsevier and Taylor & Francis journals**. After comparing past publications,
+the current target is **Expert Systems with Applications (Elsevier)**. Publication cannot be guaranteed anywhere; this
+ordering maximizes topical fit and precedent, then rating.
 
-## Why IISE Transactions
-- VHB Rating 2024: **A** (OR area list). It is the best-ranked Elsevier/T&F OR-engineering journal whose scope plausibly
-  covers the paper. The journal publishes "papers with a strong methodological focus motivated by real problems that impact
-  engineering practice", in four focused issues (Design and Manufacturing; Data Science, Quality and Reliability;
-  Operations Engineering and Analytics; Supply Chain and Logistics).
-- The paper now has a decision-theoretic result with an actionable rule (vote first, judge only on ties) and a
-  difficulty-aware threshold, not only an audit; that serves the "strong methodological focus". It does not by itself supply a
-  classic engineering motivation: the introduction draws the analogy with redundant inspection with adjudication, but fit is a
-  risk. No LLM-selection paper in IISE Transactions was found (the search tool covers journal archives poorly).
-- Past IISE Transactions papers (Crossref index, articles since 2021; titles and metadata only, full texts are paywalled):
-  - No article title contains "language model"; the AI content is GANs and deep learning for manufacturing, one editorial on
-    AI/ML for manufacturing, and applications. **There is no LLM precedent in the journal**, so the topic is new to it.
-  - Nearest neighbours are selection, ranking and sequential-decision papers: Mahpouya et al. 2026 (top-k rank from aggregated
-    pairwise comparisons, 49 references, 20 pp), Atsiz et al. 2026 (optimization-based classifier ensembles), Tsai et al. 2024
-    (adaptive sequential quantile selection), Liu et al. 2023 (similarity-based sampling with binary outcomes), Steimle et al.
-    2021 (multi-model Markov decision processes). These are cited in the related work.
-  - Norms from a sample of 100 articles since 2024: median 46 references (middle half 38 to 54), median 16 printed pages
-    (middle half 15 to 18). The blind build has 51 references and 26 manuscript pages (about 13 to 15 printed).
-  - Structure: the available metadata does not show section layouts; the paper keeps the usual introduction, related work,
-    model and theory, experiments, discussion and conclusion, with proofs in the online supplement.
-- Fit evidence added for the journal's engineering orientation: Rule H needs only 6.7% (homogeneous) and 4.3% (heterogeneous)
-  of the judge comparisons that judging everywhere needs, at voting-level accuracy, and the introduction links it to
-  redundant inspection with adjudication on disagreement.
-- Requirements: the instructions-for-authors text supplied by the author (updated 2026-10-20), checked in
-  `docs/iise_transactions_checklist.md`: about 30 pages including references, 11 pt, 1 inch margins, 1.5 spacing for everything
-  including appendices, no footnotes, American spelling, abstract of 200 words, at most 10 keywords, double-blind review,
-  LaTeX allowed (anonymous PDF plus one zip of sources), data availability statement, generative-AI declaration, CRediT,
-  biographical note. The linked pre-submission checklist, reproducibility-report template and reference guide were not
-  available to me and must be read before upload.
-- Build status: `main_iise.pdf` is 25 pages, abstract 191 words, no identifying strings; supplement 14 pages;
-  `submission/iise/iise-latex-source.zip` rebuilds in a clean directory.
+## Evidence: recent papers by journal (Crossref scan, titles only, articles since 2024)
+`LLM-titled` counts papers whose title names language models; `selection terms` counts those whose title also has
+judge, voting, ensemble, aggregation, consensus, self-consistency, best-of, selection, ranking, reward, verification,
+preference, pairwise, multi-agent or debate. Counts are lower bounds (Crossref title matching is fuzzy, 30 hits per
+query), so read them as relative signals.
 
-## Alternatives, in order (Elsevier / Taylor & Francis only)
-1. Information Fusion (Elsevier) - best topic fit (decision-level fusion; three related 2026/2023 papers verified through
-   Crossref), but not in the VHB catalogue, 35-page / 50-reference limits, and the guide requires seven cover-letter answers.
-   Its build is the elsarticle `main.tex` (numeric style needs `elsarticle-num-names.bst`).
-2. Operations Research Letters (Elsevier, VHB B) - a theory-only letter (about 8 pages) from the finite-pool results.
-3. Computers & Operations Research (Elsevier, VHB B), Decision Support Systems (Elsevier, VHB B), JORS (T&F, VHB B).
-4. Discrete Applied Mathematics (Elsevier, VHB A) only for a pure theory paper.
+| Journal | Publisher | LLM-titled | Selection terms | Closest precedents (titles; metadata checked for the two ESWA papers) |
+|---|---|---|---|---|
+| **Expert Systems with Applications** | Elsevier | 43 | 5 | LLM-driven group consensus decision-making (2026); LLM-guided maintenance decision-making (2027) |
+| Knowledge-Based Systems | Elsevier | 42 | 5 | dynamic adaptive ensemble decoding for LLMs; hybrid prompt ensembles; data voting |
+| Engineering Applications of AI | Elsevier | 37 | 3 | ensemble-based transfer testing for LLMs |
+| Information Fusion | Elsevier | 31 | 3 | ensemble learning with LLMs for formal verification |
+| Applied Soft Computing | Elsevier | 30 | 2 | self-consistency voting framework for physics reasoning |
+| Information Sciences | Elsevier | 24 | 4 | "When does relational calibration help an LLM-as-a-judge?" (2026) |
+| Decision Support Systems | Elsevier | 12 | 1 | LLM-based physician-selection behaviour |
+| Int. J. Production Research | T&F | 13 | 3 | LLM multi-agent risk assessment (applications) |
+| Journal of Decision Systems | T&F | 4 | 1 | users anchoring on LLM rankings |
+| JORS | T&F | 1 | 1 | crowd wisdom vs LLMs for team selection |
+| Omega | Elsevier | 1 | 1 | LLM and ML consensus for surgery scheduling |
+| EJOR | Elsevier | 2 | 0 | none on selection |
+| IISE Transactions | T&F | 0 | 0 | none (no title with "language model" since 2021) |
+| Computers & OR, Computers & Industrial Engineering | Elsevier | 0 | 0 | none |
 
-VHB Rating 2024 (OR/IS area lists, verified): EJOR A, INFORMS J. Computing A, IISE Transactions A, Discrete Applied
-Mathematics A, Operations Research Letters B, C&OR B, Omega B, JORS B, IJPR B, Decision Support Systems B,
-Expert Systems with Applications B. Information Fusion has no VHB entry. ABS/AJG and Clarivate JCR need logins and were
-not verified. Do not submit to two venues in parallel.
+## Why Expert Systems with Applications first
+- Most LLM-titled papers of the OR/AI candidates and an OR-style precedent (LLM-driven group consensus decision-making),
+  cited in the related work.
+- Elsevier's own transfer suggestions after the first rejection listed it at impact factor 9.4, CiteScore 17.0, first
+  decision in about 5 days (figures from that email; not independently checked). VHB Rating 2024: B.
+- Single-anonymized review (Elsevier default; not confirmed for this journal), so no blind build is needed.
+- Caveats: **its guide for authors was not available** (ScienceDirect refuses automated access): confirm page limit,
+  reference style, highlights and any cover-letter questions before upload (`docs/eswa_checklist.md`). The journal
+  publishes a very large volume, so selectivity per paper is uncertain; the scope is applications of intelligent systems,
+  and the paper is theory plus an audit with a null result on one weak judge.
 
-## New results added in this revision (all offline, zero API calls)
-- A (`scripts/difficulty_mixture.py`): with per-problem accuracy p ~ F, the Copeland-minus-plurality gap is
-  A(q)m1 - B(q)m2, so the break-even depends on F only through r_F = E[p^2(1-p)] / E[p(1-p)^2]. At mean accuracy 0.8 the
-  break-even ranges from 0.706 (kappa=1) to 0.804 (single p). On the homogeneous judged rows (n=130, AIME 2025 and
-  MMLU-Pro) the own-k prediction of the Copeland-minus-plurality gap is -2.2 points against -1.3 observed, while the pooled-p
-  model predicts -10.3. Plug-in check on small samples; q-hat on MMLU-Pro is below one half.
-- B (`scripts/hybrid_rule.py`): vote first, judge only on ties is Bayes-optimal in the model for every N and q >= 1/2 and weakly
-  dominates plurality and Copeland (verified by exact enumeration for N=3,4 and in floats for N=5,6; proof in the
-  supplement). On stored runs it matches voting (hom. 84.1 vs 84.1, het. 92.0 vs 92.5; discordant 1/1 and 1/2) and beats Copeland-everywhere
-  in heterogeneous pools (92.0 vs 85.5; discordant 14/1, p<0.001). Exact vote ties are rare (11 of 164 and 11 of 200 problems),
-  so it adds no detectable gain over voting with the tested judge.
+## Alternatives, in order
+1. Information Fusion (Elsevier) - guide verified earlier: research article 10-35 pages, at most 50 references, seven
+   cover-letter questions. The current sources exceed both limits (39 pages in the elsarticle preprint format, 51 references),
+   so it needs trimming, numeric references (`elsarticle-num-names`) and its cover-letter questions before use. No VHB entry.
+2. Knowledge-Based Systems, Applied Soft Computing, Information Sciences (Elsevier): strong LLM-ensemble/voting/judge
+   precedents but weaker ratings (Information Sciences VHB C); guides not checked.
+3. Journal of the Operational Research Society (T&F, VHB B): OR identity and one crowd-versus-LLM selection paper, few LLM
+   papers overall; Operations Research Letters (Elsevier, VHB B) for a theory-only letter.
+4. IISE Transactions (T&F, VHB A): no LLM precedent; its build and checklist are kept (`submission/iise/`,
+   `docs/iise_transactions_checklist.md`); engineering-practice motivation is the main risk.
 
-## Parked builds
-- `manuscript/main_tmlr.tex` (TMLR, double-blind) is kept in sync but TMLR is neither Elsevier nor T&F.
-- Three TMLR papers and three Information Fusion papers are cited in the related work (journal references verified on
-  arXiv and Crossref respectively; abstracts and metadata only).
+VHB Rating 2024 (verified from VHB lists): EJOR A, INFORMS J. Computing A, IISE Transactions A, Discrete Applied Mathematics A,
+Artificial Intelligence B, Decision Support Systems B, Expert Systems with Applications B, Operations Research Letters B,
+C&OR B, Omega B, JORS B, IJPR B, Information Sciences C. Information Fusion, Knowledge-Based Systems and Applied Soft
+Computing have no VHB entry. ABS/AJG and Clarivate JCR need logins and were not verified. Do not submit to two venues in parallel.
 
-## Build
-`scripts/make_iise_manuscript.py` generates `manuscript/main_iise.tex` and `supplement_iise.tex` from `main.tex`
-and `supplement.tex`; see `manuscript/BUILD_README.md` for the pdfLaTeX/BibTeX sequence.
+## Contributions in the current manuscript (all offline, zero API calls)
+- Exact finite-pool break-even judge accuracy; difficulty-mixture effective-odds threshold with a per-problem prediction
+  check (`scripts/difficulty_mixture.py`; own-k gap prediction -2.2 points vs observed -1.3, pooled-p model -10.3).
+- Vote first, judge only on ties: Bayes-optimal in the model, weakly dominates plurality and Copeland
+  (`scripts/hybrid_rule.py`); on stored runs it matches voting, beats Copeland-everywhere in heterogeneous pools
+  (14 vs 1 discordant, p<0.001) and uses 6.7% / 4.3% of the judge comparisons; no detectable gain over voting.
+- One weak free-tier judge underlies every empirical claim; a stronger-judge run (paid, needs approval) is the largest gap.
 
-## Before submitting (author actions)
-- Read the live IISE Transactions instructions; confirm length, abstract limit, reference style, the right department, and how
-  the supplement and blind files are uploaded. See `docs/iise_transactions_checklist.md`.
-- Upload the blind manuscript (`main_iise.pdf`), the blind supplement, the title page with author details, and the cover letter.
-- Provide an anonymized code and data archive; remove the GitHub URL and Zenodo DOI from anything uploaded.
-- Decide on the paid stronger-judge run; every empirical claim rests on one weak judge.
+## Builds and packages
+- `manuscript/main.tex` (elsarticle, author-year, `apalike-local.bst`) is the Elsevier source; `scripts/package_elsevier.py`
+  writes `submission/eswa/` (PDFs, highlights, declarations, figures, source zip rebuilt in a clean directory).
+- IISE: `scripts/make_iise_manuscript.py` and `scripts/package_iise.py` write the blind build in `submission/iise/`.
+- TMLR: `scripts/make_tmlr_manuscript.py`; parked (not an Elsevier or T&F journal).
+
+## Before submitting to Expert Systems with Applications (author actions)
+- Read the live guide for authors; adapt reference style, length and any declarations; the cover letter has no
+  journal-specific questions because none were verified.
+- Enter the CRediT roles, funding, competing-interest and generative-AI statements as the portal asks (texts are in `submission/eswa/`).
+- Decide on the stronger-judge run before submission if possible.

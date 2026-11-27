@@ -22,6 +22,21 @@ keywords = re.search(r"\\begin\{keyword\}(.*?)\\end\{keyword\}", main, re.S).gro
 
 body = main[main.index("\\section{Introduction}"):main.index("\\section*{Data and code availability}")]
 body = body.replace("Online Supplement", "Online Supplement")  # name kept: supplied as supplemental online material
+# Venue-specific related work: IISE Transactions neighbours (verified via Crossref, titles and metadata only).
+IISE_PARAGRAPH = r"""\paragraph{Selection and aggregation in industrial engineering}
+\emph{IISE Transactions} has published work on aggregating pairwise comparisons to
+find the top-ranked alternatives under an experimentation budget
+\citep{mahpouya2026topk}, on optimization-based ensembles of classifiers
+\citep{atsiz2026ensemble} and on adaptive sequential selection procedures
+\citep{tsai2024quantile}. Those settings choose among alternatives measured with
+noise. Here the alternatives are already-generated language-model answers, the
+measurements are binary judge comparisons that each carry a price, and the
+question is when a costly comparison should replace a free vote.
+
+"""
+ANCHOR = "Judgment aggregation and selection among forecasts provide a related OR"
+assert ANCHOR in body
+body = body.replace(ANCHOR, IISE_PARAGRAPH + ANCHOR, 1)
 body = re.sub(r"\\ref\{S-", r"\\ref{S-", body)
 
 tail = main[main.index("\\section*{Declaration of competing interest}"):main.index("\\bibliographystyle")]

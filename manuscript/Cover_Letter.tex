@@ -1,21 +1,30 @@
 \documentclass[11pt]{letter}
 \usepackage[T1]{fontenc}
 \usepackage[margin=1in]{geometry}
+\usepackage{enumitem}
 \signature{Aris Dressino}
 \address{TUM School of Management \\ Technical University of Munich \\ Arcisstra{\ss}e 21 \\ 80333 Munich, Germany \\ aris.dressino@tum.de}
 \longindentation=0pt
 
 \begin{document}
 
-\begin{letter}{The Editors \\ \emph{IISE Transactions}}
+\begin{letter}{The Editors \\ \emph{Expert Systems with Applications}}
 
 \opening{Dear Editors,}
 
-Please find enclosed our manuscript, \textbf{``Pairwise Judging versus Voting for Language Model Answer Selection: Finite-Pool Theory and an Empirical Audit,''} for consideration in \emph{IISE Transactions}. The manuscript is anonymized for double-blind review; author details are on the separate title page.
+Please find enclosed our manuscript, \textbf{``Pairwise Judging versus Voting for Language Model Answer Selection: Finite-Pool Theory and an Empirical Audit,''} submitted as a research article to \emph{Expert Systems with Applications}.
 
-Sampling several answers from a language model and returning one is a data-driven decision problem with a cost: take the most frequent answer, or pay for a pairwise judge. The paper contributes (i) an exact finite-pool break-even judge accuracy for binary Copeland selection against plurality voting; (ii) a result for problems of differing difficulty: the break-even is governed by an effective-odds ratio of difficulty moments, not pooled accuracy, and the per-problem prediction is checked on stored judgments; (iii) a proof that voting first and judging only on ties is Bayes-optimal in the model and never worse than either rule, so it has no break-even threshold; and (iv) a ground-truth audit of one free-tier judge on six public benchmarks (532 problems) with paired exact tests, stored outputs for offline replay, and an exact Kemeny--Young reference.
+\textbf{Problem and relevance.} Intelligent systems built on language models often sample several answers and must return one. The designer chooses between a free rule, the most frequent answer (self-consistency voting), and a paid component, a pairwise judge. The paper gives a decision rule for that choice and tests it on stored runs. Related applied work in this journal uses language models inside decision systems, for example for group consensus decision-making and for maintenance decisions; our question is complementary: how to select among sampled answers and when a judge call is worth its cost.
 
-The empirical findings are deliberately narrow: the tested judge shows no detected advantage over self-consistency in homogeneous pools and performs worse when judging everywhere in heterogeneous pools; vote-first selection removes that loss but adds no detectable gain over voting because exact vote ties are rare. They concern the tested judge and configuration, not stronger judges. Code, public stored runs and tables are archived on Zenodo, with data-access conditions described in the manuscript.
+\textbf{Contributions.}
+\begin{enumerate}[leftmargin=*,itemsep=2pt]
+\item An exact finite-pool break-even judge accuracy for binary Copeland selection against plurality voting (80.35\% at 80\% candidate accuracy for three candidates).
+\item A result for problems of differing difficulty: the break-even is governed by an effective-odds ratio of difficulty moments, not pooled accuracy; per-problem prediction of the observed gap is checked on stored judgments.
+\item A proof that voting first and judging only on ties is Bayes-optimal in the model and never worse than either rule, so it needs no accuracy threshold; on stored runs it uses only 4--7\% of the judge comparisons of judging everywhere and removes the loss that judging everywhere causes in heterogeneous pools.
+\item A ground-truth audit of one free-tier judge on six public benchmarks (532 problems) with paired exact tests, stored outputs for offline replay and an exact Kemeny--Young reference.
+\end{enumerate}
+
+\textbf{Scope of the evidence.} The empirical findings concern the tested judge and configuration, not stronger judges: the judge shows no detected advantage over self-consistency in homogeneous pools, and vote-first selection adds no detectable accuracy over voting because exact vote ties are rare. Datasets are public (GSM8K, MATH Level 5, AIME 2025 and 2026, MMLU-Pro, GPQA Diamond, RewardBench). Code, public stored runs and tables are archived on Zenodo (DOI 10.5281/zenodo.24112045).
 
 No part of this work has been published, and the manuscript is not under consideration elsewhere. The author declares no competing interests.
 

@@ -34,6 +34,13 @@ pdflatex -interaction=nonstopmode -halt-on-error Cover_Letter.tex
 pdflatex -interaction=nonstopmode -halt-on-error Submission_Title_Page.tex
 ```
 
+### Expert Systems with Applications package
+
+After building `main`, `supplement`, `Cover_Letter` and `Submission_Title_Page` with the sequence above,
+`python3 ../scripts/package_elsevier.py` writes `submission/eswa/`: the PDFs, `highlights.txt`, the declaration texts,
+the figures as separate files and `eswa-latex-source.zip` (includes `supplement.aux` so that `main.tex` alone resolves
+its cross-references into the supplement). `main.tex` uses the Elsevier `elsarticle` class with an author-year style.
+
 ### Blind IISE Transactions sources
 
 `python3 ../scripts/make_iise_manuscript.py` writes `main_iise.tex` and `supplement_iise.tex` (anonymous, 11 pt,

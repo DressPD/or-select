@@ -1,4 +1,4 @@
-\documentclass[preprint,11pt,number,sort&compress]{elsarticle}
+\documentclass[preprint,11pt,authoryear]{elsarticle}
 \linespread{1.5}
 
 \usepackage{amsmath}
@@ -18,7 +18,7 @@
 \newtheorem{lemma}{Lemma}[section]
 \newtheorem{corollary}{Corollary}[section]
 
-\journal{IISE Transactions}
+\journal{Expert Systems with Applications}
 
 % All numbers in the Results are generated from outputs/*.json:
 %   python3 scripts/create_results_macros.py   -> Results_data.tex
@@ -243,15 +243,14 @@ optimization components provide the reference machinery; the finite-pool
 correctness comparison and its accompanying audit address the answer-level
 decision.
 
-\paragraph{Selection and aggregation in industrial engineering}
-\emph{IISE Transactions} has published work on aggregating pairwise comparisons to
-find the top-ranked alternatives under an experimentation budget
-\citep{mahpouya2026topk}, on optimization-based ensembles of classifiers
-\citep{atsiz2026ensemble} and on adaptive sequential selection procedures
-\citep{tsai2024quantile}. Those settings choose among alternatives measured with
-noise. Here the alternatives are already-generated language-model answers, the
-measurements are binary judge comparisons that each carry a price, and the
-question is when a costly comparison should replace a free vote.
+\paragraph{Language models in decision systems}
+Applied work increasingly places language models inside decision systems, for
+example to drive group consensus decision-making in a local debt-risk case
+\citep{liu2026consensus} and to guide multi-objective reward optimization for
+maintenance decisions \citep{huang2026maintenance}. Those studies use the model as
+a decision component. The question here is complementary: once several answers
+have been sampled, how should a vote or a pairwise judge select among them, and
+when is a costly judge comparison worth buying?
 
 Judgment aggregation and selection among forecasts provide a related OR
 perspective \citep{brown2019wisdom,jaspersen2022judgment,debaets2020judgment}:
@@ -1048,7 +1047,7 @@ The models served through OpenRouter are experimental subjects, not writing tool
 After using these tools the author reviewed and edited the content as needed and takes
 full responsibility for the content of the publication.
 
-\bibliographystyle{elsarticle-num-names}
+\bibliographystyle{apalike-local}
 \bibliography{refs}
 
 \end{document}
