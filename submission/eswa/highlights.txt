@@ -1,5 +1,0 @@
-- Exact finite-pool break-even judge accuracy against plurality voting
-- Break-even depends on difficulty spread via effective odds, not mean accuracy
-- Vote first, judge only on ties is Bayes-optimal and has no break-even threshold
-- One free-tier judge shows no gain over voting on 532 benchmark problems
-- Stored judge outputs support offline comparisons and objective ablations

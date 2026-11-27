@@ -34,7 +34,7 @@ measurements are binary judge comparisons that each carry a price, and the
 question is when a costly comparison should replace a free vote.
 
 """
-ANCHOR = "Judgment aggregation and selection among forecasts provide a related OR"
+ANCHOR = "\\paragraph{Language models in decision systems}"
 assert ANCHOR in body
 body = body.replace(ANCHOR, IISE_PARAGRAPH + ANCHOR, 1)
 body = re.sub(r"\\ref\{S-", r"\\ref{S-", body)

@@ -46,7 +46,7 @@
 
 \begin{frontmatter}
 
-\title{Pairwise Judging versus Voting for Language Model Answer Selection: Finite-Pool Theory and an Empirical Audit}
+\title{Vote First, Judge on Ties: Cost-Aware Answer Selection for Language-Model Systems}
 
 \author[inst1]{Aris Dressino\corref{cor1}}
 \cortext[cor1]{Corresponding author. ORCID: 0009-0003-0693-9051.}
@@ -58,25 +58,31 @@
             country={Germany}}
 
 \begin{abstract}
-Choosing among sampled language-model answers is a decision problem: take the most frequent answer, or let a pairwise judge decide. In a finite-pool model we first derive the exact accuracy gain of binary Copeland selection over plurality voting and its break-even judge accuracy (80.35\% at 80\% candidate accuracy for three candidates). When problems differ in difficulty, the threshold depends on an effective-odds ratio of difficulty moments, not on pooled accuracy. Second, we prove that voting first and judging only on ties is Bayes-optimal and never worse than either rule, so it has no break-even threshold. Third, we audit one free-tier judge, scoring \RBOverallAcc\% on RewardBench, on six benchmarks of \TotalProblems{} problems. Paired exact tests find no homogeneous-pool advantage over self-consistency (\HomogPooledB{} versus \HomogPooledC{} discordant problems of \HomogPooledN{}); judging everywhere performs worse in heterogeneous pools (\HeteroPooledB{} versus \HeteroPooledC{} of \HeteroPooledN{}, \HeteroPooledP). Vote-first selection removes that loss (\HybHetBCop{} versus \HybHetCCop{} discordant problems) with only \HybHetCallShare\% of the judge comparisons, but, because exact ties are rare, adds no detectable gain over voting. Each problem's own difficulty predicts the observed gap better than pooled accuracy. Findings concern the tested judge, not stronger judges.
+Intelligent systems built on language models often sample several answers and must return one. Designers can take the most frequent answer (self-consistency voting) at no extra cost, or pay for a pairwise judge that is itself unreliable, and they lack guidelines for choosing. We analyze the choice in a finite-pool model and audit it on stored runs. Voting first and consulting the judge only on tied answers is Bayes-optimal in the model and never worse than either voting or judging everywhere, so it needs no judge-accuracy threshold. Judging everywhere pays only above an explicit break-even accuracy (80.35\% at 80\% candidate accuracy for three candidates); when problems differ in difficulty, that break-even depends on an effective-odds ratio of difficulty moments, not on pooled accuracy. We audit one free-tier judge, scoring \RBOverallAcc\% on RewardBench, on six benchmarks of \TotalProblems{} problems. Paired exact tests find no homogeneous-pool advantage over self-consistency (\HomogPooledB{} versus \HomogPooledC{} discordant problems of \HomogPooledN{}), and judging everywhere performs worse in heterogeneous pools (\HeteroPooledB{} versus \HeteroPooledC{} of \HeteroPooledN{}, \HeteroPooledP). Vote-first selection removes that loss (\HybHetBCop{} versus \HybHetCCop{} discordant problems) with only \HybHetCallShare\% of the judge comparisons, but adds no detectable accuracy over voting because exact ties are rare. We close with design guidelines for system builders. The findings concern the tested judge, not stronger judges.
 \end{abstract}
 
 \begin{keyword}
-Decision-level fusion \sep Large language models \sep LLM-as-a-judge \sep Answer selection \sep Rank aggregation \sep Self-consistency
+Language models \sep Answer selection \sep Self-consistency \sep LLM-as-a-judge \sep Decision-level fusion \sep Cost-aware design
 \end{keyword}
 
 \end{frontmatter}
 
 \section{Introduction}
 
-Sampling several answers can increase the probability that a language model
-produces a correct answer without ensuring that a selector finds it.
-Self-consistency \citep{wang2023selfconsistency} votes over extracted final
-answers; when all answers differ, its result depends on the tie rule.
-A language-model judge can distinguish such answers, but introduces another
-potentially unstable and inaccurate component \citep{atil2024nondeterminism,landesberg2026bestofn}.
-We study selection over fixed candidate pools, separating agreement with
-judge preferences from correctness against ground truth.
+Intelligent systems built on language models, such as question-answering
+assistants and decision-support tools, rarely return the first answer they
+generate. A common design samples several candidate answers and selects one.
+Two selectors are widely used. Self-consistency \citep{wang2023selfconsistency}
+returns the most frequent extracted final answer at no extra cost; when all
+answers differ, its result depends on the tie rule. A language-model judge can
+distinguish such answers, but it is a paid component that is itself unstable
+and inaccurate \citep{atil2024nondeterminism,landesberg2026bestofn}.
+System designers therefore face a concrete management question: when is a
+judge worth its price, and where in the pipeline should it be called? Practical
+guidance is scarce, because published comparisons rarely hold the candidate
+pool fixed or separate agreement with judge preferences from correctness
+against ground truth. We study selection over fixed candidate pools to give
+that guidance.
 
 The operational decision arises after generation has already incurred its
 cost: a system must return one of the available responses. A correct answer
@@ -97,22 +103,24 @@ reference. The probabilistic analysis then asks a separate question: under
 a specified model of correct and incorrect answers, how accurate must
 binary comparisons be for their Copeland winner to outperform voting?
 
-The paper makes five contributions. First, it derives an exact finite-pool
-condition under which binary pairwise judging with Copeland aggregation
-outperforms plurality voting: a closed form for $N=3$, enumeration for
-$N\le7$, and extensions to pair-dependent judges and colliding wrong answers
-(Section~\ref{sec:theory} and Online Supplement). Second, it shows that when
-problems differ in difficulty the threshold is governed by an effective-odds
-ratio of difficulty moments, not by pooled accuracy, and tests the resulting
-per-problem prediction on stored judgments (Sections~\ref{sec:mixture} and
-\ref{sec:mixture-results}). Third, it proves that voting first and judging only on
-ties is Bayes-optimal in the model and weakly dominates both plurality and
-Copeland, and audits that rule on stored runs (Sections~\ref{sec:hybrid} and
-\ref{sec:hybrid-results}). Fourth, it combines a composite selector, OR-Select,
-with an exact Kemeny--Young reference and stored judge outputs for offline
-comparison (Section~\ref{sec:formal-model}). Fifth, it audits one free-tier judge on six
-ground-truth benchmarks using paired tests, recovery relative to available
-headroom and weight ablations (Sections~\ref{sec:experiments}--\ref{sec:results}).
+The paper makes five contributions. First, it proves that voting first and
+judging only on ties is Bayes-optimal in a finite-pool model and weakly
+dominates both plurality and judging everywhere, and it measures the judge
+comparisons this saves on stored runs (Sections~\ref{sec:hybrid} and
+\ref{sec:hybrid-results}). Second, it derives the exact condition under which
+binary pairwise judging with Copeland aggregation beats plurality voting: a
+closed form for $N=3$, enumeration for $N\le7$, and extensions to
+pair-dependent judges and colliding wrong answers (Section~\ref{sec:theory} and
+Online Supplement). Third, it shows that when problems differ in difficulty this
+threshold is governed by an effective-odds ratio of difficulty moments, not by
+pooled accuracy, and tests the per-problem prediction on stored judgments
+(Sections~\ref{sec:mixture} and \ref{sec:mixture-results}). Fourth, it audits
+one free-tier judge on six ground-truth benchmarks using paired tests, recovery
+relative to available headroom and weight ablations
+(Sections~\ref{sec:experiments}--\ref{sec:results}). Fifth, it supplies a composite
+selector, OR-Select, with an exact Kemeny--Young reference and stored judge
+outputs for offline comparison (Section~\ref{sec:formal-model}), and distills the
+results into design guidelines (Section~\ref{sec:guidelines}).
 
 Operationally, vote-first selection has the structure of redundant inspection
 with adjudication on disagreement: several inexpensive assessments are combined
@@ -166,7 +174,7 @@ provable scaling laws \citep{chen2025provable}. Our setting differs in
 analyzing complete finite tournaments against plurality voting and in
 auditing the resulting selectors against ground truth.
 
-Three peer-reviewed studies frame our design. Best-of-$N$ selection
+Two peer-reviewed studies frame our design. Best-of-$N$ selection
 against an imperfect proxy is vulnerable to reward hacking, and regularized
 and stochastic variants have been compared on alignment benchmarks
 \citep{ichihara2025bon}; our judge is such a proxy, which is why we score the
@@ -174,11 +182,7 @@ selected answer against ground truth instead of against the judge. A
 systematic comparison of nine debiasing strategies for pairwise judges finds
 style bias far larger than position bias in its benchmarks
 \citep{soumik2026judging}; our order-averaging controls only position, so
-style effects remain untested here (Section~\ref{sec:future}). Finally,
-language models show low hypothetical and compositional consistency in
-multi-step reasoning \citep{chen2024twofailures}; the self-consistency we use
-as a baseline is the different, answer-agreement notion of voting
-\citep{wang2023selfconsistency}, and we do not claim it certifies reasoning.
+style effects remain untested here (Section~\ref{sec:future}).
 These findings motivate paired correctness evaluation.
 
 These approaches also make different uses of additional information.
@@ -227,21 +231,11 @@ Copeland tournament. Negative judge results alone are not the distinction.
 
 \paragraph{Decision fusion and ensembles}
 Decision-level fusion combines the outputs of several classifiers or models,
-and large comparisons of aggregation rules show that no rule dominates
-\citep{campagner2023aggregation}. Recent work fuses language-model outputs by
-majority voting over small models \citep{cielen2026slm} and by rank fusion
-over prompt ensembles \citep{li2026dualprompt}; both fuse retrieval rankings
-or labels, not free-form final answers chosen by a pairwise judge.
-Exact Kemeny methods address median rankings and winner
-computation \citep{amodio2016kemeny,rico2023kemeny}; ensemble optimization
-selects constituent models \citep{debock2020ensemble,aktas2024clusterensemble}.
-Here the decision is which already-generated answer to return, with an
-exact ranking reference and an offline audit. The distinction is between
-optimizing ensemble membership before prediction and optimizing the
-returned answer after observing a candidate pool. Established ranking and
-optimization components provide the reference machinery; the finite-pool
-correctness comparison and its accompanying audit address the answer-level
-decision.
+and a large comparison of aggregation rules shows that no rule dominates
+\citep{campagner2023aggregation}. Here the decision is which already-generated
+answer to return after observing a candidate pool, with an exact ranking
+reference and an offline audit; the finite-pool correctness comparison and its
+accompanying audit address that answer-level decision.
 
 \paragraph{Language models in decision systems}
 Applied work increasingly places language models inside decision systems, for
@@ -252,12 +246,6 @@ a decision component. The question here is complementary: once several answers
 have been sampled, how should a vote or a pairwise judge select among them, and
 when is a costly judge comparison worth buying?
 
-Judgment aggregation and selection among forecasts provide a related OR
-perspective \citep{brown2019wisdom,jaspersen2022judgment,debaets2020judgment}:
-the selection mechanism is itself a decision object, not simply a final
-implementation detail. This perspective motivates examining the scale of
-the objective terms and testing the selected answer against ground truth,
-alongside the quality of the fitted preference ranking.
 
 \section{Method}
 
@@ -972,6 +960,35 @@ the higher-cap rescued problems lowers selector accuracy by 0.3--15 points
 depending on track, without reversing the direction of the comparisons
 (Table~\ref{S-tab:extended}). These results describe the retry-conditioned
 generation protocol, not unrestricted independent draws.
+
+\section{Design guidelines for system builders}
+\label{sec:guidelines}
+
+The results translate into five guidelines for the answer-selection component of a
+language-model system whose final answers can be extracted and compared.
+\begin{enumerate}
+\item \textbf{Vote first.} Extract each candidate's final answer and return the plurality
+answer when it is unique. In the model, this loses nothing against voting and
+never needs a judge-accuracy threshold (Theorem~\ref{thm:hybrid}); on the stored
+runs no accuracy difference against self-consistency was detected.
+\item \textbf{Call the judge only on ties.} Compare only the tied candidates. On the stored runs this
+needed \HybHomCallShare\% (homogeneous) and \HybHetCallShare\% (heterogeneous) of the
+comparisons that judging every problem requires, and it removed the heterogeneous-pool
+loss of judging everywhere (Section~\ref{sec:hybrid-results}).
+\item \textbf{Replace voting by judging everywhere only above a measured break-even.}
+Estimate the judge's binary accuracy on mixed pairs from a labeled sample, then compare it
+with the break-even computed from the observed distribution of correct candidates per problem
+(Theorem~\ref{thm:mixture}); pooled accuracy misstates it, and a judge near chance never qualifies.
+\item \textbf{Audit on frozen pools.} Store the candidate pool and the judge outputs per problem and
+compare selectors on the same problems with paired exact tests on discordant problems. Report
+how many problems have ties and how many ties contain a correct candidate, because that
+bounds what a tie-breaking judge can add.
+\item \textbf{Control judge biases before trusting a judge.} Average both presentation orders, and test
+style effects, which one systematic comparison finds larger than position effects
+\citep{soumik2026judging} and which this study did not control (Section~\ref{sec:future}).
+\end{enumerate}
+These guidelines hold under the stated assumptions: answers that can be extracted and compared, and
+the tested judge and configuration. They do not show that stronger judges cannot help.
 
 \section{Discussion}
 
