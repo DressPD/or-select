@@ -41,6 +41,7 @@
 \input{Figure_3_WorkedExample_data.tex}
 \input{Mixture_data.tex}
 \input{Hybrid_data.tex}
+\input{Collision_data.tex}
 
 \begin{document}
 
@@ -58,7 +59,7 @@
             country={Germany}}
 
 \begin{abstract}
-Intelligent systems built on language models often sample several answers and must return one. Designers can take the most frequent answer (self-consistency voting) at no extra cost, or pay for a pairwise judge that is itself unreliable, and they lack guidelines for choosing. We analyze the choice in a finite-pool model and audit it on stored runs. Voting first and consulting the judge only on tied answers is Bayes-optimal in the model and never worse than either voting or judging everywhere, so it needs no judge-accuracy threshold. Judging everywhere pays only above an explicit break-even accuracy (80.35\% at 80\% candidate accuracy for three candidates); when problems differ in difficulty, that break-even depends on an effective-odds ratio of difficulty moments, not on pooled accuracy. We audit one free-tier judge, scoring \RBOverallAcc\% on RewardBench, on six benchmarks of \TotalProblems{} problems. Paired exact tests find no homogeneous-pool advantage over self-consistency (\HomogPooledB{} versus \HomogPooledC{} discordant problems of \HomogPooledN{}), and judging everywhere performs worse in heterogeneous pools (\HeteroPooledB{} versus \HeteroPooledC{} of \HeteroPooledN{}, \HeteroPooledP). Vote-first selection removes that loss (\HybHetBCop{} versus \HybHetCCop{} discordant problems) with only \HybHetCallShare\% of the judge comparisons, but adds no detectable accuracy over voting because exact ties are rare. We close with design guidelines for system builders. The findings concern the tested judge, not stronger judges.
+Intelligent systems built on language models often sample several answers and must return one. Designers can take the most frequent answer (self-consistency voting) at no extra cost, or pay for a pairwise judge that is itself unreliable, and they lack guidelines for choosing. We analyze the choice in a finite-pool model and audit it on stored runs. Voting first and consulting the judge only on tied answers is Bayes-optimal in the model and never worse than either voting or judging everywhere, so it needs no judge-accuracy threshold. Judging everywhere pays only above an explicit break-even accuracy (80.35\% at 80\% candidate accuracy for three candidates); when problems differ in difficulty, that break-even depends on an effective-odds ratio of difficulty moments, not on pooled accuracy. We audit one free-tier judge, scoring \RBOverallAcc\% on RewardBench, on six benchmarks of \TotalProblems{} problems. Paired exact tests find no homogeneous-pool advantage over self-consistency (\HomogPooledB{} versus \HomogPooledC{} discordant problems of \HomogPooledN{}), and judging everywhere performs worse in heterogeneous pools (\HeteroPooledB{} versus \HeteroPooledC{} of \HeteroPooledN{}, \HeteroPooledP). Vote-first selection removes that loss (\HybHetBCop{} versus \HybHetCCop{} discordant problems) with only \HybHetCallShare\% of the judge comparisons, but adds no detectable accuracy over voting because exact ties are rare. When wrong answers collide, the required judge accuracy falls as they concentrate, but the measured judge stays below it; we close with design guidelines for system builders. The findings concern the tested judge, not stronger judges.
 \end{abstract}
 
 \begin{keyword}
@@ -107,7 +108,10 @@ The paper makes five contributions. First, it proves that voting first and
 judging only on ties is Bayes-optimal in a finite-pool model and weakly
 dominates both plurality and judging everywhere, and it measures the judge
 comparisons this saves on stored runs (Sections~\ref{sec:hybrid} and
-\ref{sec:hybrid-results}). Second, it derives the exact condition under which
+\ref{sec:hybrid-results}); with colliding wrong answers it gives the exact
+accuracy and judge cost of margin-gated judging and the judge accuracy each
+collision level requires, and locates the stored runs in that map
+(Section~\ref{sec:collision}). Second, it derives the exact condition under which
 binary pairwise judging with Copeland aggregation beats plurality voting: a
 closed form for $N=3$, enumeration for $N\le7$, and extensions to
 pair-dependent judges and colliding wrong answers (Section~\ref{sec:theory} and
@@ -602,9 +606,9 @@ happens with probability $P(k\le1)=(1-p)^N+Np(1-p)^{N-1}$ and then needs $\binom
 comparisons, so its expected number of comparisons is $\binom N2\,P(k\le1)$ against
 $\binom N2$ for Copeland on every problem; at $N=3$ and $p=0.6$ this is $0.35$ of the
 comparisons. The result is proved
-only for distinct wrong answers; when wrong answers collide, a wrong repeated
-answer can outvote a lone correct one, Rule~H inherits that failure, and a
-Copeland-based rule can recover it (Table~\ref{tab:threshold-n}).
+only for distinct wrong answers. When wrong answers collide, a wrong repeated
+answer can outvote a lone correct one and Rule~H inherits that failure; the next
+subsection quantifies when judging beyond ties then pays.
 
 \begin{table}[htbp]
 \centering
@@ -616,6 +620,60 @@ Copeland-based rule can recover it (Table~\ref{tab:threshold-n}).
 $N$ & $p$ & $q$ & Plurality & Copeland & Rule~H \\
 \midrule
 \HybridTheoryRows
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Colliding wrong answers: when to judge beyond ties}
+\label{sec:collision}
+
+Real pools violate the distinct-wrong-answers assumption: wrong candidates often repeat
+the same wrong answer. Extend the model so that a wrong candidate repeats one shared
+distractor with probability $s$ and otherwise gives an answer nobody else gives ($s=0$
+is the model above). Consider the margin-gated duel $G_t$: let $m_1\ge m_2$ be the
+sizes of the two largest answer classes (ties broken uniformly); if $m_1-m_2>t$ return the
+largest class, otherwise run one judge comparison between the two largest classes.
+$G_0$ judges only exact ties for first place and $G_\infty$ always judges. Exact enumeration over
+the multinomial counts of correct, distractor and unique wrong answers (checked against
+simulation) gives accuracy and expected judge calls (Table~\ref{tab:collision}).
+Three facts follow. First, tie-only judging $G_0$ is never worse than plurality when $q\ge\tfrac12$ and
+equals it at $q=\tfrac12$. Second, the value of judging more is governed by $s$:
+at $p=0.5$ and $q=0.8$, always judging loses $13.8$ points to plurality when wrong answers
+are scattered ($s=0$) but gains $21.2$ points when they concentrate on one distractor ($s=0.9$),
+with intermediate margins in between. Third, the judge accuracy needed to beat plurality falls with
+$s$ (Table~\ref{tab:collision-be}): at $p=0.5$ it is $0.96$ for $s=0$, $0.82$ for $s=0.5$ and $0.57$
+for $s=0.9$. The policy follows from two measurable quantities, the collision share $s$ of
+wrong answers and the judge's accuracy on mixed pairs: judge only ties when wrong answers are
+scattered, extend the gate when they concentrate, and never judge beyond ties with a judge
+below the break-even.
+
+\begin{table}[htbp]
+\centering
+\caption{Exact accuracy (\%) and expected judge calls per problem (in parentheses) at $N=\CollN$,
+$q=\CollQ$. $p$: probability a candidate is correct; $s$: probability a wrong candidate repeats the
+shared distractor. $G_t$ is the margin-gated duel.}
+\label{tab:collision}
+\small
+\begin{tabular}{rrrrrr}
+\toprule
+$p$ & $s$ & Plurality & $G_0$ & $G_1$ & $G_\infty$ \\
+\midrule
+\CollRows
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Smallest judge accuracy $q$ for which always judging the two largest classes
+($G_\infty$) matches plurality at $N=\CollN$ (``none'': no $q\le1$ suffices).}
+\label{tab:collision-be}
+\small
+\begin{tabular}{rrrr}
+\toprule
+$p$ & $s=0$ & $s=0.5$ & $s=0.9$ \\
+\midrule
+\CollBERows
 \bottomrule
 \end{tabular}
 \end{table}
@@ -926,6 +984,22 @@ voting-level accuracy. The stored
 voting baseline breaks ties by candidate order, and the judged subset is not a random sample;
 GPQA Diamond is not part of this audit because its stored outputs are not in the public archive.
 
+\paragraph{Where the stored runs sit in the collision model}
+Wrong answers do collide: $\CollHomS$ of wrong candidates in homogeneous pools and $\CollHetS$ in
+heterogeneous pools repeat another wrong candidate's answer. The judge's accuracy on pairs of
+answer classes with exactly one correct class, measured on the stored soft judgments, is
+$\CollHomQ$ and $\CollHetQ$. At the observed correct-candidate rates ($\CollHomP$ and $\CollHetP$) and the
+pool sizes $N=3$ and $N=6$, Section~\ref{sec:collision} requires judge accuracy $\CollHomNeedInf$
+(homogeneous) and $\CollHetNeedInf$ (heterogeneous) for always judging to match plurality, and
+$\CollHomNeedOne$ and $\CollHetNeedOne$ for the margin-one gate $G_1$. The tested judge is far below all of these. Replaying
+$G_1$ on the stored judgments agrees: $\CollHomGone\%$ against $\CollHomPl\%$ for plurality in homogeneous pools
+($\CollHomB$ versus $\CollHomC$ discordant problems, $p=\CollHomPV$) and $\CollHetGone\%$ against $\CollHetPl\%$ in
+heterogeneous pools ($\CollHetB$ versus $\CollHetC$, $p=\CollHetPV$); always judging gives $\CollHomGinf\%$ and
+$\CollHetGinf\%$. The null result is therefore predicted by the model and
+not only observed: a judge needs to be accurate on mixed pairs by a margin that the free-tier model does not
+reach. The class-pair accuracy uses the stored soft scores and so is an upper-level proxy for the binary
+accuracy in the theory.
+
 \begin{table}[htbp]
 \centering
 \caption{Rule~H on stored runs. Ties: problems where several answers tie for most votes; Opp.:
@@ -964,7 +1038,7 @@ generation protocol, not unrestricted independent draws.
 \section{Design guidelines for system builders}
 \label{sec:guidelines}
 
-The results translate into five guidelines for the answer-selection component of a
+The results translate into six guidelines for the answer-selection component of a
 language-model system whose final answers can be extracted and compared.
 \begin{enumerate}
 \item \textbf{Vote first.} Extract each candidate's final answer and return the plurality
@@ -979,6 +1053,11 @@ loss of judging everywhere (Section~\ref{sec:hybrid-results}).
 Estimate the judge's binary accuracy on mixed pairs from a labeled sample, then compare it
 with the break-even computed from the observed distribution of correct candidates per problem
 (Theorem~\ref{thm:mixture}); pooled accuracy misstates it, and a judge near chance never qualifies.
+\item \textbf{Measure collisions before widening the gate.} Estimate the share $s$ of wrong
+answers that repeat another wrong answer and the judge's accuracy on mixed pairs. Scattered wrong
+answers argue for judging ties only; concentrated wrong answers lower the break-even enough to
+judge the top two answer classes (Section~\ref{sec:collision}). On the stored runs $s$ is
+$\CollHomS$ and $\CollHetS$, but the judge is far below the required accuracy.
 \item \textbf{Audit on frozen pools.} Store the candidate pool and the judge outputs per problem and
 compare selectors on the same problems with paired exact tests on discordant problems. Report
 how many problems have ties and how many ties contain a correct candidate, because that

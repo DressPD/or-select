@@ -36,6 +36,20 @@ needs trimming and a stronger bar), Mathematical Social Sciences and Operations 
 Artificial Intelligence (stretch). **If the restriction can be lifted**, TMLR gives the best odds for this paper, followed
 by JAIR and Machine Learning; Annals of OR and Social Choice and Welfare suit a theory-only version.
 
+## Decision after the collision result (2026-11-28)
+
+New contribution (`scripts/collision_model.py`, `manuscript/main.tex` Section "Colliding wrong answers"): exact accuracy
+and judge cost of margin-gated judging when wrong answers collide, the break-even judge accuracy as a function of the
+collision share (0.96, 0.82, 0.57 at p=0.5 for s=0, 0.5, 0.9), and a placement of the stored runs on that map (collision
+share 0.52 and 0.38, judge accuracy on mixed pairs 0.55 and 0.59, required 0.84 to 0.99): the null result is now predicted
+by the model rather than only observed. Still missing: a stronger judge and tie-rich tasks.
+
+**Choice.** First TMLR if the publisher restriction is lifted (claims-versus-evidence review, null results accepted, topical
+precedent). Within Elsevier and Taylor & Francis: Information Fusion first (guide verified, "decision fusion" scope, LLM
+ensemble precedent; needs trimming to 35 pages, numeric style and the cover-letter answers), then Pattern Recognition
+(guide not yet read), with Mathematical Social Sciences or Operations Research Letters only for a theory-only cut.
+Expert Systems with Applications is dropped (no application domain).
+
 ## Evidence: recent papers by journal (Crossref scan, titles only, articles since 2024)
 `LLM-titled` counts papers whose title names language models; `selection terms` counts those whose title also has
 judge, voting, ensemble, aggregation, consensus, self-consistency, best-of, selection, ranking, reward, verification,
