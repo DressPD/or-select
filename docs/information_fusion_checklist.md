@@ -30,5 +30,7 @@ Numbers marked generated come from `scripts/package_infofusion.py` (`submission/
 
 Reviewer risks (not guide items): the audit uses one free-tier judge and exact ties are rare; no trained-verifier or
 LLM-Blender baseline; universal self-consistency was run (`scripts/usc_baseline.py`, 538 problems, same judge: ties
-plurality in homogeneous pools, worse in heterogeneous pools, strong position bias) but only with the weak judge; the new
-collision result is a model with measured inputs, not a stronger-judge run.
+plurality in homogeneous pools, worse in heterogeneous pools, strong position bias) with the free judge; two paid small
+judges (Claude Haiku 5.5, GPT Luna; `scripts/strong_judges.py`, about $2.1 spent) also do not beat voting, with partial
+coverage (Haiku: 151 homogeneous pools pairwise, many truncated replies; Luna: all 334 homogeneous pools, 34 sampled
+heterogeneous pools, universal self-consistency on all 538); no frontier-scale judge was tested.

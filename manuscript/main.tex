@@ -42,6 +42,7 @@
 \input{Hybrid_data.tex}
 \input{Collision_data.tex}
 \input{Usc_data.tex}
+\input{Strong_data.tex}
 
 \begin{document}
 
@@ -59,7 +60,7 @@
             country={Germany}}
 
 \begin{abstract}
-Intelligent systems built on language models often sample several answers and must return one. Designers can take the most frequent answer (self-consistency voting) at no extra cost, or pay for a pairwise judge that is itself unreliable, and they lack guidelines for choosing. We analyze the choice in a finite-pool model and audit it on stored runs. Voting first and consulting the judge only on tied answers is Bayes-optimal in the model and never worse than either voting or judging everywhere, so it needs no judge-accuracy threshold. Judging everywhere pays only above an explicit break-even accuracy (80.35\% at 80\% candidate accuracy for three candidates); when problems differ in difficulty, that break-even depends on an effective-odds ratio of difficulty moments, not on pooled accuracy. We audit one free-tier judge, scoring \RBOverallAcc\% on RewardBench, on six benchmarks of \TotalProblems{} problems. Paired exact tests find no homogeneous-pool advantage over self-consistency (\HomogPooledB{} versus \HomogPooledC{} discordant problems of \HomogPooledN{}), and judging everywhere performs worse in heterogeneous pools (\HeteroPooledB{} versus \HeteroPooledC{} of \HeteroPooledN{}, \HeteroPooledP). Vote-first selection removes that loss (\HybHetBCop{} versus \HybHetCCop{} discordant problems) with only \HybHetCallShare\% of the judge comparisons, but adds no detectable accuracy over voting because exact ties are rare. Universal self-consistency with the same judge does not beat voting either. When wrong answers collide, the required judge accuracy falls as they concentrate, but the measured judge stays below it; we close with design guidelines for system builders. The findings concern the tested judge, not stronger judges.
+Intelligent systems built on language models often sample several answers and must return one. Designers can take the most frequent answer (self-consistency voting) at no extra cost, or pay for a pairwise judge that is itself unreliable, and they lack guidelines for choosing. We analyze the choice in a finite-pool model and audit it on stored runs. Voting first and consulting the judge only on tied answers is Bayes-optimal in the model and never worse than either voting or judging everywhere, so it needs no judge-accuracy threshold. Judging everywhere pays only above an explicit break-even accuracy (80.35\% at 80\% candidate accuracy for three candidates); when problems differ in difficulty, that break-even depends on an effective-odds ratio of difficulty moments, not on pooled accuracy. We audit one free-tier judge, scoring \RBOverallAcc\% on RewardBench, on six benchmarks of \TotalProblems{} problems. Paired exact tests find no homogeneous-pool advantage over self-consistency (\HomogPooledB{} versus \HomogPooledC{} discordant problems of \HomogPooledN{}), and judging everywhere performs worse in heterogeneous pools (\HeteroPooledB{} versus \HeteroPooledC{} of \HeteroPooledN{}, \HeteroPooledP). Vote-first selection removes that loss (\HybHetBCop{} versus \HybHetCCop{} discordant problems) with only \HybHetCallShare\% of the judge comparisons, but adds no detectable accuracy over voting because exact ties are rare. Universal self-consistency and two paid small judges do not beat voting either. When wrong answers collide, the required judge accuracy falls as they concentrate, but the measured judge stays below it; we close with design guidelines for system builders. The findings concern the tested judge, not stronger judges.
 \end{abstract}
 
 \begin{keyword}
@@ -846,6 +847,46 @@ the pairwise results this extends the finding to a second use of the same judge:
 does not outperform plurality whether it compares pairs or reads the whole pool. A stronger model
 reading the pool, or a trained verifier, is not tested.
 
+\subsection{Two paid judges}
+\label{sec:strong}
+
+To test whether a better judge changes the picture, we repeated pairwise judging and universal self-consistency
+with two paid small models, Claude Haiku~5.5 and GPT Luna (same prompts, reasoning off, total spend of about two dollars). Coverage
+differs with the budget and is reported as such. Luna judged every pair of all $\StLunaHomN$ homogeneous pools,
+a sample of $\StLunaHetN$ heterogeneous pools, and read all $\StLunaHomUN+\StLunaHetUN$ pools for universal
+self-consistency. Haiku judged every pair of $\StHaikuHomN$ homogeneous pools: its replies often exceeded the
+short-reply token cap, so many calls failed and the run stopped at its spend cap; it read $\StHaikuHomUN$
+homogeneous pools for universal self-consistency, with $\StHaikuHomUFail$ replies lacking a valid index.
+
+Neither paid judge beats voting (Table~\ref{tab:strong}). Copeland over the judge's pairwise comparisons reaches
+$\StLunaHomCop\%$ against $\StLunaHomSC\%$ for plurality with Luna in homogeneous pools ($\StLunaHomCopB$ versus
+$\StLunaHomCopC$ discordant problems, $p\StLunaHomCopP$) and $\StHaikuHomCop\%$ against $\StHaikuHomSC\%$ with Haiku
+($\StHaikuHomCopB$ versus $\StHaikuHomCopC$). On the Luna heterogeneous sample, Copeland reaches $\StLunaHetCop\%$ against
+$\StLunaHetSC\%$. Universal self-consistency with Luna reads $\StLunaHomUAcc\%$ against $\StLunaHomUSC\%$ in homogeneous pools and
+$\StLunaHetUAcc\%$ against $\StLunaHetUSC\%$ in heterogeneous pools ($\StLunaHetUB$ versus $\StLunaHetUC$,
+$p\StLunaHetUP$); with Haiku, $\StHaikuHomUAcc\%$ against $\StHaikuHomUSC\%$ in homogeneous pools. No difference is
+significant. The judges' accuracy on mixed pairs, measured on stored soft scores, is $\StHaikuHomQ$ for Haiku and
+$\StLunaHomQ$ for Luna in homogeneous pools, higher than the free judge's but still far below the $0.84$ to $0.99$ that
+Section~\ref{sec:collision} requires for judging beyond ties to pay at the measured collision rates, so the null result
+is again what the model predicts. These are small models, coverage is partial, and a frontier-scale judge is not tested.
+
+\begin{table}[htbp]
+\centering
+\caption{Paid judges against plurality voting (accuracy, \%). Cop.: Copeland over the judge's pairwise comparisons; $\hat q$: mean stored
+weight on the correct candidate in mixed pairs; USC: universal self-consistency on all pools the judge read (its own $n$).}
+\label{tab:strong}
+\small
+\begin{tabular}{llrrrrrr}
+\toprule
+Judge & Pools & $n$ & Vote & Cop. & Rule H & $\hat q$ & USC \\
+\midrule
+Haiku 5.5 & Hom. & \StHaikuHomN & \StHaikuHomSC & \StHaikuHomCop & \StHaikuHomHyb & \StHaikuHomQ & \StHaikuHomUAcc \\
+GPT Luna & Hom. & \StLunaHomN & \StLunaHomSC & \StLunaHomCop & \StLunaHomHyb & \StLunaHomQ & \StLunaHomUAcc \\
+GPT Luna & Het. (sample) & \StLunaHetN & \StLunaHetSC & \StLunaHetCop & \StLunaHetHyb & \StLunaHetQ & \StLunaHetUAcc \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsection{Headroom and recovery}
 \label{sec:recovery}
 
@@ -1037,8 +1078,9 @@ about score distributions and dependence, not merely a mean score.
 \paragraph{Scope}
 \label{sec:future}
 
-Only one free-tier fixed judge is evaluated, in both pairwise judging and universal
-self-consistency. Stronger
+The main audit uses one free-tier fixed judge, in both pairwise judging and universal
+self-consistency; two paid small judges are tested with partial coverage (Section~\ref{sec:strong}).
+Frontier-scale
 judges, trained verifiers and other selection architectures may perform
 differently. Forward--reverse averaging addresses position bias; style bias,
 reported to be larger in other judge benchmarks \citep{soumik2026judging},
