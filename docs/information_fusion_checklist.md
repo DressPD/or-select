@@ -29,4 +29,6 @@ Numbers marked generated come from `scripts/package_infofusion.py` (`submission/
 | Inclusive language; British or American English, not both | Pass after the earlier spelling check |
 
 Reviewer risks (not guide items): the audit uses one free-tier judge and exact ties are rare; no trained-verifier or
-universal self-consistency baseline; the new collision result is a model with measured inputs, not a stronger-judge run.
+LLM-Blender baseline; universal self-consistency was run (`scripts/usc_baseline.py`, 538 problems, same judge: ties
+plurality in homogeneous pools, worse in heterogeneous pools, strong position bias) but only with the weak judge; the new
+collision result is a model with measured inputs, not a stronger-judge run.

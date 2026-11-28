@@ -3,7 +3,7 @@
 - [x] Manuscript length 29 pages (limit 35, including figures, tables, references)
 - [x] 47 references (limit 50)
 - [x] 5 highlights, longest 73 characters (3 to 5 bullets, 85 characters)
-- [x] abstract about 231 words (limit 250; macro values counted as one word)
+- [x] abstract about 242 words (limit 250; macro values counted as one word)
 
 Author actions that cannot be automated:
 - Complete the Elsevier declarations tool and upload the Word document it generates.
