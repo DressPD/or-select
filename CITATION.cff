@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "Please cite this OR-Select release. The DOI and release URL identify the published archive; for v1.2.0 the version DOI is assigned by Zenodo after publication, until then the concept DOI resolves to the latest version."
+message: "Please cite this OR-Select release. The DOI and release URL identify the published archive; for v1.3.0 the version DOI is assigned by Zenodo after publication, until then the concept DOI resolves to the latest version."
 title: "Vote First, Judge on Ties: Cost-Aware Answer Selection for Language-Model Systems (OR-Select)"
 type: software
 authors:
@@ -10,8 +10,8 @@ authors:
 repository-code: "https://github.com/DressPD/or-select"
 license: MIT
 doi: 10.5281/zenodo.24112044
-url: "https://github.com/DressPD/or-select/releases/tag/v1.2.0"
-version: "1.2.0"
+url: "https://github.com/DressPD/or-select/releases/tag/v1.3.0"
+version: "1.3.0"
 date-released: "2026-11-28"
 keywords:
   - operations research

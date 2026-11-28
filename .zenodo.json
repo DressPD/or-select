@@ -1,8 +1,8 @@
 {
   "title": "Vote First, Judge on Ties: Cost-Aware Answer Selection for Language-Model Systems (OR-Select)",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "upload_type": "software",
-  "description": "OR-Select v1.2.0: code, public stored runs, generated tables, the revised manuscript and online supplement, and the submission package for Vote First, Judge on Ties: Cost-Aware Answer Selection for Language-Model Systems. New since v1.1.0: the vote-first (judge on ties) optimality result, the difficulty-mixture threshold, the collision model with margin-gated judging, universal self-consistency on all stored pools with the free judge, and pairwise judging and universal self-consistency with two paid small judges (Claude Haiku 5.5, GPT Luna) with partial coverage. Stored runs for the new analyses are in outputs/usc_baseline.json and outputs/strong_judge_*.json. GPQA Diamond files embed password-gated question text and are not included. This release does not overwrite earlier archives.",
+  "description": "OR-Select v1.3.0: code, public stored runs, generated tables, the revised manuscript and online supplement, and the submission package for Vote First, Judge on Ties: Cost-Aware Answer Selection for Language-Model Systems. New since v1.1.0: the Bayes-optimal posterior-odds gate with exact sequential judging, the headroom analysis, the vote-first (judge on ties) optimality result, the difficulty-mixture threshold, the collision model with margin-gated judging, universal self-consistency on all stored pools with the free judge, and pairwise judging and universal self-consistency with two paid small judges (Claude Haiku 5.5, GPT Luna) with partial coverage. Stored runs for the new analyses are in outputs/usc_baseline.json and outputs/strong_judge_*.json. GPQA Diamond files embed password-gated question text and are not included. This release does not overwrite earlier archives.",
   "creators": [
     {
       "name": "Dressino, Aris",
