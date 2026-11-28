@@ -1,6 +1,6 @@
 # OR-Select
 
-**Pairwise Judging versus Voting for Language Model Answer Selection: Finite-Pool Theory and an Empirical Audit**
+**Vote First, Judge on Ties: Cost-Aware Answer Selection for Language-Model Systems**
 
 A no-fine-tuning pipeline that turns N stochastic LLM answers into one auditable choice, plus the audit protocol and
 theory used to test whether the choice is *accurate*. Selection is cast as an integer program over a judge-derived
@@ -152,15 +152,14 @@ Citation coverage and source policy: [citation audit](docs/citation_audit.md).
 
 ### Target journal
 
-The manuscript is prepared for **Expert Systems with Applications** (Elsevier). The comparison of past publications by
-journal, the ranking evidence and the ordered alternatives are in [`docs/venue_decision.md`](docs/venue_decision.md); the
-requirement check (the journal's guide was not available, so partly unverified) is in
-[`docs/eswa_checklist.md`](docs/eswa_checklist.md). The double-anonymized package is in [`submission/eswa/`](submission/eswa/) (`anonymous/` and `author_files/`), built with
-`scripts/package_elsevier.py` (see [`manuscript/BUILD_README.md`](manuscript/BUILD_README.md)); the cover letter is
-`manuscript/Cover_Letter.tex`. A blind IISE Transactions build (`submission/iise/`) and an anonymous TMLR build
-(`submission/tmlr/`) are kept as alternatives. Journal-specific packages from the first target were removed and remain in
-git history.
+The manuscript is prepared for **Information Fusion** (Elsevier, single anonymized review). The venue analysis is in
+[`docs/venue_decision.md`](docs/venue_decision.md) and the guide-for-authors check in
+[`docs/information_fusion_checklist.md`](docs/information_fusion_checklist.md). The submission folder is
+[`submission/information_fusion/`](submission/information_fusion/), built with `scripts/package_infofusion.py` (see
+[`manuscript/BUILD_README.md`](manuscript/BUILD_README.md)); the cover letter is `manuscript/Cover_Letter.tex`.
+Packages for earlier targets were removed and remain in git history.
 
-Two results beyond the original threshold theorem are computed offline from the stored runs:
-`scripts/difficulty_mixture.py` (break-even judge accuracy under varying problem difficulty) and
-`scripts/hybrid_rule.py` (vote-first, judge-on-ties rule: optimality check and stored-run audit).
+Three results beyond the original threshold theorem are computed offline from the stored runs:
+`scripts/difficulty_mixture.py` (break-even judge accuracy under varying problem difficulty),
+`scripts/hybrid_rule.py` (vote-first, judge-on-ties rule: optimality check and stored-run audit) and
+`scripts/collision_model.py` (margin-gated judging when wrong answers collide, and the judge accuracy each collision level requires).

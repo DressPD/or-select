@@ -129,7 +129,7 @@ in one simulation. A dominant cost term selects the shortest candidate;
 when lengths are independent of correctness and ties have probability zero,
 that rule has accuracy $p$. This limiting argument does not prove monotone
 accuracy degradation for every cost distribution or judge. Empirical lengths
-are not independent of correctness, so Section~\ref{M-sec:cost-diagnosis}
+are not independent of correctness, so Section~\ref{sec:cost-diagnosis}
 evaluates their effect by replay.
 
 \begin{table}[htbp]
@@ -518,7 +518,7 @@ contributions to $\text{score}_i$. Confidence and consistency are constant
 across candidates here (no duplicates; uniform scorer confidence), so the
 ranking is decided by quality and cost. These candidates are one-sentence
 summaries; on multi-hundred-word reasoning outputs the cost term is far
-larger relative to quality (Section~\ref{M-sec:cost-diagnosis}).}
+larger relative to quality (Section~\ref{sec:cost-diagnosis}).}
 \label{fig:worked-example}
 \end{figure}
 
@@ -531,3 +531,136 @@ effects, not arbitrary order dependence. For identical trimmed candidate
 texts, the implementation skips both calls and directly assigns $W=0.5$.}
 \label{fig:bias-cancel}
 \end{figure}
+
+\section{Selector internals, ablations and the Kemeny--Young reference}
+\label{sec:selector-internals}
+
+\subsection{Exact Kemeny--Young baseline}
+\label{sec:kemeny-exact}
+
+For the ranking reference, let $y_{ij}=1$ mean that $i$ ranks above $j$.
+The Kemeny--Young program maximizes agreement with the same matrix:
+
+\begin{equation}
+\max \sum_{i \neq j} W[i,j]\, y_{ij}
+\label{eq:kemeny-obj}
+\end{equation}
+\begin{align}
+\text{s.t.} \quad & y_{ij} + y_{ji} = 1 \quad \forall\, i \neq j \label{eq:kemeny-antisym}\\
+& y_{ij} + y_{jk} + y_{ki} \leq 2 \quad \forall \text{ distinct } i,j,k \label{eq:kemeny-transitivity}\\
+& y_{ij} \in \{0,1\}
+\end{align}
+
+Antisymmetry and the absence of 3-cycles enforce a linear order.
+The implementation uses $\binom{N}{2}$ binary variables, $O(N^3)$
+constraints and coefficients $\operatorname{round}(10^4(W[i,j]-W[j,i]))$.
+A 200{,}000-conflict budget replaces a wall-clock limit; a non-optimality
+flag distinguishes feasible from proven-optimal solutions. All
+\KYTopOneN{} stored reference solutions at $N\le6$ are flagged optimal
+for this integerized objective, not necessarily for unrounded weights.
+
+The reference removes the composite selector's confidence, consistency and
+cost terms and uses all pairwise relations simultaneously. With cyclic
+preferences, its top-ranked candidate need not have the largest weighted
+win total. This permits an empirical distinction between losing
+information through aggregation and receiving unhelpful information from
+the judge. We compare returned answers, rather than treating a difference
+between rankings as an accuracy error. When two different candidates give
+the same extracted answer, they count as the same answer-level decision.
+
+\subsection{Approximation guarantee}
+\label{sec:approx-guarantee}
+
+\begin{proposition}[Weighted-win ranking]
+\label{prop:copeland-approx}
+Assume nonnegative pair weights with $W[i,j]+W[j,i]=1$.
+Ranking by decreasing $Q_i$ approximates minimum weighted disagreement
+within a factor of 5. This factor is tight.
+\end{proposition}
+
+The constructed matrix satisfies these conditions. This guarantee, from
+\citet{coppersmith2006ordering},
+covers the \emph{full quality-only ranking}, not top-1 correctness, agreement
+with the Kemeny winner, or the composite objective~\eqref{M-eq:selection-obj}.
+
+\subsection{Objective and selection diagnostics}
+\label{sec:selection-bias}
+\label{sec:cost-diagnosis}
+\label{sec:ablations}
+
+On replayable problems, the within-pool cost-term spread has median
+\CostSpreadMed{}, versus \QualitySpreadMed{} for quality, and exceeds
+the quality spread in \CostDominatesK/\CostDominatesN{} cases. This
+exposes a scale mismatch, not a proof that cost determines every winner:
+confidence, consistency, eligibility and score gaps also matter.
+
+Table~\ref{tab:ablation} compares the default, no-cost, quality-only and
+plurality-plus-quality variants on identical replayable subsets. In
+heterogeneous pools, removing cost yields \AblHetNoCostAcc\% accuracy and
+quality-only selection \AblHetQOnlyAcc\%, against voting's
+\AblHetSCAcc\% ($n=\AblHetN$; exact $p$ \AblHetNoCostP{} and
+\AblHetQOnlyP{}, respectively). Thus the cost term is not the only
+limitation. These post-hoc results do not prove that the judge contains
+no useful correctness information.
+
+OR-Select picks Cohere candidates in \PickShareCohere\% of heterogeneous
+problems, although their overall accuracy (\CandAccCohere\%) is similar to
+Nemotron's (\CandAccNemotron\%). This is a property of the \emph{composite
+selector}, not an isolated judge preference; length and other terms are
+confounded (Table~\ref{tab:selection}).
+
+\begin{table}[htbp]
+\centering
+\caption{Offline replay of the selection step on stored judge outputs
+(accuracy \%, problems whose judge outputs were stored). SC: stored
+self-consistency result on the same problems.}
+\label{tab:ablation}
+\small\setlength{\tabcolsep}{4pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Track & Replayable & SC & Default & No cost & Quality only & SC+quality \\
+\midrule
+\AblationTableRows
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\paragraph{Additional selectors}
+\label{sec:baselines}
+
+Shortest/longest, token-Jaccard minimum-Bayes-risk, pointwise confidence,
+confidence-weighted voting, a knockout tournament and Bradley--Terry
+selection establish no significant improvement over plurality in the
+exploratory comparisons (Table~\ref{tab:baselines}). Minimum-Bayes-risk
+is numerically ahead in some pooled comparisons, without a significant advantage.
+
+\paragraph{Soft-score diagnostics}
+\label{sec:threshold-results}
+
+The mean stored weight assigned to the correct candidate on mixed pairs
+is $0.49$--$0.56$ on tracks with at least 70 such pairs. These are
+\emph{soft-score means}, not frequencies of correct binary decisions.
+They cannot be substituted for $q$ in Theorem~\ref{M-thm:threshold}; neither
+can an average establish the pairwise bounds of Corollary~\ref{cor:pairdep}.
+Table~\ref{tab:threshold-emp-gen} retains these descriptive measurements
+and model sensitivity calculations, with their sampling limitations.
+
+\subsection{Ranking reference results and coverage}
+\label{sec:kemeny-results}
+
+OR-Select and the integerized Kemeny--Young reference return different
+final answers on \KYTopOneDiffers/\KYTopOneN{} problems. OR-Select alone
+is correct on \KYORwins{} and Kemeny--Young alone on \KYKYwins{}
+(Table~\ref{M-tab:paired}); the exact ranking reference shows no detected
+accuracy advantage. Ranking optimality does not guarantee correctness.
+
+\paragraph{Coverage}
+\label{sec:coverage}
+
+Every problem is ultimately graded (Table~\ref{tab:coverage}). Including
+the higher-cap rescued problems lowers selector accuracy by 0.3--15 points
+depending on track, without reversing the direction of the comparisons
+(Table~\ref{tab:extended}). These results describe the retry-conditioned
+generation protocol, not unrestricted independent draws.
+

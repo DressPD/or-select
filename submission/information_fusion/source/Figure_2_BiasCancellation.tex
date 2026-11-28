@@ -1,0 +1,54 @@
+\documentclass[tikz,border=5pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath}
+\usetikzlibrary{arrows.meta,positioning,calc}
+
+\definecolor{orblue}{RGB}{76,120,168}
+\definecolor{ororange}{RGB}{209,143,0}
+\definecolor{orgray}{RGB}{122,122,122}
+
+\begin{document}
+\begin{tikzpicture}[
+  >=Latex,
+  flow/.style={-Latex,draw=black!60,line width=0.9pt},
+  box/.style={fill=white,line width=1.1pt,rounded corners=1pt,
+    text width=4.6cm,minimum height=1.9cm,align=center,inner sep=7pt,
+    font=\small},
+  note/.style={font=\footnotesize,text=black!70,align=left}
+]
+\node[anchor=west,font=\Large\bfseries] at (0,0) {Permutation self-consistency};
+\node[anchor=west,font=\small,text=black!70] at (0,-0.55)
+  {Averaging both input orders mitigates positional bias.};
+\draw[black!25] (0,-0.88) -- (14.6,-0.88);
+
+\node[box,draw=orblue,anchor=north west] (fwd) at (0,-1.5) {
+  \textbf{Forward call}\\[2pt]
+  Judge$(A, B) = v$\\[2pt]
+  \footnotesize $A$ shown first; a judge that favors
+  the first answer inflates $v$.};
+
+\node[box,draw=ororange,right=1.1cm of fwd] (bwd) {
+  \textbf{Backward call}\\[2pt]
+  Judge$(B, A) = v'$\\[2pt]
+  \footnotesize $B$ shown first; the same bias now
+  inflates $v'$, i.e.\ deflates $A$'s implied score $1-v'$.};
+
+\node[box,draw=orgray,below=1.2cm of $(fwd.south)!0.5!(bwd.south)$] (avg) {
+  \textbf{Averaged}\\[2pt]
+  $W[A,B] = \dfrac{v + (1-v')}{2}$\\[2pt]
+  \footnotesize An equal additive position effect cancels;
+  arbitrary order effects need not.};
+
+\draw[flow] (fwd.south) -- ++(0,-0.3) -| (avg.north -| fwd) ;
+\draw[flow] (bwd.south) -- ++(0,-0.3) -| (avg.north -| bwd) ;
+
+\node[note,anchor=north west] at ($(avg.south)+(-3.6,-0.6)$) {
+  If the two raw scores coincide, $v=v'$, their average is $0.5$.\\
+  Identical input text alone does not ensure identical API outputs.\\
+  A pilot recorded different scores on identical-text pairs; this\\
+  does not isolate seed handling as the cause. The implementation\\
+  skips judge calls when trimmed candidate texts match and assigns\\
+  $W[A,B]=0.5$ directly.};
+\end{tikzpicture}
+\end{document}

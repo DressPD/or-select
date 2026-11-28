@@ -1,0 +1,40 @@
+\documentclass[tikz,border=5pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+\definecolor{orgray}{RGB}{122,122,122}
+\definecolor{orblue}{RGB}{76,120,168}
+\definecolor{ororange}{RGB}{209,143,0}
+\definecolor{orgreen}{RGB}{80,140,90}
+\input{Results_data.tex}
+
+\begin{document}
+\begin{tikzpicture}
+\begin{axis}[
+  width=16.5cm,height=7.2cm,
+  ybar,bar width=5pt,
+  ymin=60,ymax=104,
+  ylabel={Accuracy on graded problems (\%)},
+  tick label style={font=\scriptsize},
+  ylabel style={font=\scriptsize},
+  symbolic x coords/.expand once=\FigLabels,
+  xtick=data,
+  xticklabel style={font=\scriptsize},
+  ymajorgrids=true,grid style={black!12},
+  axis line style={black!70},
+  enlarge x limits=0.07,
+  legend style={at={(0.5,-0.16)},anchor=north,legend columns=4,font=\scriptsize,draw=none}
+]
+\addplot[fill=orgray,draw=none] coordinates {\FigGRCoordinates};
+\addlegendentry{Greedy}
+\addplot[fill=ororange,draw=none] coordinates {\FigSCCoordinates};
+\addlegendentry{Self-consistency}
+\addplot[fill=orblue,draw=none] coordinates {\FigORCoordinates};
+\addlegendentry{OR-Select}
+\addplot[fill=orgreen,draw=none] coordinates {\FigKYCoordinates};
+\addlegendentry{Kemeny--Young (exact)}
+\end{axis}
+\end{tikzpicture}
+\end{document}

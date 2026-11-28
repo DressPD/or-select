@@ -1,14 +1,15 @@
 # Building the manuscript sources
 
 Main entry point: **`main.tex`**. The online supplement entry point is
-**`supplement.tex`**. Cover-letter and title-page entry points are
-`Cover_Letter.tex` and `Submission_Title_Page.tex`.
+**`supplement.tex`**. The cover-letter entry point is `Cover_Letter.tex`. The author block, CRediT,
+funding and generative-AI declarations are inside `main.tex` (Information Fusion uses single anonymized review).
 
 ## Requirements
 
 Use a standard LaTeX installation with pdfLaTeX, BibTeX, and the packages
-requested in the source files. The document class and bibliography style
-are included locally: `elsarticle.cls` and **`apalike-local.bst`**.
+requested in the source files. The document class and bibliography styles
+are included locally: `elsarticle.cls`, **`elsarticle-num-names.bst`** (manuscript, numbered references)
+and **`apalike-local.bst`** (supplement, author-year).
 No locally installed custom bibliography style, Python, API credentials,
 benchmark data or new model calls are required to compile these sources.
 
@@ -31,25 +32,17 @@ pdflatex -interaction=nonstopmode -halt-on-error main.tex
 pdflatex -interaction=nonstopmode -halt-on-error supplement.tex
 pdflatex -interaction=nonstopmode -halt-on-error main.tex
 pdflatex -interaction=nonstopmode -halt-on-error Cover_Letter.tex
-pdflatex -interaction=nonstopmode -halt-on-error Submission_Title_Page.tex
 ```
 
-### Expert Systems with Applications package
+### Information Fusion package
 
-After building `main`, `supplement`, `Cover_Letter` and `Submission_Title_Page` with the sequence above,
-`python3 ../scripts/package_elsevier.py` writes `submission/eswa/`: the PDFs, `highlights.txt`, the declaration texts,
-the figures as separate files and `eswa-latex-source.zip` (includes `supplement.aux` so that `main.tex` alone resolves
-its cross-references into the supplement). `main.tex` uses the Elsevier `elsarticle` class with an author-year style.
-
-### Blind IISE Transactions sources
-
-`python3 ../scripts/make_iise_manuscript.py` writes `main_iise.tex` and `supplement_iise.tex` (anonymous, 11 pt,
-1 inch margins, 1.5 spacing) from `main.tex` and `supplement.tex`. Build them with the same alternating
-`pdflatex`/`bibtex` sequence, substituting `main_iise` and `supplement_iise`; the bibliography style is `chicago.bst`.
-The numerical macros (`Mixture_data.tex`, `Hybrid_data.tex`) come from `scripts/difficulty_mixture.py` and
-`scripts/hybrid_rule.py`. Then `python3 ../scripts/package_iise.py` copies the PDFs to `submission/iise/`, converts the
-figures to EPS and writes `iise-latex-source.zip`, the single anonymous source zip that IISE Transactions asks for
-(the author's own archive record is removed from the zipped `refs.bib`).
+`python3 ../scripts/package_infofusion.py` copies the sources into a temporary directory, runs the sequence above
+there, fails on undefined references, and writes `submission/information_fusion/`: `Manuscript.pdf`, `Supplement.pdf`,
+`Cover_Letter.pdf`, `highlights.txt`, `figures/`, `declarations/`, `source/` and `informationfusion-latex-source.zip`
+(includes `supplement.aux` so that `main.tex` alone resolves its cross-references into the supplement), plus a generated
+`SUBMISSION_CHECKLIST.md` (page, reference, highlight and abstract limits). The numerical macros (`Mixture_data.tex`,
+`Hybrid_data.tex`, `Collision_data.tex`) come from `scripts/difficulty_mixture.py`, `scripts/hybrid_rule.py` and
+`scripts/collision_model.py`.
 
 Both documents reference each other with the `xr` package. The alternating
 passes resolve those references. The upload ZIP also includes generated

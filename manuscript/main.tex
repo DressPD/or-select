@@ -1,5 +1,4 @@
-\documentclass[preprint,11pt,authoryear]{elsarticle}
-\linespread{1.5}
+\documentclass[preprint,11pt,number,sort&compress]{elsarticle}
 
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -18,7 +17,7 @@
 \newtheorem{lemma}{Lemma}[section]
 \newtheorem{corollary}{Corollary}[section]
 
-\journal{Expert Systems with Applications}
+\journal{Information Fusion}
 
 % All numbers in the Results are generated from outputs/*.json:
 %   python3 scripts/create_results_macros.py   -> Results_data.tex
@@ -125,6 +124,12 @@ relative to available headroom and weight ablations
 selector, OR-Select, with an exact Kemeny--Young reference and stored judge
 outputs for offline comparison (Section~\ref{sec:formal-model}), and distills the
 results into design guidelines (Section~\ref{sec:guidelines}).
+
+The problem is one of decision-level fusion: the candidates are noisy sources that
+each state an answer, a vote fuses them for free, and a pairwise judge is a costly
+second source consulted to resolve disagreement \citep{campagner2023aggregation}. Fusion
+research asks which combination rule to use; we ask when a priced arbiter changes
+the outcome and what it costs.
 
 Operationally, vote-first selection has the structure of redundant inspection
 with adjudication on disagreement: several inexpensive assessments are combined
@@ -233,22 +238,34 @@ selective-intervention criterion concerns the precision of majority
 overrides, rather than the mixed-pair accuracy needed by a complete
 Copeland tournament. Negative judge results alone are not the distinction.
 
-\paragraph{Decision fusion and ensembles}
-Decision-level fusion combines the outputs of several classifiers or models,
-and a large comparison of aggregation rules shows that no rule dominates
-\citep{campagner2023aggregation}. Here the decision is which already-generated
-answer to return after observing a candidate pool, with an exact ranking
-reference and an offline audit; the finite-pool correctness comparison and its
-accompanying audit address that answer-level decision.
+\paragraph{Decision-level fusion and ensembles}
+Combining the outputs of several classifiers is the core problem of
+decision-level fusion. A large comparison of aggregation models in ensemble
+learning finds that no rule dominates \citep{campagner2023aggregation};
+multi-classifier fusion has been applied to risk analysis \citep{pan2020multiclassifier},
+confidence ensembles weight members by their confidence \citep{zoppi2025confidence},
+and majority voting remains the default aggregator of crowdsourced labels, where
+semi-supervised refinements address its weaknesses \citep{yu2026semisupervised}.
+Two themes of this literature frame our model. The first is diversity of the
+ensemble: pool-generation work treats the diversity of the classifier pool as a
+design target \citep{monteiro2023diversity}; the collision share $s$ of
+Section~\ref{sec:collision} is its answer-level counterpart, the fraction of wrong
+answers that repeat. The second is cost: choosing which ensemble members to run
+trades accuracy against computation \citep{birman2022costeffective}; vote-first
+selection is such a policy at the level of judge calls. Pairwise aggregation also
+has counterparts in rank fusion, where consensus sets generalize Kemeny-type objectives
+for partial rankings \citep{aledo2025consensus}, and in decision support, where
+pairwise comparison and holistic judgments are compared as ways to combine
+judgments \citep{saenzroyo2025divide}. Our setting differs in that the sources are
+generated answers with a checkable, binary notion of correctness, the combiner is
+either a free vote or a priced judge, and the decision is which answer to return.
 
-\paragraph{Language models in decision systems}
-Applied work increasingly places language models inside decision systems, for
-example to drive group consensus decision-making in a local debt-risk case
-\citep{liu2026consensus} and to guide multi-objective reward optimization for
-maintenance decisions \citep{huang2026maintenance}. Those studies use the model as
-a decision component. The question here is complementary: once several answers
-have been sampled, how should a vote or a pairwise judge select among them, and
-when is a costly judge comparison worth buying?
+\paragraph{Language-model judges as fusion components}
+Language-model judges are now analyzed as components whose biases need explicit
+treatment, for example through a taxonomy of judge biases with debiasing
+optimization \citep{zhou2026robustjudges}. Our question is complementary: once
+several answers have been sampled, how should a vote or a pairwise judge select
+among them, and when is a costly judge comparison worth buying?
 
 
 \section{Method}
@@ -328,53 +345,14 @@ replay reproduces \AblationFidelityK/\AblationFidelityN{} extracted final
 answers; this comparison is at the final-answer level. A worked example is
 in the Online Supplement (Table~\ref{S-tab:worked-example}).
 
-\subsection{Exact Kemeny--Young Baseline}
+\subsection{Reference rankings}
 \label{sec:kemeny-exact}
 
-For the ranking reference, let $y_{ij}=1$ mean that $i$ ranks above $j$.
-The Kemeny--Young program maximizes agreement with the same matrix:
-
-\begin{equation}
-\max \sum_{i \neq j} W[i,j]\, y_{ij}
-\label{eq:kemeny-obj}
-\end{equation}
-\begin{align}
-\text{s.t.} \quad & y_{ij} + y_{ji} = 1 \quad \forall\, i \neq j \label{eq:kemeny-antisym}\\
-& y_{ij} + y_{jk} + y_{ki} \leq 2 \quad \forall \text{ distinct } i,j,k \label{eq:kemeny-transitivity}\\
-& y_{ij} \in \{0,1\}
-\end{align}
-
-Antisymmetry and the absence of 3-cycles enforce a linear order.
-The implementation uses $\binom{N}{2}$ binary variables, $O(N^3)$
-constraints and coefficients $\operatorname{round}(10^4(W[i,j]-W[j,i]))$.
-A 200{,}000-conflict budget replaces a wall-clock limit; a non-optimality
-flag distinguishes feasible from proven-optimal solutions. All
-\KYTopOneN{} stored reference solutions at $N\le6$ are flagged optimal
-for this integerized objective, not necessarily for unrounded weights.
-
-The reference removes the composite selector's confidence, consistency and
-cost terms and uses all pairwise relations simultaneously. With cyclic
-preferences, its top-ranked candidate need not have the largest weighted
-win total. This permits an empirical distinction between losing
-information through aggregation and receiving unhelpful information from
-the judge. We compare returned answers, rather than treating a difference
-between rankings as an accuracy error. When two different candidates give
-the same extracted answer, they count as the same answer-level decision.
-
-\subsection{Approximation Guarantee}
-\label{sec:approx-guarantee}
-
-\begin{proposition}[Weighted-win ranking]
-\label{prop:copeland-approx}
-Assume nonnegative pair weights with $W[i,j]+W[j,i]=1$.
-Ranking by decreasing $Q_i$ approximates minimum weighted disagreement
-within a factor of 5. This factor is tight.
-\end{proposition}
-
-The constructed matrix satisfies these conditions. This guarantee, from
-\citet{coppersmith2006ordering},
-covers the \emph{full quality-only ranking}, not top-1 correctness, agreement
-with the Kemeny winner, or the composite objective~\eqref{eq:selection-obj}.
+As a ranking reference, an exact Kemeny--Young program over the same matrix $W$ (integer program with
+$\binom N2$ binary variables, antisymmetry and 3-cycle constraints, conflict budget of 200{,}000) returns
+its top-ranked answer for comparison; ranking by $Q_i$ approximates the minimum weighted disagreement
+within a factor of 5 \citep{coppersmith2006ordering}, a guarantee for the full ranking rather than for top-1
+correctness. The formulation and the guarantee are in Online Supplement Section~\ref{S-sec:selector-internals}.
 
 \section{When can a judge beat voting? Pairwise-accuracy thresholds}
 \label{sec:theory}
@@ -703,7 +681,7 @@ The main references are self-consistency (plurality over extracted final
 answers, candidate-order ties), the \emph{first sampled candidate} (not
 temperature-zero greedy decoding), and the Kemeny--Young top-ranked answer
 on the same matrix. Further offline selectors are listed in
-Section~\ref{sec:baselines}. Trained verifiers and universal
+Online Supplement Section~\ref{S-sec:selector-internals}. Trained verifiers and universal
 self-consistency were not evaluated.
 
 \paragraph{Judge calibration}
@@ -861,68 +839,17 @@ Track & Graded & Floor & SC & OR & Oracle & Rec.\ SC & Rec.\ OR \\
 \end{tabular}}
 \end{table}
 
-\subsection{Objective and selection diagnostics}
+\subsection{Selector diagnostics}
 \label{sec:selection-bias}
-\label{sec:cost-diagnosis}
-\label{sec:ablations}
 
-On replayable problems, the within-pool cost-term spread has median
-\CostSpreadMed{}, versus \QualitySpreadMed{} for quality, and exceeds
-the quality spread in \CostDominatesK/\CostDominatesN{} cases. This
-exposes a scale mismatch, not a proof that cost determines every winner:
-confidence, consistency, eligibility and score gaps also matter.
-
-Table~\ref{tab:ablation} compares the default, no-cost, quality-only and
-plurality-plus-quality variants on identical replayable subsets. In
-heterogeneous pools, removing cost yields \AblHetNoCostAcc\% accuracy and
-quality-only selection \AblHetQOnlyAcc\%, against voting's
-\AblHetSCAcc\% ($n=\AblHetN$; exact $p$ \AblHetNoCostP{} and
-\AblHetQOnlyP{}, respectively). Thus the cost term is not the only
-limitation. These post-hoc results do not prove that the judge contains
-no useful correctness information.
-
-OR-Select picks Cohere candidates in \PickShareCohere\% of heterogeneous
-problems, although their overall accuracy (\CandAccCohere\%) is similar to
-Nemotron's (\CandAccNemotron\%). This is a property of the \emph{composite
-selector}, not an isolated judge preference; length and other terms are
-confounded (Table~\ref{S-tab:selection}).
-
-\begin{table}[htbp]
-\centering
-\caption{Offline replay of the selection step on stored judge outputs
-(accuracy \%, problems whose judge outputs were stored). SC: stored
-self-consistency result on the same problems.}
-\label{tab:ablation}
-\small\setlength{\tabcolsep}{4pt}
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{lrrrrrr}
-\toprule
-Track & Replayable & SC & Default & No cost & Quality only & SC+quality \\
-\midrule
-\AblationTableRows
-\bottomrule
-\end{tabular}}
-\end{table}
-
-\paragraph{Additional selectors}
-\label{sec:baselines}
-
-Shortest/longest, token-Jaccard minimum-Bayes-risk, pointwise confidence,
-confidence-weighted voting, a knockout tournament and Bradley--Terry
-selection establish no significant improvement over plurality in the
-exploratory comparisons (Table~\ref{S-tab:baselines}). Minimum-Bayes-risk
-is numerically ahead in some pooled comparisons, without a significant advantage.
-
-\paragraph{Soft-score diagnostics}
-\label{sec:threshold-results}
-
-The mean stored weight assigned to the correct candidate on mixed pairs
-is $0.49$--$0.56$ on tracks with at least 70 such pairs. These are
-\emph{soft-score means}, not frequencies of correct binary decisions.
-They cannot be substituted for $q$ in Theorem~\ref{thm:threshold}; neither
-can an average establish the pairwise bounds of Corollary~\ref{S-cor:pairdep}.
-Table~\ref{S-tab:threshold-emp-gen} retains these descriptive measurements
-and model sensitivity calculations, with their sampling limitations.
+On replayable problems the within-pool cost-term spread has median \CostSpreadMed{}, against
+\QualitySpreadMed{} for quality, so the composite objective has a scale mismatch. In heterogeneous pools,
+removing the cost term gives \AblHetNoCostAcc\% and quality-only selection \AblHetQOnlyAcc\%, against voting's
+\AblHetSCAcc\% ($n=\AblHetN$; exact $p$ \AblHetNoCostP{} and \AblHetQOnlyP{}), so the cost term is not the only
+limitation. Further offline selectors (shortest, longest, minimum Bayes risk, confidence-weighted voting,
+knockout tournament, Bradley--Terry) show no significant improvement over plurality, and the mean stored weight
+on the correct candidate in mixed pairs is $0.49$--$0.56$; these soft-score means cannot be substituted for $q$
+in Theorem~\ref{thm:threshold}. Tables and details are in Online Supplement Section~\ref{S-sec:selector-internals}.
 
 \subsection{Difficulty-aware prediction}
 \label{sec:mixture-results}
@@ -1020,20 +947,12 @@ Track & $n$ & Ties/Opp. & Vote & Copeland & Rule H & H vs.\ vote & H vs.\ Copela
 \subsection{Ranking reference and coverage}
 \label{sec:kemeny-results}
 
-OR-Select and the integerized Kemeny--Young reference return different
-final answers on \KYTopOneDiffers/\KYTopOneN{} problems. OR-Select alone
-is correct on \KYORwins{} and Kemeny--Young alone on \KYKYwins{}
-(Table~\ref{tab:paired}); the exact ranking reference shows no detected
-accuracy advantage. Ranking optimality does not guarantee correctness.
-
-\paragraph{Coverage}
-\label{sec:coverage}
-
-Every problem is ultimately graded (Table~\ref{S-tab:coverage}). Including
-the higher-cap rescued problems lowers selector accuracy by 0.3--15 points
-depending on track, without reversing the direction of the comparisons
-(Table~\ref{S-tab:extended}). These results describe the retry-conditioned
-generation protocol, not unrestricted independent draws.
+OR-Select and the integerized Kemeny--Young reference return different final answers on
+\KYTopOneDiffers/\KYTopOneN{} problems; OR-Select alone is correct on \KYORwins{} and Kemeny--Young alone on
+\KYKYwins{} (Table~\ref{tab:paired}), so the exact ranking reference shows no detected accuracy advantage.
+Every problem is ultimately graded; including the higher-cap rescued problems lowers selector accuracy by
+0.3--15 points depending on track without reversing the direction of the comparisons
+(Online Supplement Tables~\ref{S-tab:coverage} and~\ref{S-tab:extended}).
 
 \section{Design guidelines for system builders}
 \label{sec:guidelines}
@@ -1143,7 +1062,7 @@ The models served through OpenRouter are experimental subjects, not writing tool
 After using these tools the author reviewed and edited the content as needed and takes
 full responsibility for the content of the publication.
 
-\bibliographystyle{apalike-local}
+\bibliographystyle{elsarticle-num-names}
 \bibliography{refs}
 
 \end{document}

@@ -39,7 +39,5 @@ No installed custom bibliography style is needed when building this source set.
 The existing third-party `elsarticle.cls` and `elsarticle-num-names.bst` retain
 their own LaTeX Project Public License notices. They are not relicensed as MIT.
 
-`chicago.bst` (Glenn Paulley, 1992, "Chicago" author-date style) was downloaded from CTAN and is the style the
-IISE Transactions LaTeX template uses. It carries a 1985 copyright line and no explicit redistribution licence in the
-file; its CTAN licence was not checked. It is included only so the IISE source zip builds; confirm the licence before any
-public redistribution. It is not relicensed as MIT.
+The Information Fusion manuscript uses `elsarticle-num-names.bst` (numbered references, as the journal's guide
+requires); `apalike-local.bst` is used only by the supplement.
