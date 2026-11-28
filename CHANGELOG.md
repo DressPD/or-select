@@ -1,5 +1,13 @@
 # OR-Select release notes
 
+## Unreleased
+
+- Theory: Bayes-optimal posterior-odds gate for consulting a judge under colliding wrong answers, with a closed-form
+  vote-margin threshold, and exact sequential (optimal-stopping) judging (`scripts/bayes_gate.py`,
+  `tests/test_bayes_gate.py`, manuscript Section 5.5, supplement proofs); two classical sequential-analysis references.
+  Posterior formula checked against exhaustive enumeration (N up to 7). Not in the v1.2.0 archive; cut a new release
+  before relying on the archive for these results.
+
 ## v1.2.0 — 28 November 2026
 
 GitHub: https://github.com/DressPD/or-select/releases/tag/v1.2.0

@@ -1,5 +1,5 @@
 - Vote first, judge only on ties is optimal in the model, with no threshold
 - Tie-only judging used 4% to 7% of the judge comparisons on stored runs
 - Judging everywhere pays only above a break-even set by difficulty spread
-- Exact map of the judge accuracy needed as wrong answers collide
+- Log-odds rule: a judge may overrule the vote only above a closed-form accuracy
 - Free and two paid small judges give no gain over voting on benchmark pools
