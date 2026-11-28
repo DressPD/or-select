@@ -6,10 +6,10 @@ Numbers marked generated come from `scripts/package_infofusion.py` (`submission/
 
 | Requirement | Status |
 |---|---|
-| Research article, 10 to 35 pages including figures, tables, references; at most 50 references | Pass (generated): 29 pages in the `elsarticle` preprint layout, 47 references. Selector internals, ablations and the Kemeny reference moved to the supplement |
+| Research article, 10 to 35 pages including figures, tables, references; at most 50 references | Pass (generated): 33 pages in the `elsarticle` preprint layout, 49 references. Selector internals, ablations and the Kemeny reference moved to the supplement |
 | Single anonymized review: author block allowed in the manuscript | Pass: author, affiliation, corresponding email and ORCID in `main.tex` |
 | LaTeX source files required, PDF alone not accepted; template | Pass: `elsarticle` class; sources in `source/` and `informationfusion-latex-source.zip`, rebuilt in a clean directory with no undefined references. The official journal template was not downloaded; the class is the Elsevier one |
-| Abstract at most 250 words, stand-alone | Pass (about 231 words) |
+| Abstract at most 250 words, stand-alone | Pass (about 246 words) |
 | 1 to 7 keywords, no multiword "and/of" keywords | Pass: 6 keywords |
 | Highlights: separate file with "highlights" in name, 3 to 5 bullets, at most 85 characters | Pass: `highlights.txt`, 5 bullets, longest 73 characters |
 | Numbered sections, abstract unnumbered | Pass |

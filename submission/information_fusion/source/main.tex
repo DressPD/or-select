@@ -42,6 +42,8 @@
 \input{Hybrid_data.tex}
 \input{Collision_data.tex}
 \input{Usc_data.tex}
+\input{Bayes_data.tex}
+\input{Headroom_data.tex}
 \input{Strong_data.tex}
 
 \begin{document}
@@ -60,7 +62,7 @@
             country={Germany}}
 
 \begin{abstract}
-Intelligent systems built on language models often sample several answers and must return one. Designers can take the most frequent answer (self-consistency voting) at no extra cost, or pay for a pairwise judge that is itself unreliable, and they lack guidelines for choosing. We analyze the choice in a finite-pool model and audit it on stored runs. Voting first and consulting the judge only on tied answers is Bayes-optimal in the model and never worse than either voting or judging everywhere, so it needs no judge-accuracy threshold. Judging everywhere pays only above an explicit break-even accuracy (80.35\% at 80\% candidate accuracy for three candidates); when problems differ in difficulty, that break-even depends on an effective-odds ratio of difficulty moments, not on pooled accuracy. We audit one free-tier judge, scoring \RBOverallAcc\% on RewardBench, on six benchmarks of \TotalProblems{} problems. Paired exact tests find no homogeneous-pool advantage over self-consistency (\HomogPooledB{} versus \HomogPooledC{} discordant problems of \HomogPooledN{}), and judging everywhere performs worse in heterogeneous pools (\HeteroPooledB{} versus \HeteroPooledC{} of \HeteroPooledN{}, \HeteroPooledP). Vote-first selection removes that loss (\HybHetBCop{} versus \HybHetCCop{} discordant problems) with only \HybHetCallShare\% of the judge comparisons, but adds no detectable accuracy over voting because exact ties are rare. Universal self-consistency and two paid small judges do not beat voting either. When wrong answers collide, the required judge accuracy falls as they concentrate, but the measured judge stays below it; we close with design guidelines for system builders. The findings concern the tested judge, not stronger judges.
+Intelligent systems built on language models often sample several answers and must return one. Designers can take the most frequent answer (self-consistency voting) at no extra cost, or pay for a pairwise judge that is itself unreliable, and they lack guidelines for choosing. We analyze the choice in a finite-pool model and audit it on stored runs. Voting first and consulting the judge only on tied answers is Bayes-optimal in the model and never worse than either voting or judging everywhere, so it needs no judge-accuracy threshold. Judging everywhere pays only above an explicit break-even accuracy (80.35\% at 80\% candidate accuracy for three candidates); when problems differ in difficulty, that break-even depends on an effective-odds ratio of difficulty moments, not on pooled accuracy. We audit one free-tier judge, scoring \RBOverallAcc\% on RewardBench, on six benchmarks of \TotalProblems{} problems. Paired exact tests find no homogeneous-pool advantage over self-consistency (\HomogPooledB{} versus \HomogPooledC{} discordant problems of \HomogPooledN{}), and judging everywhere performs worse in heterogeneous pools (\HeteroPooledB{} versus \HeteroPooledC{} of \HeteroPooledN{}, \HeteroPooledP). Vote-first selection removes that loss (\HybHetBCop{} versus \HybHetCCop{} discordant problems) with only \HybHetCallShare\% of the judge comparisons, but adds no detectable accuracy over voting because exact ties are rare. Universal self-consistency and two paid small judges do not beat voting either. When wrong answers collide, a posterior-odds gate gives the judge accuracy needed to overrule a vote; the measured judges stay below it. We close with design guidelines for system builders. The findings concern the tested judge, not stronger judges.
 \end{abstract}
 
 \begin{keyword}
@@ -112,7 +114,8 @@ comparisons this saves on stored runs (Sections~\ref{sec:hybrid} and
 \ref{sec:hybrid-results}); with colliding wrong answers it gives the exact
 accuracy and judge cost of margin-gated judging and the judge accuracy each
 collision level requires, and locates the stored runs in that map
-(Section~\ref{sec:collision}). Second, it derives the exact condition under which
+(Section~\ref{sec:collision}); it proves that the Bayes-optimal comparison rule is a posterior-odds gate whose vote-margin
+threshold has a closed form, and solves the sequential version exactly (Section~\ref{sec:bayes}). Second, it derives the exact condition under which
 binary pairwise judging with Copeland aggregation beats plurality voting: a
 closed form for $N=3$, enumeration for $N\le7$, and extensions to
 pair-dependent judges and colliding wrong answers (Section~\ref{sec:theory} and
@@ -672,6 +675,92 @@ $p$ & $s=0$ & $s=0.5$ & $s=0.9$ \\
 \end{tabular}
 \end{table}
 
+\subsection{A Bayes-optimal gate and sequential judging}
+\label{sec:bayes}
+
+The margin gates $G_t$ above are heuristics, but the collision model has an exact posterior. Write $\pi_i$ for the
+probability, given the answer partition, that answer class $i$ is the correct one, and $\pi_1\ge\pi_2$ for the two largest.
+
+\begin{theorem}[Posterior-odds gate]
+\label{thm:bayes-gate}
+In the collision model, comparing the two classes of highest posterior with a judge of accuracy $q$ and following the judge
+changes the expected accuracy by $\max\{q\pi_2-(1-q)\pi_1,\,0\}$. Among policies that use the answer partition and compare these two
+classes at most once, the Bayes-optimal one compares iff $q\pi_2-(1-q)\pi_1>c$, where $c$ is the cost of a comparison in units of accuracy.
+If the two largest classes have sizes $m_1\ge m_2\ge2$ and all other classes are singletons, then
+$\pi_1/\pi_2=\rho^{\,m_1-m_2}$ with $\rho=p/\bigl((1-p)s\bigr)$, so for $c=0$ and $\rho>1$ the gate compares iff
+\begin{equation}
+m_1-m_2<\frac{\log\bigl(q/(1-q)\bigr)}{\log\rho}.
+\label{eq:margin-threshold}
+\end{equation}
+\end{theorem}
+
+The result fuses two sources of evidence in log-odds. Each unit of vote margin contributes $\log\rho$ in favor of the leading
+answer, one judge comparison contributes $\pm\log\bigl(q/(1-q)\bigr)$, and the judge should overrule the vote only when its
+evidence outweighs the vote's. For $s\to0$ we have $\rho\to\infty$ and the threshold collapses to exact ties, which is
+Theorem~\ref{thm:hybrid}; collisions are exactly what lowers $\rho$ and opens the gate. The proof is in the Online Supplement; the
+posterior formula and the dominance claims were also checked by exhaustive enumeration over candidate-level labelings
+($N\le7$). Table~\ref{tab:bayes-gate} shows that the Bayes gate is never below any margin gate and can be clearly above all of them
+(at $p=s=0.5$ and $q=0.8$ it reaches $78.1\%$ with $0.29$ comparisons per problem, against $76.6\%$ for the best margin gate).
+Table~\ref{tab:bayes-thr} gives the threshold~\eqref{eq:margin-threshold} for the collision rates measured on the stored runs
+($\hat p\approx0.83$, $\hat s\approx0.5$): a judge of accuracy $0.9$ should still act only on exact ties, and one of accuracy
+$0.95$ on margins of one vote. This explains why ties are the decisive cases and why their rarity limits the gain of any judge
+short of near perfection.
+
+\begin{table}[htbp]
+\centering
+\caption{Exact accuracy (\%) and expected judge comparisons per problem (in parentheses) at $N=5$. $G_t$: margin-gated duel;
+Bayes gate: Theorem~\ref{thm:bayes-gate} with $c=0$.}
+\label{tab:bayes-gate}
+\small
+\begin{tabular}{rrrrrrrr}
+\toprule
+$p$ & $s$ & $q$ & Plurality & $G_0$ & $G_1$ & $G_\infty$ & Bayes gate \\
+\midrule
+\BayesRows
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Largest vote margin (exclusive bound) that a judge of accuracy $q$ should overrule, from~\eqref{eq:margin-threshold}:
+a margin $m_1-m_2$ below the entry is compared, otherwise the vote stands.}
+\label{tab:bayes-thr}
+\small
+\begin{tabular}{rrrrrrrr}
+\toprule
+$p$ & $s$ & $q=0.6$ & $0.7$ & $0.8$ & $0.9$ & $0.95$ & $0.99$ \\
+\midrule
+\BayesThrRows
+\bottomrule
+\end{tabular}
+\end{table}
+
+With repeated comparisons the problem becomes sequential. If comparisons of the same two classes are independent, the posterior
+log-odds of the leading class performs a random walk with steps $\pm\log\bigl(q/(1-q)\bigr)$ started at the vote's log-odds, and with
+a linear cost $c$ per comparison the optimal policy for two simple hypotheses stops when the log-odds leaves an interval, a
+control-limit policy of the sequential-probability-ratio type \citep{wald1948optimum,arrow1949bayes}. Here a third possibility, that
+neither class is correct, is uninformative about the comparison and breaks the classical premise, so we compute the optimal
+policy exactly by dynamic programming and verify numerically that for every number of comparisons used the continuation set is an
+interval of the win difference (Table~\ref{tab:bayes-seq}). Independence is an
+assumption: a deterministic judge repeated on the same prompt is not independent, so the sequential gains are an upper bound
+that needs fresh randomness, for example varied prompts or sampling temperatures.
+
+\begin{table}[htbp]
+\centering
+\caption{Single-comparison Bayes gate against optimal sequential judging at $N=5$, $p=s=0.5$ (accuracy \%, expected comparisons
+in parentheses; at most nine comparisons per problem; independent comparisons assumed).}
+\label{tab:bayes-seq}
+\small
+\begin{tabular}{rrrrr}
+\toprule
+$q$ & $c$ & Plurality & Single comparison & Sequential \\
+\midrule
+\BayesSeqRows
+\bottomrule
+\end{tabular}
+\end{table}
+
 \section{Experimental Protocol}
 \label{sec:experiments}
 
@@ -1074,6 +1163,25 @@ score. Stored outputs make these distinctions inspectable without new API
 calls. The theory separately quantifies the trade-off for independent binary
 comparisons. Connecting it to soft-score selection requires assumptions
 about score distributions and dependence, not merely a mean score.
+
+\paragraph{Why the result is null, and where a gain should appear}
+\label{sec:headroom}
+The null result is a property of the pools, not only of the judges. In the stored pools an oracle that returns a correct
+candidate whenever one exists scores $\HeadHomOracle\%$ against $\HeadHomPlur\%$ for plurality in homogeneous pools and
+$\HeadHetOracle\%$ against $\HeadHetPlur\%$ in heterogeneous pools. The headroom available to any selector is therefore
+$\HeadHomRoom$ points ($\HeadHomRoomN$ of $\HeadHomN$ problems) and $\HeadHetRoom$ points ($\HeadHetRoomN$ of $\HeadHetN$). Only a
+perfect selector could show a detectable gain in the homogeneous pools, and none could in the heterogeneous pools; a realistic
+selector recovers a fraction of these few problems, which a paired test on this many problems cannot resolve. The pools are easy and uniform: about $83\%$ of
+candidates are correct, wrong answers often agree, and exact ties are rare. The theory locates the regime where a judge should
+matter: hard problems on which a single sample is correct only about $30\%$ to $50\%$ of the time and wrong answers
+collide, where the posterior-odds gate of Section~\ref{sec:bayes} predicts gains of several points for a judge of accuracy near
+$0.8$ and above (Table~\ref{tab:bayes-gate}). Because the study uses small and free-tier generators and judges, its findings
+describe that regime only.
+
+A direct test is the natural next study and is left open: harder problems, small generators so that plurality fails often, a
+strong judge consulted only where the gate fires (few comparisons), and an analysis plan fixed in advance, namely the gated judge
+against plurality with a paired exact test on discordant problems, reported whichever way it falls. We have not run it, so no
+claim is made about frontier-scale judges, and a trained verifier remains an untested alternative to the judge.
 
 \paragraph{Scope}
 \label{sec:future}

@@ -532,6 +532,69 @@ texts, the implementation skips both calls and directly assigns $W=0.5$.}
 \label{fig:bias-cancel}
 \end{figure}
 
+\section{Proofs for the Bayes gate and sequential results}
+\label{sec:bayes-proofs}
+
+Setting: the collision model of Section~\ref{M-sec:collision}. The observation is the answer partition of the $N$ candidates,
+with class sizes $m_1,\dots,m_K$. Wrong candidates repeat one shared distractor with probability $s$ and otherwise give an answer
+nobody else gives; a judge compares two classes, prefers the correct one with probability $q\ge\tfrac12$ when exactly one is correct,
+and answers by a fair coin otherwise.
+
+\begin{lemma}[Posterior of the correct class]
+\label{lem:posterior}
+Let $\mathbf m$ be the class sizes of an observed partition and $\mathbf m_{-i}$ the sizes of the other classes, with $b$ of them of
+size at least two and $u$ of size one. The probability that the partition arises with class $i$ the correct class is
+$L_i=p^{m_i}(1-p)^{N-m_i}\,T(\mathbf m_{-i})$, where $T=0$ if $b\ge2$, $T=s^{a}(1-s)^{u}$ if $b=1$ with that class of size $a$, and
+$T=(1-s)^{u}+u\,s(1-s)^{u-1}$ if $b=0$. The probability that no class is correct is $(1-p)^N\,T(\mathbf m)$, and
+$\pi_i=L_i/\bigl(\sum_jL_j+L_{\rm none}\bigr)$.
+\end{lemma}
+
+\begin{proof}
+Correct candidates share one answer and no wrong candidate shares it, so class $i$ is the correct class exactly when its $m_i$
+members are correct and the other $N-m_i$ candidates are wrong, which has probability $p^{m_i}(1-p)^{N-m_i}$ for a given
+membership. Each wrong candidate then repeats the distractor with probability $s$ and is otherwise unique. The distractor
+members form one class and unique answers form singletons. If some other class has size at least two it must be the distractor
+class, and then all remaining classes are unique singletons, probability $s^{a}(1-s)^{u}$; two such classes are impossible.
+If all other classes are singletons, either none repeats the distractor, probability $(1-s)^u$, or exactly one singleton is a
+distractor class of size one, probability $u\,s(1-s)^{u-1}$. Summing over the disjoint events gives $T$; the same argument with
+no correct class gives the last term. Normalizing gives $\pi_i$.
+\end{proof}
+
+Lemma~\ref{lem:posterior} was also checked against exhaustive enumeration of all labelings of the candidates in
+$\{\text{correct},\text{distractor},\text{unique}\}^N$ for $N\le7$ and several $(p,s)$ (\texttt{scripts/bayes\_gate.py}).
+
+\begin{proof}[Proof of the odds formula in Theorem~\ref{M-thm:bayes-gate}]
+Let the two largest classes have sizes $m_1\ge m_2\ge2$ and let the other classes be $u$ singletons. By Lemma~\ref{lem:posterior},
+$L_1=p^{m_1}(1-p)^{N-m_1}s^{m_2}(1-s)^u$ and $L_2=p^{m_2}(1-p)^{N-m_2}s^{m_1}(1-s)^u$, hence
+$\pi_1/\pi_2=L_1/L_2=\bigl(p/((1-p)s)\bigr)^{m_1-m_2}=\rho^{m_1-m_2}$.
+The gate compares iff $q\pi_2>(1-q)\pi_1$, that is $\pi_1/\pi_2<q/(1-q)$, that is $(m_1-m_2)\log\rho<\log(q/(1-q))$.
+\end{proof}
+
+\begin{proof}[Proof of the gain formula in Theorem~\ref{M-thm:bayes-gate}]
+Compare classes $1$ and $2$ (posteriors $\pi_1\ge\pi_2\ge\pi_x$ for the others). If class $x$ is correct and neither $1$ nor $2$ is,
+the judge answers by a fair coin; so with $M=\max_{x\ge3}\pi_x$ the joint probabilities of the outcome ``$1$ wins'' and the
+correct class are $\pi_1q$, $\pi_2(1-q)$ and $\pi_x/2$, and of the outcome ``$2$ wins'' are $\pi_1(1-q)$, $\pi_2q$ and $\pi_x/2$.
+The expected accuracy of the Bayes-optimal choice after the outcome is therefore
+$\max\{\pi_1q,\pi_2(1-q),M/2\}+\max\{\pi_1(1-q),\pi_2q,M/2\}$. Since $M\le\pi_2$ and $q\ge\tfrac12$, the first maximum equals
+$\pi_1q$ and in the second $M/2\le\pi_2q$, so the total is $\pi_1q+\max\{\pi_2q,\pi_1(1-q)\}$. Without a comparison the best
+accuracy is $\pi_1$. The gain is $\pi_1q+\max\{\pi_2q,\pi_1(1-q)\}-\pi_1=\max\{q\pi_2-(1-q)\pi_1,0\}$. When
+$q\pi_2>(1-q)\pi_1$ the maximum in the second term is $\pi_2q$, which is exactly the accuracy of following the judge. At comparison cost
+$c$ the Bayes-optimal policy compares iff the gain exceeds $c$, which is the stated condition.
+\end{proof}
+
+\paragraph{Sequential judging.}
+Suppose comparisons of classes $1$ and $2$ can be repeated independently. After $w_1$ wins for class $1$ and $w_2$ for class
+$2$, the unnormalized posterior masses are $\pi_1q^{w_1}(1-q)^{w_2}$, $\pi_2(1-q)^{w_1}q^{w_2}$ and $\pi_0\,2^{-(w_1+w_2)}$ for
+``neither is correct''. Stopping returns the class with the larger mass, so the stopping reward is the larger of the two
+normalized masses, and continuing costs $c$ and moves to $(w_1+1,w_2)$ or $(w_1,w_2+1)$ with the predictive probabilities of the
+outcomes. Backward induction on this finite tree (at most nine comparisons) gives the optimal value and policy
+exactly (\texttt{solve\_sequence} in \texttt{scripts/bayes\_gate.py}). When $\pi_0=0$ the state reduces to the
+log-odds, which moves by $\pm\log(q/(1-q))$ per comparison, and the classical result on the optimality of the sequential
+probability ratio test with a linear sampling cost \citep{wald1948optimum,arrow1949bayes} implies a control-limit policy. For
+$\pi_0>0$ the premise of that result does not hold exactly; we verified by exhaustive computation on several parameter sets
+(tests in \texttt{tests/test\_bayes\_gate.py}) that for every number of comparisons used the set of win differences at which
+the policy continues is an interval. We do not claim a proof of this interval property for $\pi_0>0$.
+
 \section{Selector internals, ablations and the Kemeny--Young reference}
 \label{sec:selector-internals}
 
