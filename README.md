@@ -139,8 +139,8 @@ To cite the software and data, see `CITATION.cff`.
 
 ## Release and manuscript status
 
-Release **v1.2.0** contains the retitled manuscript, the new theory and baseline runs and the Information Fusion
-submission package; see the [GitHub release](https://github.com/DressPD/or-select/releases/tag/v1.2.0) and
+Release **v1.3.0** contains the retitled manuscript, the new theory (including the Bayes gate), the headroom analysis, the baseline runs and the Information Fusion
+submission package; see the [GitHub release](https://github.com/DressPD/or-select/releases/tag/v1.3.0) and
 [release notes](CHANGELOG.md). Zenodo archives each release; the concept DOI
 [10.5281/zenodo.24112044](https://doi.org/10.5281/zenodo.24112044) resolves to the latest version.
 Release v1.1.0 is archived at [10.5281/zenodo.24115542](https://doi.org/10.5281/zenodo.24115542).
