@@ -1,8 +1,8 @@
 {
-  "title": "Pairwise Judging versus Voting for Language Model Answer Selection: Finite-Pool Theory and an Empirical Audit",
-  "version": "1.1.0",
+  "title": "Vote First, Judge on Ties: Cost-Aware Answer Selection for Language-Model Systems (OR-Select)",
+  "version": "1.2.0",
   "upload_type": "software",
-  "description": "OR-Select v1.1.0: code, public stored runs, generated tables, revised manuscript and online supplement accompanying Pairwise Judging versus Voting for Language Model Answer Selection: Finite-Pool Theory and an Empirical Audit. Stored judgments support offline selector replay where present. Experimental records and selection behavior are unchanged. GPQA Diamond files embed password-gated question text and are not included; the released workflow can generate new runs with authorized benchmark access, not recreate the original stochastic outputs. This release does not overwrite the v1.0.0 archive.",
+  "description": "OR-Select v1.2.0: code, public stored runs, generated tables, the revised manuscript and online supplement, and the submission package for Vote First, Judge on Ties: Cost-Aware Answer Selection for Language-Model Systems. New since v1.1.0: the vote-first (judge on ties) optimality result, the difficulty-mixture threshold, the collision model with margin-gated judging, universal self-consistency on all stored pools with the free judge, and pairwise judging and universal self-consistency with two paid small judges (Claude Haiku 5.5, GPT Luna) with partial coverage. Stored runs for the new analyses are in outputs/usc_baseline.json and outputs/strong_judge_*.json. GPQA Diamond files embed password-gated question text and are not included. This release does not overwrite earlier archives.",
   "creators": [
     {
       "name": "Dressino, Aris",
@@ -12,5 +12,5 @@
   ],
   "license": "MIT",
   "access_right": "open",
-  "keywords": ["operations research", "large language models", "answer selection", "self-consistency", "Kemeny rank aggregation"]
+  "keywords": ["operations research", "large language models", "answer selection", "self-consistency", "decision-level fusion", "LLM-as-a-judge"]
 }
