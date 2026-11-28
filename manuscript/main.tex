@@ -43,6 +43,7 @@
 \input{Collision_data.tex}
 \input{Usc_data.tex}
 \input{Bayes_data.tex}
+\input{Headroom_data.tex}
 \input{Strong_data.tex}
 
 \begin{document}
@@ -1162,6 +1163,25 @@ score. Stored outputs make these distinctions inspectable without new API
 calls. The theory separately quantifies the trade-off for independent binary
 comparisons. Connecting it to soft-score selection requires assumptions
 about score distributions and dependence, not merely a mean score.
+
+\paragraph{Why the result is null, and where a gain should appear}
+\label{sec:headroom}
+The null result is a property of the pools, not only of the judges. In the stored pools an oracle that returns a correct
+candidate whenever one exists scores $\HeadHomOracle\%$ against $\HeadHomPlur\%$ for plurality in homogeneous pools and
+$\HeadHetOracle\%$ against $\HeadHetPlur\%$ in heterogeneous pools. The headroom available to any selector is therefore
+$\HeadHomRoom$ points ($\HeadHomRoomN$ of $\HeadHomN$ problems) and $\HeadHetRoom$ points ($\HeadHetRoomN$ of $\HeadHetN$). Only a
+perfect selector could show a detectable gain in the homogeneous pools, and none could in the heterogeneous pools; a realistic
+selector recovers a fraction of these few problems, which a paired test on this many problems cannot resolve. The pools are easy and uniform: about $83\%$ of
+candidates are correct, wrong answers often agree, and exact ties are rare. The theory locates the regime where a judge should
+matter: hard problems on which a single sample is correct only about $30\%$ to $50\%$ of the time and wrong answers
+collide, where the posterior-odds gate of Section~\ref{sec:bayes} predicts gains of several points for a judge of accuracy near
+$0.8$ and above (Table~\ref{tab:bayes-gate}). Because the study uses small and free-tier generators and judges, its findings
+describe that regime only.
+
+A direct test is the natural next study and is left open: harder problems, small generators so that plurality fails often, a
+strong judge consulted only where the gate fires (few comparisons), and an analysis plan fixed in advance, namely the gated judge
+against plurality with a paired exact test on discordant problems, reported whichever way it falls. We have not run it, so no
+claim is made about frontier-scale judges, and a trained verifier remains an untested alternative to the judge.
 
 \paragraph{Scope}
 \label{sec:future}
