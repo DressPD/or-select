@@ -24,8 +24,13 @@ Numbers marked generated come from `scripts/package_infofusion.py` (`submission/
 | Competing interests; declarations tool always completed | Text ready in `declarations/`; **author action:** complete the Elsevier tool and upload the Word document |
 | Acknowledgements only in a separate section before references, not on the title page | Pass: none to declare |
 | Cover letter answering the seven required questions, concise, fit with scope, novelty | Pass: `Cover_Letter.pdf`. Answer 1 states plainly that universal self-consistency and trained verifiers were not compared |
-| Graphical abstract | Encouraged, not prepared |
+| Graphical abstract (encouraged): at least 1328 px wide, longest side horizontal, readable at 13 cm | Done: `Graphical_Abstract.pdf` (vector, about 20 cm wide, generated from the same data macros as the paper) |
+| References: real, existing sources; DOIs; preprints marked | Checked 2026-11-28: every DOI entry compared with Crossref (title, year, volume, pages, first author; no real mismatches), eight arXiv identifiers compared with arXiv, the Zenodo archive title corrected to its record. About 20 conference-paper entries have no DOI and were not checked against the proceedings |
 | Inclusive language; British or American English, not both | Pass after the earlier spelling check |
 
 Reviewer risks (not guide items): the audit uses one free-tier judge and exact ties are rare; no trained-verifier or
-universal self-consistency baseline; the new collision result is a model with measured inputs, not a stronger-judge run.
+LLM-Blender baseline; universal self-consistency was run (`scripts/usc_baseline.py`, 538 problems, same judge: ties
+plurality in homogeneous pools, worse in heterogeneous pools, strong position bias) with the free judge; two paid small
+judges (Claude Haiku 5.5, GPT Luna; `scripts/strong_judges.py`, about $2.1 spent) also do not beat voting, with partial
+coverage (Haiku: 151 homogeneous pools pairwise, many truncated replies; Luna: all 334 homogeneous pools, 34 sampled
+heterogeneous pools, universal self-consistency on all 538); no frontier-scale judge was tested.

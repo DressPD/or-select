@@ -59,5 +59,9 @@ Sáenz-Royo and Chiclana 2025 (pairwise versus holistic judgments), Zhou et al. 
 
 ## What would raise the odds (not done)
 
-A stronger-judge run on tie-rich problems with at least three judges of different strength (paid, needs approval), a
-universal self-consistency baseline (needs new generation), and one real application domain.
+A stronger-judge run on tie-rich problems with at least three judges of different strength (paid, needs approval) and a
+trained-verifier baseline. Done on 2026-11-28: universal self-consistency on all 538 stored pools with the same free judge
+(`scripts/usc_baseline.py`, `outputs/usc_baseline.json`): ties plurality in homogeneous pools (89.5% vs 89.5%), worse in
+heterogeneous pools (85.3% vs 92.6%, 0 vs 15 discordant, p<0.001), second response picked in 66% to 75% of replies.
+Paid judges run the same day (about $2.1): Claude Haiku 5.5 and GPT Luna, partial coverage, no gain over voting;
+mixed-pair accuracy 0.64 to 0.71 against 0.84 to 0.99 required. A frontier-scale judge and a trained verifier remain untested.

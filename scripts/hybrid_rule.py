@@ -208,6 +208,8 @@ def main() -> None:
             L.append(rf"\def\Hyb{tag}PCop{{{fp(p2)}}}")
             share = 100 * sum(x["pairs_h"] for x in r) / sum(x["pairs_c"] for x in r)
             L.append(rf"\def\Hyb{tag}CallShare{{{share:.1f}}}")
+            L.append(rf"\def\Hyb{tag}CallsHPerK{{{round(1000 * sum(x['pairs_h'] for x in r) / n):,}}}".replace(",", "{,}"))
+            L.append(rf"\def\Hyb{tag}CallsCPerK{{{round(1000 * sum(x['pairs_c'] for x in r) / n):,}}}".replace(",", "{,}"))
             L.append(rf"\def\Hyb{tag}CallSaved{{{100 - share:.1f}}}")
             print(f"   judge comparisons: Rule H uses {share:.1f}% of those Copeland-everywhere needs")
     L.append(r"\def\HybridAuditRows{" + "\n".join(out) + "}")

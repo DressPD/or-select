@@ -4,6 +4,7 @@ import json
 import os
 import time
 import unittest
+
 from unittest import mock
 
 from or_select.generate import TruncatedOutput
@@ -137,7 +138,7 @@ class RetryableErrorTest(unittest.TestCase):
         # case fell through to "not retryable" silently.
         import openai
 
-        exc = openai.APITimeoutError(request=None)
+        exc = openai.APITimeoutError(request=mock.Mock(headers={}))
         self.assertTrue(_is_retryable_error(exc))
 
     def test_truncated_json_response_is_retryable(self) -> None:
@@ -182,7 +183,7 @@ class ResetClientsOnConnectionErrorTest(unittest.TestCase):
         with mock.patch.object(_openai_client, "cache_clear") as openai_clear, mock.patch.object(
             _openrouter_client, "cache_clear"
         ) as openrouter_clear:
-            _reset_clients_if_connection_error(openai.APIConnectionError(request=None))
+            _reset_clients_if_connection_error(openai.APIConnectionError(request=mock.Mock(headers={})))
             openai_clear.assert_called_once()
             openrouter_clear.assert_called_once()
 
