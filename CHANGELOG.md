@@ -1,12 +1,30 @@
 # OR-Select release notes
 
-## Unreleased — retarget to Information Fusion
+## v1.2.0 — 28 November 2026
 
-- Remove the earlier journal's cover letter, review/audit notes, source-package ZIP and delivery PDFs
-  (still in git history); rename the local bibliography style to `apalike-local.bst`.
-- Retarget `main.tex` to Information Fusion: journal macro, keywords, a decision-fusion related-work
-  paragraph with three verified Information Fusion citations; add `Cover_Letter.tex`.
-- Add the anonymous TMLR build (parked) and three verified TMLR citations; see `docs/venue_decision.md`.
+GitHub: https://github.com/DressPD/or-select/releases/tag/v1.2.0
+
+Retitled paper ("Vote First, Judge on Ties"), new results and the Information Fusion submission package.
+
+### Added
+
+- Theory and scripts: vote-first (judge on ties) optimality (`scripts/hybrid_rule.py`), difficulty-mixture threshold
+  (`scripts/difficulty_mixture.py`), collision model with margin-gated judging and required judge accuracy
+  (`scripts/collision_model.py`), with tests.
+- Baselines on stored pools: universal self-consistency with the free judge (`scripts/usc_baseline.py`,
+  `outputs/usc_baseline.json`, 538 problems); pairwise judging and universal self-consistency with Claude Haiku 5.5 and
+  GPT Luna (`scripts/strong_judges.py`, `outputs/strong_judge_*.json`, about $2.1 spent, partial coverage).
+- Information Fusion package builder (`scripts/package_infofusion.py`) and `submission/information_fusion/`
+  (manuscript, supplement, cover letter with the journal's seven answers, graphical abstract, highlights, declarations,
+  LaTeX source zip, generated checklist); guide check in `docs/information_fusion_checklist.md`.
+- Offline provider tests updated for the current openai SDK (226 offline tests pass).
+
+### Changed
+
+- Manuscript retargeted to Information Fusion (numeric references, 31 pages, 47 references); selector internals,
+  ablations and the Kemeny reference moved to the online supplement; 24 uncited bibliography entries removed;
+  archive reference corrected to its Zenodo title.
+- Earlier ESWA, IISE Transactions and TMLR packages and builders removed (still in git history).
 
 ## Earlier — source-package completion
 

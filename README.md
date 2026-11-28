@@ -139,9 +139,11 @@ To cite the software and data, see `CITATION.cff`.
 
 ## Release and manuscript status
 
-Release **v1.1.0** contains the revised manuscript and online supplement; see the
-[GitHub release](https://github.com/DressPD/or-select/releases/tag/v1.1.0) and [release notes](CHANGELOG.md).
-Zenodo automatically archived v1.1.0 at [10.5281/zenodo.24115542](https://doi.org/10.5281/zenodo.24115542).
+Release **v1.2.0** contains the retitled manuscript, the new theory and baseline runs and the Information Fusion
+submission package; see the [GitHub release](https://github.com/DressPD/or-select/releases/tag/v1.2.0) and
+[release notes](CHANGELOG.md). Zenodo archives each release; the concept DOI
+[10.5281/zenodo.24112044](https://doi.org/10.5281/zenodo.24112044) resolves to the latest version.
+Release v1.1.0 is archived at [10.5281/zenodo.24115542](https://doi.org/10.5281/zenodo.24115542).
 `CITATION.cff` now uses that confirmed version DOI. The tagged source used the valid concept DOI
 `10.5281/zenodo.24112044` plus an exact release URL before the new version DOI was assigned;
 this post-release metadata update does not move the tag or change the archived article.
