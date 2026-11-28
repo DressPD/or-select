@@ -1,0 +1,44 @@
+\documentclass[11pt]{letter}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{enumitem}
+\signature{Aris Dressino}
+\address{TUM School of Management \\ Technical University of Munich \\ Arcisstra{\ss}e 21 \\ 80333 Munich, Germany \\ aris.dressino@tum.de}
+\longindentation=0pt
+
+\begin{document}
+
+\begin{letter}{The Editors \\ \emph{Information Fusion}}
+
+\opening{Dear Editors,}
+
+Please find enclosed our manuscript, \textbf{``Vote First, Judge on Ties: Cost-Aware Answer Selection for Language-Model Systems,''} submitted as a research article (29 pages including references; 47 references). An online supplement with proofs and extended tables is provided as supplementary material.
+
+\textbf{Aim and fit with the journal.} The paper treats the selection of one answer from several sampled language-model answers as a decision-level fusion problem. The candidates are noisy sources, a vote fuses them at no cost, and a pairwise judge is a costly second source that can resolve disagreement. The journal lists decision fusion, multi-classifier and decision systems, fusion system design, and the optimization of computational resources among its topics, and welcomes fundamental theoretical analyses. The paper contributes such an analysis for this fusion setting and tests it on public benchmarks.
+
+\textbf{Main findings.}
+\begin{enumerate}[leftmargin=*,itemsep=2pt]
+\item Voting first and consulting the judge only on tied answers is Bayes-optimal in a finite-pool model. It is never worse than voting or than judging every problem, so it needs no judge-accuracy threshold.
+\item When wrong answers collide, the exact accuracy and judge cost of margin-gated judging and the judge accuracy each collision level requires are computed. At the collision rates measured on stored runs the required accuracy (0.84 to 0.99) is far above that of the tested judge (0.55 to 0.59), which predicts the null result.
+\item Judging every problem pays only above an explicit break-even accuracy; for problems of differing difficulty it is set by an effective-odds ratio of difficulty moments, not by pooled accuracy.
+\item On six public benchmarks (532 problems) with frozen candidate pools and paired exact tests, vote-first selection uses 4\% to 7\% of the judge comparisons that judging everywhere needs, removes the loss that judging everywhere causes in heterogeneous pools, and adds no detectable accuracy over voting because exact ties are rare.
+\end{enumerate}
+
+\vspace{4pt}
+\textbf{Answers to the journal's required questions.}
+\begin{enumerate}[leftmargin=*,itemsep=3pt]
+\item \emph{Comparison with the state of the art.} Partly. The audit compares against self-consistency voting (Wang et al., 2023), an exact Kemeny--Young ranking reference, and a set of offline selectors (minimum Bayes risk, confidence-weighted voting, a knockout tournament, Bradley--Terry). The theory is positioned against analyses of reward-based selection and voting (Di et al., 2025; Komiyama et al., 2025; Ai et al., 2025) and against the aggregation comparison of Campagner et al. (2023) in this journal. Universal self-consistency (Chen et al., 2023), LLM-Blender (Jiang et al., 2023) and trained verifiers were not evaluated: they need additional generation or training, whereas the study fixes candidate pools and replays stored outputs. We state this limitation in the paper.
+\item \emph{Public datasets.} Common choices are GSM8K, MATH, AIME, MMLU-Pro, GPQA Diamond for answer quality, and RewardBench for judge calibration. We used all of them. GPQA outputs contain password-gated question text, so those stored runs are not in the public archive and GPQA is excluded from the vote-first audit.
+\item \emph{Validation measures.} Standard measures are accuracy against ground truth and the share of available headroom recovered. We report both, with paired exact McNemar tests on discordant problems, the judge's accuracy on RewardBench, and the number of exact ties and ties that contain a correct candidate.
+\item \emph{Main claim and significance.} A priced arbiter should be consulted only where the free fusion rule is uninformative, and judging beyond ties pays only above a break-even that depends on difficulty spread and on how often wrong answers repeat. This gives builders of language-model systems a cost-aware design rule and a measurable test for when to buy more judge calls, rather than an assertion of priority.
+\item \emph{Evidence.} Exact enumeration verifies optimality and dominance of vote-first fusion for pool sizes 3 to 6, the break-even and collision calculations are checked against simulation, and the stored-run audit shows no gain from judging everywhere and a 93\% to 96\% reduction in judge comparisons for vote-first selection at voting-level accuracy. All findings concern one free-tier judge, not stronger judges.
+\item \emph{Closest related work.} Decision-level aggregation and ensembles (Campagner et al., 2023; Pan et al., 2020), majority voting for crowdsourced labels (Yu et al., 2026), cost-aware ensemble selection (Birman et al., 2022), and analyses of best-of-$N$ and voting for language models (Di et al., 2025; Komiyama et al., 2025). We differ in analyzing a complete finite tournament of binary comparisons against plurality and in auditing it on frozen pools against ground truth.
+\item \emph{Prior publication.} No part of this work has been published, including in conference proceedings. Code and stored runs are archived on Zenodo, which is not a publication of the paper.
+\end{enumerate}
+
+\textbf{Data and reproducibility.} Code, stored runs and tables are deposited in a public repository (persistent identifier given in the submission form), consistent with the journal's Option~C. The manuscript is not under consideration elsewhere, and the author declares no competing interests.
+
+\closing{Sincerely,}
+
+\end{letter}
+\end{document}

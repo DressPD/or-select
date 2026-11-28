@@ -1,6 +1,6 @@
 Declaration of Competing Interest
 
-Manuscript title: Pairwise Judging versus Voting for Language Model Answer Selection: Finite-Pool Theory and an Empirical Audit
+Manuscript title: Vote First, Judge on Ties: Cost-Aware Answer Selection for Language-Model Systems
 
 Author: Aris Dressino
 

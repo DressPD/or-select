@@ -1,0 +1,56 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage[section]{placeins}
+\usepackage[authoryear,round]{natbib}
+\usepackage{seqsplit}
+\usepackage{url}
+\usepackage{xr}
+\externaldocument[M-]{main}
+
+\renewcommand{\thesection}{S\arabic{section}}
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\thefigure}{S\arabic{figure}}
+\renewcommand{\theequation}{S\arabic{equation}}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\renewcommand{\theproposition}{S\arabic{proposition}}
+\renewcommand{\thelemma}{S\arabic{lemma}}
+\renewcommand{\thecorollary}{S\arabic{corollary}}
+
+\input{Results_data.tex}
+\input{Selection_data.tex}
+\input{Ablation_data.tex}
+\input{Baselines_data.tex}
+\input{Theory_data.tex}
+\input{ThresholdGeneral_data.tex}
+\input{ThresholdEmpiricalGeneral_data.tex}
+\input{ThresholdExt_data.tex}
+\input{Figure_3_WorkedExample_data.tex}
+\input{Mixture_data.tex}
+\input{Hybrid_data.tex}
+
+\title{Online Supplement to ``Vote First, Judge on Ties: Cost-Aware Answer Selection for Language-Model Systems''}
+\author{Aris Dressino}
+\date{}
+
+\begin{document}
+\maketitle
+
+This supplement contains the extended threshold analysis and proofs,
+additional selectors, secondary judge and generator diagnostics, coverage,
+the open-ended pilot and implementation notes. Numbers prefixed with S
+refer to this supplement.
+
+\input{supplement_body.tex}
+
+\bibliographystyle{apalike-local}
+\bibliography{refs}
+
+\end{document}

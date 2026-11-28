@@ -1,5 +1,5 @@
-- Exact finite-pool comparison of binary pairwise selection and voting
-- Three-candidate break-even judge accuracy is 80.35% at 80% candidate accuracy
-- Exact integerized ranking reference separates preference fit from correctness
-- One free-tier selector has lower pooled heterogeneous accuracy than voting
-- Stored judge outputs support offline comparisons and objective ablations
+- Vote first, judge only on ties is optimal in the model, with no threshold
+- Tie-only judging used 4% to 7% of the judge comparisons on stored runs
+- Judging everywhere pays only above a break-even set by difficulty spread
+- Exact map of the judge accuracy needed as wrong answers collide
+- One free-tier judge shows no gain over voting on 532 benchmark problems

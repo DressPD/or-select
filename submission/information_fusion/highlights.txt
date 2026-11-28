@@ -1,0 +1,5 @@
+- Vote first, judge only on ties is optimal in the model, with no threshold
+- Tie-only judging used 4% to 7% of the judge comparisons on stored runs
+- Judging everywhere pays only above a break-even set by difficulty spread
+- Exact map of the judge accuracy needed as wrong answers collide
+- One free-tier judge shows no gain over voting on 532 benchmark problems

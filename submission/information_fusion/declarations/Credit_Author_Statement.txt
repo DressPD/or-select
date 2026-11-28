@@ -1,0 +1,10 @@
+CRediT Author Statement
+
+Manuscript title: Vote First, Judge on Ties: Cost-Aware Answer Selection for Language-Model Systems
+
+Aris Dressino: Conceptualization, Methodology, Software, Validation, Formal analysis,
+Investigation, Data curation, Writing - original draft, Writing - review & editing,
+Visualization.
+
+As sole author, Aris Dressino confirms responsibility for the entire content of this
+manuscript.

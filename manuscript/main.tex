@@ -1,5 +1,4 @@
-\documentclass[preprint,11pt,authoryear]{elsarticle}
-\linespread{1.5}
+\documentclass[preprint,11pt,number,sort&compress]{elsarticle}
 
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -18,7 +17,7 @@
 \newtheorem{lemma}{Lemma}[section]
 \newtheorem{corollary}{Corollary}[section]
 
-\journal{European Journal of Operational Research}
+\journal{Information Fusion}
 
 % All numbers in the Results are generated from outputs/*.json:
 %   python3 scripts/create_results_macros.py   -> Results_data.tex
@@ -39,12 +38,15 @@
 \input{ThresholdEmpiricalGeneral_data.tex}
 \input{ThresholdExt_data.tex}
 \input{Figure_3_WorkedExample_data.tex}
+\input{Mixture_data.tex}
+\input{Hybrid_data.tex}
+\input{Collision_data.tex}
 
 \begin{document}
 
 \begin{frontmatter}
 
-\title{Pairwise Judging versus Voting for Language Model Answer Selection: Finite-Pool Theory and an Empirical Audit}
+\title{Vote First, Judge on Ties: Cost-Aware Answer Selection for Language-Model Systems}
 
 \author[inst1]{Aris Dressino\corref{cor1}}
 \cortext[cor1]{Corresponding author. ORCID: 0009-0003-0693-9051.}
@@ -56,25 +58,31 @@
             country={Germany}}
 
 \begin{abstract}
-Choosing among sampled language-model answers requires a selection rule whose reproducibility and accuracy can be assessed separately. We formulate selection as an integer program combining pairwise judge scores, confidence, self-consistency and cost, and compute an exact Kemeny--Young reference. The quality-only ranking inherits a known 5-approximation guarantee for weighted ranking disagreement, not answer correctness. Under an independent binary-comparison model, we derive the exact accuracy gain over plurality voting for three candidates and enumerate break-even thresholds for larger finite pools. At 80\% candidate accuracy, the three-candidate threshold is 80.35\% mixed-pair judge accuracy. We audit one free-tier judge, scoring \RBOverallAcc\% on RewardBench, on six benchmarks comprising \TotalProblems{} distinct problems. Paired exact tests detect no homogeneous-pool advantage over self-consistency (\HomogPooledB{} versus \HomogPooledC{} discordant problems of \HomogPooledN{}); the heterogeneous-pool selector performs worse (\HeteroPooledB{} versus \HeteroPooledC{} of \HeteroPooledN{}, \HeteroPooledP). Offline ablations expose an objective-scale mismatch, while removing the cost term does not establish an advantage. These findings concern the tested judge and configuration, not stronger judges generally. The theoretical thresholds characterize binary Copeland selection under explicit assumptions; averaged soft judge scores do not directly estimate their accuracy parameter. The contribution combines a finite-pool benchmark for judge reliability with an auditable selection protocol, an exact ranking reference and stored outputs for offline comparisons.
+Intelligent systems built on language models often sample several answers and must return one. Designers can take the most frequent answer (self-consistency voting) at no extra cost, or pay for a pairwise judge that is itself unreliable, and they lack guidelines for choosing. We analyze the choice in a finite-pool model and audit it on stored runs. Voting first and consulting the judge only on tied answers is Bayes-optimal in the model and never worse than either voting or judging everywhere, so it needs no judge-accuracy threshold. Judging everywhere pays only above an explicit break-even accuracy (80.35\% at 80\% candidate accuracy for three candidates); when problems differ in difficulty, that break-even depends on an effective-odds ratio of difficulty moments, not on pooled accuracy. We audit one free-tier judge, scoring \RBOverallAcc\% on RewardBench, on six benchmarks of \TotalProblems{} problems. Paired exact tests find no homogeneous-pool advantage over self-consistency (\HomogPooledB{} versus \HomogPooledC{} discordant problems of \HomogPooledN{}), and judging everywhere performs worse in heterogeneous pools (\HeteroPooledB{} versus \HeteroPooledC{} of \HeteroPooledN{}, \HeteroPooledP). Vote-first selection removes that loss (\HybHetBCop{} versus \HybHetCCop{} discordant problems) with only \HybHetCallShare\% of the judge comparisons, but adds no detectable accuracy over voting because exact ties are rare. When wrong answers collide, the required judge accuracy falls as they concentrate, but the measured judge stays below it; we close with design guidelines for system builders. The findings concern the tested judge, not stronger judges.
 \end{abstract}
 
 \begin{keyword}
-Artificial intelligence in OR \sep Large language models in OR \sep Integer programming \sep Group decisions and negotiations \sep Decision support systems
+Language models \sep Answer selection \sep Self-consistency \sep LLM-as-a-judge \sep Decision-level fusion \sep Cost-aware design
 \end{keyword}
 
 \end{frontmatter}
 
 \section{Introduction}
 
-Sampling several answers can increase the probability that a language model
-produces a correct answer without ensuring that a selector finds it.
-Self-consistency \citep{wang2023selfconsistency} votes over extracted final
-answers; when all answers differ, its result depends on the tie rule.
-A language-model judge can distinguish such answers, but introduces another
-potentially unstable and inaccurate component \citep{atil2024nondeterminism,landesberg2026bestofn}.
-We study selection over fixed candidate pools, separating agreement with
-judge preferences from correctness against ground truth.
+Intelligent systems built on language models, such as question-answering
+assistants and decision-support tools, rarely return the first answer they
+generate. A common design samples several candidate answers and selects one.
+Two selectors are widely used. Self-consistency \citep{wang2023selfconsistency}
+returns the most frequent extracted final answer at no extra cost; when all
+answers differ, its result depends on the tie rule. A language-model judge can
+distinguish such answers, but it is a paid component that is itself unstable
+and inaccurate \citep{atil2024nondeterminism,landesberg2026bestofn}.
+System designers therefore face a concrete management question: when is a
+judge worth its price, and where in the pipeline should it be called? Practical
+guidance is scarce, because published comparisons rarely hold the candidate
+pool fixed or separate agreement with judge preferences from correctness
+against ground truth. We study selection over fixed candidate pools to give
+that guidance.
 
 The operational decision arises after generation has already incurred its
 cost: a system must return one of the available responses. A correct answer
@@ -95,16 +103,40 @@ reference. The probabilistic analysis then asks a separate question: under
 a specified model of correct and incorrect answers, how accurate must
 binary comparisons be for their Copeland winner to outperform voting?
 
-The paper makes three contributions. First, it derives an exact finite-pool
-condition under which binary pairwise judging with Copeland aggregation
-outperforms plurality voting: a closed form for $N=3$, enumeration for
-$N\le7$, and extensions to pair-dependent judges and colliding wrong answers
-(Section~\ref{sec:theory} and Online Supplement). Second, it combines a
-composite selector, OR-Select, with an exact Kemeny--Young reference and
-stored judge outputs for offline comparison (Section~\ref{sec:formal-model}).
-Third, it audits one free-tier judge on six
-ground-truth benchmarks using paired tests, recovery relative to available
-headroom and weight ablations (Sections~\ref{sec:experiments}--\ref{sec:results}).
+The paper makes five contributions. First, it proves that voting first and
+judging only on ties is Bayes-optimal in a finite-pool model and weakly
+dominates both plurality and judging everywhere, and it measures the judge
+comparisons this saves on stored runs (Sections~\ref{sec:hybrid} and
+\ref{sec:hybrid-results}); with colliding wrong answers it gives the exact
+accuracy and judge cost of margin-gated judging and the judge accuracy each
+collision level requires, and locates the stored runs in that map
+(Section~\ref{sec:collision}). Second, it derives the exact condition under which
+binary pairwise judging with Copeland aggregation beats plurality voting: a
+closed form for $N=3$, enumeration for $N\le7$, and extensions to
+pair-dependent judges and colliding wrong answers (Section~\ref{sec:theory} and
+Online Supplement). Third, it shows that when problems differ in difficulty this
+threshold is governed by an effective-odds ratio of difficulty moments, not by
+pooled accuracy, and tests the per-problem prediction on stored judgments
+(Sections~\ref{sec:mixture} and \ref{sec:mixture-results}). Fourth, it audits
+one free-tier judge on six ground-truth benchmarks using paired tests, recovery
+relative to available headroom and weight ablations
+(Sections~\ref{sec:experiments}--\ref{sec:results}). Fifth, it supplies a composite
+selector, OR-Select, with an exact Kemeny--Young reference and stored judge
+outputs for offline comparison (Section~\ref{sec:formal-model}), and distills the
+results into design guidelines (Section~\ref{sec:guidelines}).
+
+The problem is one of decision-level fusion: the candidates are noisy sources that
+each state an answer, a vote fuses them for free, and a pairwise judge is a costly
+second source consulted to resolve disagreement \citep{campagner2023aggregation}. Fusion
+research asks which combination rule to use; we ask when a priced arbiter changes
+the outcome and what it costs.
+
+Operationally, vote-first selection has the structure of redundant inspection
+with adjudication on disagreement: several inexpensive assessments are combined
+by majority, and a costlier arbiter is consulted only when they fail to agree.
+Here each judge call has a price, so the question of when an additional
+comparison is worth buying is a measurement-allocation decision under costly
+information, and Theorem~\ref{thm:hybrid} states when this structure is optimal.
 
 \paragraph{Outcome and use case}
 \label{sec:outcome}
@@ -148,10 +180,10 @@ Judges have also been benchmarked as test-time-scaling selectors
 with calibrated vote distributions \citep{dadkhahi2025calibrated}, and
 knockout-style pairwise selection with repeated comparisons has been given
 provable scaling laws \citep{chen2025provable}. Our setting differs in
-analysing complete finite tournaments against plurality voting and in
+analyzing complete finite tournaments against plurality voting and in
 auditing the resulting selectors against ground truth.
 
-Three studies in this journal frame our design. Best-of-$N$ selection
+Two peer-reviewed studies frame our design. Best-of-$N$ selection
 against an imperfect proxy is vulnerable to reward hacking, and regularized
 and stochastic variants have been compared on alignment benchmarks
 \citep{ichihara2025bon}; our judge is such a proxy, which is why we score the
@@ -159,11 +191,7 @@ selected answer against ground truth instead of against the judge. A
 systematic comparison of nine debiasing strategies for pairwise judges finds
 style bias far larger than position bias in its benchmarks
 \citep{soumik2026judging}; our order-averaging controls only position, so
-style effects remain untested here (Section~\ref{sec:future}). Finally,
-language models show low hypothetical and compositional consistency in
-multi-step reasoning \citep{chen2024twofailures}; the self-consistency we use
-as a baseline is the different, answer-agreement notion of voting
-\citep{wang2023selfconsistency}, and we do not claim it certifies reasoning.
+style effects remain untested here (Section~\ref{sec:future}).
 These findings motivate paired correctness evaluation.
 
 These approaches also make different uses of additional information.
@@ -210,24 +238,35 @@ selective-intervention criterion concerns the precision of majority
 overrides, rather than the mixed-pair accuracy needed by a complete
 Copeland tournament. Negative judge results alone are not the distinction.
 
-\paragraph{Operational-research context}
-Exact Kemeny methods in this journal address median rankings and winner
-computation \citep{amodio2016kemeny,rico2023kemeny}; ensemble optimization
-selects constituent models \citep{debock2020ensemble,aktas2024clusterensemble}.
-Here the decision is which already-generated answer to return, with an
-exact ranking reference and an offline audit. The distinction is between
-optimizing ensemble membership before prediction and optimizing the
-returned answer after observing a candidate pool. Established ranking and
-optimization components provide the reference machinery; the finite-pool
-correctness comparison and its accompanying audit address the answer-level
-decision.
+\paragraph{Decision-level fusion and ensembles}
+Combining the outputs of several classifiers is the core problem of
+decision-level fusion. A large comparison of aggregation models in ensemble
+learning finds that no rule dominates \citep{campagner2023aggregation};
+multi-classifier fusion has been applied to risk analysis \citep{pan2020multiclassifier},
+confidence ensembles weight members by their confidence \citep{zoppi2025confidence},
+and majority voting remains the default aggregator of crowdsourced labels, where
+semi-supervised refinements address its weaknesses \citep{yu2026semisupervised}.
+Two themes of this literature frame our model. The first is diversity of the
+ensemble: pool-generation work treats the diversity of the classifier pool as a
+design target \citep{monteiro2023diversity}; the collision share $s$ of
+Section~\ref{sec:collision} is its answer-level counterpart, the fraction of wrong
+answers that repeat. The second is cost: choosing which ensemble members to run
+trades accuracy against computation \citep{birman2022costeffective}; vote-first
+selection is such a policy at the level of judge calls. Pairwise aggregation also
+has counterparts in rank fusion, where consensus sets generalize Kemeny-type objectives
+for partial rankings \citep{aledo2025consensus}, and in decision support, where
+pairwise comparison and holistic judgments are compared as ways to combine
+judgments \citep{saenzroyo2025divide}. Our setting differs in that the sources are
+generated answers with a checkable, binary notion of correctness, the combiner is
+either a free vote or a priced judge, and the decision is which answer to return.
 
-Judgment aggregation and selection among forecasts provide a related OR
-perspective \citep{brown2019wisdom,jaspersen2022judgment,debaets2020judgment}:
-the selection mechanism is itself a decision object, not simply a final
-implementation detail. This perspective motivates examining the scale of
-the objective terms and testing the selected answer against ground truth,
-alongside the quality of the fitted preference ranking.
+\paragraph{Language-model judges as fusion components}
+Language-model judges are now analyzed as components whose biases need explicit
+treatment, for example through a taxonomy of judge biases with debiasing
+optimization \citep{zhou2026robustjudges}. Our question is complementary: once
+several answers have been sampled, how should a vote or a pairwise judge select
+among them, and when is a costly judge comparison worth buying?
+
 
 \section{Method}
 
@@ -306,53 +345,14 @@ replay reproduces \AblationFidelityK/\AblationFidelityN{} extracted final
 answers; this comparison is at the final-answer level. A worked example is
 in the Online Supplement (Table~\ref{S-tab:worked-example}).
 
-\subsection{Exact Kemeny--Young Baseline}
+\subsection{Reference rankings}
 \label{sec:kemeny-exact}
 
-For the ranking reference, let $y_{ij}=1$ mean that $i$ ranks above $j$.
-The Kemeny--Young program maximizes agreement with the same matrix:
-
-\begin{equation}
-\max \sum_{i \neq j} W[i,j]\, y_{ij}
-\label{eq:kemeny-obj}
-\end{equation}
-\begin{align}
-\text{s.t.} \quad & y_{ij} + y_{ji} = 1 \quad \forall\, i \neq j \label{eq:kemeny-antisym}\\
-& y_{ij} + y_{jk} + y_{ki} \leq 2 \quad \forall \text{ distinct } i,j,k \label{eq:kemeny-transitivity}\\
-& y_{ij} \in \{0,1\}
-\end{align}
-
-Antisymmetry and the absence of 3-cycles enforce a linear order.
-The implementation uses $\binom{N}{2}$ binary variables, $O(N^3)$
-constraints and coefficients $\operatorname{round}(10^4(W[i,j]-W[j,i]))$.
-A 200{,}000-conflict budget replaces a wall-clock limit; a non-optimality
-flag distinguishes feasible from proven-optimal solutions. All
-\KYTopOneN{} stored reference solutions at $N\le6$ are flagged optimal
-for this integerized objective, not necessarily for unrounded weights.
-
-The reference removes the composite selector's confidence, consistency and
-cost terms and uses all pairwise relations simultaneously. With cyclic
-preferences, its top-ranked candidate need not have the largest weighted
-win total. This permits an empirical distinction between losing
-information through aggregation and receiving unhelpful information from
-the judge. We compare returned answers, rather than treating a difference
-between rankings as an accuracy error. When two different candidates give
-the same extracted answer, they count as the same answer-level decision.
-
-\subsection{Approximation Guarantee}
-\label{sec:approx-guarantee}
-
-\begin{proposition}[Weighted-win ranking]
-\label{prop:copeland-approx}
-Assume nonnegative pair weights with $W[i,j]+W[j,i]=1$.
-Ranking by decreasing $Q_i$ approximates minimum weighted disagreement
-within a factor of 5. This factor is tight.
-\end{proposition}
-
-The constructed matrix satisfies these conditions. This guarantee, from
-\citet{coppersmith2006ordering},
-covers the \emph{full quality-only ranking}, not top-1 correctness, agreement
-with the Kemeny winner, or the composite objective~\eqref{eq:selection-obj}.
+As a ranking reference, an exact Kemeny--Young program over the same matrix $W$ (integer program with
+$\binom N2$ binary variables, antisymmetry and 3-cycle constraints, conflict budget of 200{,}000) returns
+its top-ranked answer for comparison; ranking by $Q_i$ approximates the minimum weighted disagreement
+within a factor of 5 \citep{coppersmith2006ordering}, a guarantee for the full ranking rather than for top-1
+correctness. The formulation and the guarantee are in Online Supplement Section~\ref{S-sec:selector-internals}.
 
 \section{When can a judge beat voting? Pairwise-accuracy thresholds}
 \label{sec:theory}
@@ -506,6 +506,156 @@ uniform-$q_{\min}$ and uniform-$q_{\max}$ cases. This provides a conservative
 comparison when such bounds are available, without requiring every mixed
 pair to have exactly the same reliability.
 
+\subsection{Problems of differing difficulty}
+\label{sec:mixture}
+
+Theorem~\ref{thm:threshold} treats $p$ as common to all problems. In a
+benchmark, difficulty varies: many problems are solved by every candidate or
+by none, and only intermediate problems separate the rules. Let $p$ be drawn
+per problem from a distribution $F$, with candidates and comparisons following
+the model given $p$. Write $A(q)=(2q-1)(q+1)$ and $B(q)=(3-2q)(1-q)$, so that the
+single-$p$ gap of Theorem~\ref{thm:threshold} is
+$A(q)\,p(1-p)^2-B(q)\,p^2(1-p)$.
+
+\begin{theorem}[Effective-odds threshold]
+\label{thm:mixture}
+Let $m_1=\mathbb{E}_F[p(1-p)^2]>0$ and $m_2=\mathbb{E}_F[p^2(1-p)]$. The accuracy of
+Copeland minus that of plurality is $\Delta_F(q)=A(q)\,m_1-B(q)\,m_2$. It is positive
+if and only if $A(q)/B(q)>r_F:=m_2/m_1$, so the break-even accuracy $q^*_F\in(\tfrac12,1]$
+is the unique root of $A/B=r_F$ and increases with $r_F$.
+\end{theorem}
+
+The pooled threshold of Theorem~\ref{thm:threshold} is the special case
+$F=\delta_{\bar p}$, where $r_F=\bar p/(1-\bar p)$. Dispersion changes $r_F$, so two
+benchmarks with the same mean accuracy can have different break-even
+judges; Table~\ref{tab:mixture} gives Beta examples. A problem set needs no
+parametric $F$: if problem $i$ has $k_i$ of 3 candidates correct, the
+conditional accuracy of Copeland is $a_{k_i}(q)$ (closed forms in the proof of
+Theorem~\ref{thm:threshold}) and that of plurality is $0,\tfrac13,1,1$ for $k_i=0,\dots,3$.
+Averaging over the observed $k_i$ gives a prediction that uses the
+problems' own difficulty (Section~\ref{sec:mixture-results}).
+
+\begin{table}[htbp]
+\centering
+\caption{Break-even binary accuracy $q^*_F$ when $p\sim\mathrm{Beta}$ with mean $\bar p$
+and concentration $\kappa$ (smaller $\kappa$ means more dispersed difficulty);
+the last column is the single-$p$ threshold at $\bar p$.}
+\label{tab:mixture}
+\small
+\begin{tabular}{rrrrrr}
+\toprule
+$\bar p$ & $\kappa=1$ & $\kappa=2$ & $\kappa=5$ & $\kappa=20$ & $p\equiv\bar p$ \\
+\midrule
+\MixtureThresholdRows
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Vote first, judge only on ties}
+\label{sec:hybrid}
+
+The model says more than a threshold. Because correct candidates share an
+answer and wrong answers are distinct, any repeated answer is certainly
+correct. A judge can only help when all $N$ answers differ. Rule~H returns a
+most-voted answer and, if several answers tie, runs binary Copeland on the
+comparisons among the tied candidates only.
+
+\begin{theorem}[Vote-first fusion is optimal]
+\label{thm:hybrid}
+Under the model, for any $N\ge 2$ and $q\ge\tfrac12$, Rule~H attains the maximum
+accuracy among all rules that observe the answer partition and the
+comparison outcomes, namely
+$P(k\ge2)+N\,p(1-p)^{N-1}\,a^{(N)}(q)$, where $a^{(N)}(q)\ge 1/N$ is the probability
+that Copeland selects the lone correct candidate among $N$ distinct answers. Hence
+Rule~H is at least as accurate as plurality and as Copeland for every $p$
+and $q\ge\tfrac12$: it has no break-even threshold.
+\end{theorem}
+
+The proof (Appendix) is a Bayes argument: when all answers differ, the
+posterior of a candidate being the only correct one is proportional to
+$q^{w}(1-q)^{N-1-w}$, increasing in its number of wins $w$. Exhaustive
+enumeration for $N\le4$ in exact rational arithmetic and for $N=5,6$ in floating
+point confirms optimality and dominance. For example, at $N=6$, $p=0.3$ and
+$q=0.8$ the accuracies of plurality, Copeland and Rule~H are $63.0\%$, $70.7\%$
+and $77.1\%$ (Table~\ref{tab:hybrid-theory}). The result is a design principle
+for fusion: spend judge calls only where votes are uninformative. It is also a
+cost statement. Rule~H compares only when all $N$ answers differ, which in the model
+happens with probability $P(k\le1)=(1-p)^N+Np(1-p)^{N-1}$ and then needs $\binom N2$
+comparisons, so its expected number of comparisons is $\binom N2\,P(k\le1)$ against
+$\binom N2$ for Copeland on every problem; at $N=3$ and $p=0.6$ this is $0.35$ of the
+comparisons. The result is proved
+only for distinct wrong answers. When wrong answers collide, a wrong repeated
+answer can outvote a lone correct one and Rule~H inherits that failure; the next
+subsection quantifies when judging beyond ties then pays.
+
+\begin{table}[htbp]
+\centering
+\caption{Model accuracy (\%) of plurality, Copeland and Rule~H (exact enumeration).}
+\label{tab:hybrid-theory}
+\small
+\begin{tabular}{rrrrrr}
+\toprule
+$N$ & $p$ & $q$ & Plurality & Copeland & Rule~H \\
+\midrule
+\HybridTheoryRows
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Colliding wrong answers: when to judge beyond ties}
+\label{sec:collision}
+
+Real pools violate the distinct-wrong-answers assumption: wrong candidates often repeat
+the same wrong answer. Extend the model so that a wrong candidate repeats one shared
+distractor with probability $s$ and otherwise gives an answer nobody else gives ($s=0$
+is the model above). Consider the margin-gated duel $G_t$: let $m_1\ge m_2$ be the
+sizes of the two largest answer classes (ties broken uniformly); if $m_1-m_2>t$ return the
+largest class, otherwise run one judge comparison between the two largest classes.
+$G_0$ judges only exact ties for first place and $G_\infty$ always judges. Exact enumeration over
+the multinomial counts of correct, distractor and unique wrong answers (checked against
+simulation) gives accuracy and expected judge calls (Table~\ref{tab:collision}).
+Three facts follow. First, tie-only judging $G_0$ is never worse than plurality when $q\ge\tfrac12$ and
+equals it at $q=\tfrac12$. Second, the value of judging more is governed by $s$:
+at $p=0.5$ and $q=0.8$, always judging loses $13.8$ points to plurality when wrong answers
+are scattered ($s=0$) but gains $21.2$ points when they concentrate on one distractor ($s=0.9$),
+with intermediate margins in between. Third, the judge accuracy needed to beat plurality falls with
+$s$ (Table~\ref{tab:collision-be}): at $p=0.5$ it is $0.96$ for $s=0$, $0.82$ for $s=0.5$ and $0.57$
+for $s=0.9$. The policy follows from two measurable quantities, the collision share $s$ of
+wrong answers and the judge's accuracy on mixed pairs: judge only ties when wrong answers are
+scattered, extend the gate when they concentrate, and never judge beyond ties with a judge
+below the break-even.
+
+\begin{table}[htbp]
+\centering
+\caption{Exact accuracy (\%) and expected judge calls per problem (in parentheses) at $N=\CollN$,
+$q=\CollQ$. $p$: probability a candidate is correct; $s$: probability a wrong candidate repeats the
+shared distractor. $G_t$ is the margin-gated duel.}
+\label{tab:collision}
+\small
+\begin{tabular}{rrrrrr}
+\toprule
+$p$ & $s$ & Plurality & $G_0$ & $G_1$ & $G_\infty$ \\
+\midrule
+\CollRows
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Smallest judge accuracy $q$ for which always judging the two largest classes
+($G_\infty$) matches plurality at $N=\CollN$ (``none'': no $q\le1$ suffices).}
+\label{tab:collision-be}
+\small
+\begin{tabular}{rrrr}
+\toprule
+$p$ & $s=0$ & $s=0.5$ & $s=0.9$ \\
+\midrule
+\CollBERows
+\bottomrule
+\end{tabular}
+\end{table}
+
 \section{Experimental Protocol}
 \label{sec:experiments}
 
@@ -531,7 +681,7 @@ The main references are self-consistency (plurality over extracted final
 answers, candidate-order ties), the \emph{first sampled candidate} (not
 temperature-zero greedy decoding), and the Kemeny--Young top-ranked answer
 on the same matrix. Further offline selectors are listed in
-Section~\ref{sec:baselines}. Trained verifiers and universal
+Online Supplement Section~\ref{S-sec:selector-internals}. Trained verifiers and universal
 self-consistency were not evaluated.
 
 \paragraph{Judge calibration}
@@ -689,86 +839,154 @@ Track & Graded & Floor & SC & OR & Oracle & Rec.\ SC & Rec.\ OR \\
 \end{tabular}}
 \end{table}
 
-\subsection{Objective and selection diagnostics}
+\subsection{Selector diagnostics}
 \label{sec:selection-bias}
-\label{sec:cost-diagnosis}
-\label{sec:ablations}
 
-On replayable problems, the within-pool cost-term spread has median
-\CostSpreadMed{}, versus \QualitySpreadMed{} for quality, and exceeds
-the quality spread in \CostDominatesK/\CostDominatesN{} cases. This
-exposes a scale mismatch, not a proof that cost determines every winner:
-confidence, consistency, eligibility and score gaps also matter.
+On replayable problems the within-pool cost-term spread has median \CostSpreadMed{}, against
+\QualitySpreadMed{} for quality, so the composite objective has a scale mismatch. In heterogeneous pools,
+removing the cost term gives \AblHetNoCostAcc\% and quality-only selection \AblHetQOnlyAcc\%, against voting's
+\AblHetSCAcc\% ($n=\AblHetN$; exact $p$ \AblHetNoCostP{} and \AblHetQOnlyP{}), so the cost term is not the only
+limitation. Further offline selectors (shortest, longest, minimum Bayes risk, confidence-weighted voting,
+knockout tournament, Bradley--Terry) show no significant improvement over plurality, and the mean stored weight
+on the correct candidate in mixed pairs is $0.49$--$0.56$; these soft-score means cannot be substituted for $q$
+in Theorem~\ref{thm:threshold}. Tables and details are in Online Supplement Section~\ref{S-sec:selector-internals}.
 
-Table~\ref{tab:ablation} compares the default, no-cost, quality-only and
-plurality-plus-quality variants on identical replayable subsets. In
-heterogeneous pools, removing cost yields \AblHetNoCostAcc\% accuracy and
-quality-only selection \AblHetQOnlyAcc\%, against voting's
-\AblHetSCAcc\% ($n=\AblHetN$; exact $p$ \AblHetNoCostP{} and
-\AblHetQOnlyP{}, respectively). Thus the cost term is not the only
-limitation. These post-hoc results do not prove that the judge contains
-no useful correctness information.
+\subsection{Difficulty-aware prediction}
+\label{sec:mixture-results}
 
-OR-Select picks Cohere candidates in \PickShareCohere\% of heterogeneous
-problems, although their overall accuracy (\CandAccCohere\%) is similar to
-Nemotron's (\CandAccNemotron\%). This is a property of the \emph{composite
-selector}, not an isolated judge preference; length and other terms are
-confounded (Table~\ref{S-tab:selection}).
+On the homogeneous problems with stored judge outputs and at least ten mixed
+pairs ($n=\MixPooledN$, AIME 2025 and MMLU-Pro; GSM8K has no stored judgments and
+MATH Level 5 and AIME 2026 have too few mixed pairs), the binary mixed-pair
+accuracy is $\MixPooledQ\%$. Using each problem's own number of correct
+candidates $k_i$ and this $q$, the model predicts binary-Copeland accuracy
+$\MixPooledPredCop\%$; the observed value is $\MixPooledObsCop\%$ (bootstrap
+interval for observed minus predicted, re-estimating $q$ in each resample:
+$[\MixPooledErrLo,\MixPooledErrHi]$ points). A pooled-$p$ prediction under the
+single-$p$ binomial model gives $\MixPooledNaiveCop\%$. The two agree on Copeland but not on plurality: observed plurality
+accuracy is $\MixPooledObsVote\%$, the own-$k$ model gives $\MixPooledPredVote\%$ and the pooled-$p$ model
+$\MixPooledNaiveVote\%$, because the binomial model puts too little mass on problems solved by
+none or one candidate. The resulting gap prediction (Copeland minus plurality, in points)
+is $\MixPooledGapPred$ with own $k_i$ against $\MixPooledGapNaive$ pooled, for an observed
+$\MixPooledGapObs$ (Table~\ref{tab:mixture-emp}). The sample is small and $q$ is estimated on the
+same rows, so this is a plug-in consistency check, not out-of-sample validation;
+MMLU-Pro's binary $q$ lies below one half on 28 mixed pairs.
 
 \begin{table}[htbp]
 \centering
-\caption{Offline replay of the selection step on stored judge outputs
-(accuracy \%, problems whose judge outputs were stored). SC: stored
-self-consistency result on the same problems.}
-\label{tab:ablation}
-\small\setlength{\tabcolsep}{4pt}
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{lrrrrrr}
+\caption{Observed and predicted binary-Copeland accuracy (\%) and the Copeland-minus-plurality
+gap (points). Pred.\ ($k_i$) uses each problem's own number of correct candidates;
+Pred.\ ($\bar p$) uses the single-$p$ binomial model at the pooled accuracy.}
+\label{tab:mixture-emp}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lrrrrrrrrr}
 \toprule
-Track & Replayable & SC & Default & No cost & Quality only & SC+quality \\
+ & & & & \multicolumn{3}{c}{Copeland accuracy} & \multicolumn{3}{c}{Gap} \\
+\cmidrule(lr){5-7}\cmidrule(lr){8-10}
+Track & $n$ & $\hat p$ & $\hat q$ & Obs. & $k_i$ & $\bar p$ & Obs. & $k_i$ & $\bar p$ \\
 \midrule
-\AblationTableRows
+\MixtureEmpiricalRows
 \bottomrule
-\end{tabular}}
+\end{tabular}
 \end{table}
 
-\paragraph{Additional selectors}
-\label{sec:baselines}
+\subsection{Vote-first fusion on stored runs}
+\label{sec:hybrid-results}
 
-Shortest/longest, token-Jaccard minimum-Bayes-risk, pointwise confidence,
-confidence-weighted voting, a knockout tournament and Bradley--Terry
-selection establish no significant improvement over plurality in the
-exploratory comparisons (Table~\ref{S-tab:baselines}). Minimum-Bayes-risk
-is numerically ahead in some pooled comparisons, without a significant advantage.
+Rule~H is computed offline on every graded problem with stored judge outputs
+($\HybHomN$ homogeneous and $\HybHetN$ heterogeneous problems; Table~\ref{tab:hybrid-audit}).
+Exact vote ties are rare: $\HybHomTies$ and $\HybHetTies$ problems, of which only
+$\HybHomOpp$ and $\HybHetOpp$ contain a correct candidate. Rule~H therefore tracks voting:
+$\HybHetHyb\%$ against $\HybHetSC\%$ in heterogeneous pools ($\HybHetBSC$ versus $\HybHetCSC$ discordant
+problems, $p=\HybHetPSC$) and $\HybHomHyb\%$ against $\HybHomSC\%$ in homogeneous pools
+($\HybHomBSC$ versus $\HybHomCSC$, $p=\HybHomPSC$). Against Copeland alone it is better in heterogeneous
+pools ($\HybHetBCop$ versus $\HybHetCCop$ discordant problems, $p=\HybHetPCop$) and indistinguishable
+in homogeneous pools ($\HybHomBCop$ versus $\HybHomCCop$). Using the judge only on ties thus removes
+the heterogeneous-pool penalty of judging everywhere, but with the tested judge it adds no
+detectable accuracy over voting, as expected when its binary accuracy is near chance. Its practical
+benefit is cost: because the judge is consulted only on ties, Rule~H needs $\HybHomCallShare\%$
+(homogeneous) and $\HybHetCallShare\%$ (heterogeneous) of the pairwise comparisons that Copeland on
+every problem requires, avoiding $\HybHomCallSaved\%$ and $\HybHetCallSaved\%$ of judge comparisons at
+voting-level accuracy. The stored
+voting baseline breaks ties by candidate order, and the judged subset is not a random sample;
+GPQA Diamond is not part of this audit because its stored outputs are not in the public archive.
 
-\paragraph{Soft-score diagnostics}
-\label{sec:threshold-results}
+\paragraph{Where the stored runs sit in the collision model}
+Wrong answers do collide: $\CollHomS$ of wrong candidates in homogeneous pools and $\CollHetS$ in
+heterogeneous pools repeat another wrong candidate's answer. The judge's accuracy on pairs of
+answer classes with exactly one correct class, measured on the stored soft judgments, is
+$\CollHomQ$ and $\CollHetQ$. At the observed correct-candidate rates ($\CollHomP$ and $\CollHetP$) and the
+pool sizes $N=3$ and $N=6$, Section~\ref{sec:collision} requires judge accuracy $\CollHomNeedInf$
+(homogeneous) and $\CollHetNeedInf$ (heterogeneous) for always judging to match plurality, and
+$\CollHomNeedOne$ and $\CollHetNeedOne$ for the margin-one gate $G_1$. The tested judge is far below all of these. Replaying
+$G_1$ on the stored judgments agrees: $\CollHomGone\%$ against $\CollHomPl\%$ for plurality in homogeneous pools
+($\CollHomB$ versus $\CollHomC$ discordant problems, $p=\CollHomPV$) and $\CollHetGone\%$ against $\CollHetPl\%$ in
+heterogeneous pools ($\CollHetB$ versus $\CollHetC$, $p=\CollHetPV$); always judging gives $\CollHomGinf\%$ and
+$\CollHetGinf\%$. The null result is therefore predicted by the model and
+not only observed: a judge needs to be accurate on mixed pairs by a margin that the free-tier model does not
+reach. The class-pair accuracy uses the stored soft scores and so is an upper-level proxy for the binary
+accuracy in the theory.
 
-The mean stored weight assigned to the correct candidate on mixed pairs
-is $0.49$--$0.56$ on tracks with at least 70 such pairs. These are
-\emph{soft-score means}, not frequencies of correct binary decisions.
-They cannot be substituted for $q$ in Theorem~\ref{thm:threshold}; neither
-can an average establish the pairwise bounds of Corollary~\ref{S-cor:pairdep}.
-Table~\ref{S-tab:threshold-emp-gen} retains these descriptive measurements
-and model sensitivity calculations, with their sampling limitations.
+\begin{table}[htbp]
+\centering
+\caption{Rule~H on stored runs. Ties: problems where several answers tie for most votes; Opp.:
+ties containing a correct candidate. Accuracy in \%. Discordant counts are problems won by
+Rule~H and lost by the comparator, with the exact two-sided McNemar $p$ in parentheses.}
+\label{tab:hybrid-audit}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lrrrrrrr}
+\toprule
+Track & $n$ & Ties/Opp. & Vote & Copeland & Rule H & H vs.\ vote & H vs.\ Copeland \\
+\midrule
+\HybridAuditRows
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Ranking reference and coverage}
 \label{sec:kemeny-results}
 
-OR-Select and the integerized Kemeny--Young reference return different
-final answers on \KYTopOneDiffers/\KYTopOneN{} problems. OR-Select alone
-is correct on \KYORwins{} and Kemeny--Young alone on \KYKYwins{}
-(Table~\ref{tab:paired}); the exact ranking reference shows no detected
-accuracy advantage. Ranking optimality does not guarantee correctness.
+OR-Select and the integerized Kemeny--Young reference return different final answers on
+\KYTopOneDiffers/\KYTopOneN{} problems; OR-Select alone is correct on \KYORwins{} and Kemeny--Young alone on
+\KYKYwins{} (Table~\ref{tab:paired}), so the exact ranking reference shows no detected accuracy advantage.
+Every problem is ultimately graded; including the higher-cap rescued problems lowers selector accuracy by
+0.3--15 points depending on track without reversing the direction of the comparisons
+(Online Supplement Tables~\ref{S-tab:coverage} and~\ref{S-tab:extended}).
 
-\paragraph{Coverage}
-\label{sec:coverage}
+\section{Design guidelines for system builders}
+\label{sec:guidelines}
 
-Every problem is ultimately graded (Table~\ref{S-tab:coverage}). Including
-the higher-cap rescued problems lowers selector accuracy by 0.3--15 points
-depending on track, without reversing the direction of the comparisons
-(Table~\ref{S-tab:extended}). These results describe the retry-conditioned
-generation protocol, not unrestricted independent draws.
+The results translate into six guidelines for the answer-selection component of a
+language-model system whose final answers can be extracted and compared.
+\begin{enumerate}
+\item \textbf{Vote first.} Extract each candidate's final answer and return the plurality
+answer when it is unique. In the model, this loses nothing against voting and
+never needs a judge-accuracy threshold (Theorem~\ref{thm:hybrid}); on the stored
+runs no accuracy difference against self-consistency was detected.
+\item \textbf{Call the judge only on ties.} Compare only the tied candidates. On the stored runs this
+needed \HybHomCallShare\% (homogeneous) and \HybHetCallShare\% (heterogeneous) of the
+comparisons that judging every problem requires, and it removed the heterogeneous-pool
+loss of judging everywhere (Section~\ref{sec:hybrid-results}).
+\item \textbf{Replace voting by judging everywhere only above a measured break-even.}
+Estimate the judge's binary accuracy on mixed pairs from a labeled sample, then compare it
+with the break-even computed from the observed distribution of correct candidates per problem
+(Theorem~\ref{thm:mixture}); pooled accuracy misstates it, and a judge near chance never qualifies.
+\item \textbf{Measure collisions before widening the gate.} Estimate the share $s$ of wrong
+answers that repeat another wrong answer and the judge's accuracy on mixed pairs. Scattered wrong
+answers argue for judging ties only; concentrated wrong answers lower the break-even enough to
+judge the top two answer classes (Section~\ref{sec:collision}). On the stored runs $s$ is
+$\CollHomS$ and $\CollHetS$, but the judge is far below the required accuracy.
+\item \textbf{Audit on frozen pools.} Store the candidate pool and the judge outputs per problem and
+compare selectors on the same problems with paired exact tests on discordant problems. Report
+how many problems have ties and how many ties contain a correct candidate, because that
+bounds what a tie-breaking judge can add.
+\item \textbf{Control judge biases before trusting a judge.} Average both presentation orders, and test
+style effects, which one systematic comparison finds larger than position effects
+\citep{soumik2026judging} and which this study did not control (Section~\ref{sec:future}).
+\end{enumerate}
+These guidelines hold under the stated assumptions: answers that can be extracted and compared, and
+the tested judge and configuration. They do not show that stronger judges cannot help.
 
 \section{Discussion}
 
@@ -800,9 +1018,14 @@ does not model general correlated errors.
 \section{Conclusion}
 
 An exact finite-$N$ calculation specifies when binary Copeland selection
-beats plurality under a stylized model. A separate six-benchmark audit
+beats plurality under a stylized model; with varying difficulty the
+break-even accuracy is set by an effective-odds ratio rather than pooled
+accuracy, and a vote-first rule that judges only on ties is optimal in the model
+and has no break-even threshold. A separate six-benchmark audit
 finds no detected homogeneous-pool advantage for the tested free-tier judge
-and a pooled heterogeneous-pool loss. The exact Kemeny reference and
+and a pooled heterogeneous-pool loss; on stored runs, vote-first selection
+removes that loss but, because exact ties are rare and the judge is near
+chance, adds no detectable accuracy over voting. The exact Kemeny reference and
 offline ablations distinguish ranking fit, objective design and answer
 accuracy. Together, the finite-pool calculation and stored-output audit
 separate the reliability needed by a specified selection rule from the
@@ -839,7 +1062,7 @@ The models served through OpenRouter are experimental subjects, not writing tool
 After using these tools the author reviewed and edited the content as needed and takes
 full responsibility for the content of the publication.
 
-\bibliographystyle{apalike-ejor}
+\bibliographystyle{elsarticle-num-names}
 \bibliography{refs}
 
 \end{document}

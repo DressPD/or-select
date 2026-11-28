@@ -1,14 +1,15 @@
-# Building the EJOR submission sources
+# Building the manuscript sources
 
 Main entry point: **`main.tex`**. The online supplement entry point is
-**`supplement.tex`**. Cover-letter and title-page entry points are
-`Cover_Letter_EJOR.tex` and `Submission_Title_Page.tex`.
+**`supplement.tex`**. The cover-letter entry point is `Cover_Letter.tex`. The author block, CRediT,
+funding and generative-AI declarations are inside `main.tex` (Information Fusion uses single anonymized review).
 
 ## Requirements
 
 Use a standard LaTeX installation with pdfLaTeX, BibTeX, and the packages
-requested in the source files. The document class and bibliography style
-are included locally: `elsarticle.cls` and **`apalike-ejor.bst`**.
+requested in the source files. The document class and bibliography styles
+are included locally: `elsarticle.cls`, **`elsarticle-num-names.bst`** (manuscript, numbered references)
+and **`apalike-local.bst`** (supplement, author-year).
 No locally installed custom bibliography style, Python, API credentials,
 benchmark data or new model calls are required to compile these sources.
 
@@ -30,9 +31,18 @@ pdflatex -interaction=nonstopmode -halt-on-error supplement.tex
 pdflatex -interaction=nonstopmode -halt-on-error main.tex
 pdflatex -interaction=nonstopmode -halt-on-error supplement.tex
 pdflatex -interaction=nonstopmode -halt-on-error main.tex
-pdflatex -interaction=nonstopmode -halt-on-error Cover_Letter_EJOR.tex
-pdflatex -interaction=nonstopmode -halt-on-error Submission_Title_Page.tex
+pdflatex -interaction=nonstopmode -halt-on-error Cover_Letter.tex
 ```
+
+### Information Fusion package
+
+`python3 ../scripts/package_infofusion.py` copies the sources into a temporary directory, runs the sequence above
+there, fails on undefined references, and writes `submission/information_fusion/`: `Manuscript.pdf`, `Supplement.pdf`,
+`Cover_Letter.pdf`, `highlights.txt`, `figures/`, `declarations/`, `source/` and `informationfusion-latex-source.zip`
+(includes `supplement.aux` so that `main.tex` alone resolves its cross-references into the supplement), plus a generated
+`SUBMISSION_CHECKLIST.md` (page, reference, highlight and abstract limits). The numerical macros (`Mixture_data.tex`,
+`Hybrid_data.tex`, `Collision_data.tex`) come from `scripts/difficulty_mixture.py`, `scripts/hybrid_rule.py` and
+`scripts/collision_model.py`.
 
 Both documents reference each other with the `xr` package. The alternating
 passes resolve those references. The upload ZIP also includes generated
@@ -42,9 +52,9 @@ files are conveniences, not substitutes for the editable sources: the complete
 sequence above was also checked starting without them. After editing labels or
 references, rebuild both documents rather than relying on stale generated files.
 
-For the initial EJOR submission, the portal requires a **PDF**, not LaTeX
-sources. Retain this ZIP for revision. When the portal requests editable LaTeX
-sources, select `main.tex` as the main entry point. Upload the supplement for
+Information Fusion requires the editable LaTeX sources at submission; a PDF alone is not
+accepted. Upload the full source set (all .tex, figures, macro files, `elsarticle-num-names.bst`)
+and select `main.tex` as the main entry point. Upload the supplement for
 peer review at initial submission in its requested category. Inspect the PDF
 assembled by the portal. Keep the title page, highlights, cover letter, and
 declarations in their requested categories; do not concatenate them into the article.
@@ -52,8 +62,8 @@ declarations in their requested categories; do not concatenate them into the art
 ## Redistribution and scope
 
 See `BIBLIOGRAPHY_STYLE.md` for the upstream source, local modifications and
-redistribution permission for `apalike-ejor.bst`. It is a local adaptation,
-not an official EJOR style. `elsarticle.cls` and `elsarticle-num-names.bst`
+redistribution permission for `apalike-local.bst`. It is a local adaptation,
+not an official journal style. `elsarticle.cls` and `elsarticle-num-names.bst`
 retain their own copyright and LaTeX Project Public License notices.
 The included `LICENSE` records the repository's MIT code license. Packaging
 does not relicense third-party material or assign a new journal publishing license.

@@ -1,8 +1,8 @@
 # Bundled bibliography style
 
-`apalike-ejor.bst` is a **local adaptation**, not an official EJOR/Elsevier
+`apalike-local.bst` is a **local adaptation**, not an official publisher
 style or a claim of complete APA conformance. Its filename preserves the
-manuscript's existing `\bibliographystyle{apalike-ejor}` interface.
+manuscript's existing `\bibliographystyle{apalike-local}` interface.
 
 ## Source and redistribution
 
@@ -17,7 +17,7 @@ The upstream header grants the following permission:
 > it is unmodified. Modifications (and redistribution of modified versions)
 > are also permitted, but only if the resulting file is renamed.
 
-This modified version is renamed **`apalike-ejor.bst`**. The notice is retained
+This modified version is renamed **`apalike-local.bst`**. The notice is retained
 in the file. The original code and local changes may be redistributed under
 that permission; further modified versions must also be renamed. This is a
 third-party licensing exception to the repository's general MIT license.
@@ -38,3 +38,6 @@ No installed custom bibliography style is needed when building this source set.
 
 The existing third-party `elsarticle.cls` and `elsarticle-num-names.bst` retain
 their own LaTeX Project Public License notices. They are not relicensed as MIT.
+
+The Information Fusion manuscript uses `elsarticle-num-names.bst` (numbered references, as the journal's guide
+requires); `apalike-local.bst` is used only by the supplement.

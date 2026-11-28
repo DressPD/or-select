@@ -1,6 +1,6 @@
 # OR-Select
 
-**Pairwise Judging versus Voting for Language Model Answer Selection: Finite-Pool Theory and an Empirical Audit**
+**Vote First, Judge on Ties: Cost-Aware Answer Selection for Language-Model Systems**
 
 A no-fine-tuning pipeline that turns N stochastic LLM answers into one auditable choice, plus the audit protocol and
 theory used to test whether the choice is *accurate*. Selection is cast as an integer program over a judge-derived
@@ -147,25 +147,19 @@ Zenodo automatically archived v1.1.0 at [10.5281/zenodo.24115542](https://doi.or
 this post-release metadata update does not move the tag or change the archived article.
 The article's dataset citation retains the original experimental archive DOI `10.5281/zenodo.24112045` (**v1.0.0**);
 the run files have not changed. Neither this git revision nor the new release overwrites that immutable archive.
-Current submission inventory: `docs/submission_files.md`. Online prior-art comparison and internal publication
-assessment: `docs/novelty_audit.md`. Historical preregistrations and stored run files remain unchanged.
-
+Historical preregistrations and stored run files remain unchanged.
 Citation coverage and source policy: [citation audit](docs/citation_audit.md).
-For source-package dependencies and author actions before journal upload, see the
-[manual submission checklist](docs/manual_submission_checklist.md).
 
-### Completed source package (post-v1.1.0 fix)
+### Target journal
 
-For **initial EJOR submission**, upload [`submission/main.pdf`](submission/main.pdf)
-and the supplement PDF. The portal requests LaTeX sources only at revision.
-The AI disclosure now directly precedes References, with Funding above it.
+The manuscript is prepared for **Information Fusion** (Elsevier, single anonymized review). The venue analysis is in
+[`docs/venue_decision.md`](docs/venue_decision.md) and the guide-for-authors check in
+[`docs/information_fusion_checklist.md`](docs/information_fusion_checklist.md). The submission folder is
+[`submission/information_fusion/`](submission/information_fusion/), built with `scripts/package_infofusion.py` (see
+[`manuscript/BUILD_README.md`](manuscript/BUILD_README.md)); the cover letter is `manuscript/Cover_Letter.tex`.
+Packages for earlier targets were removed and remain in git history.
 
-Download [`submission/ejor-source-package.zip`](submission/ejor-source-package.zip)
-for revision-stage editable sources, licensed `apalike-ejor.bst`, class, figures,
-generated tables, build instructions and manifest. The four delivery PDFs are in
-[`submission/`](submission/). Isolated clean-source and extracted-ZIP builds pass;
-the bibliographies are byte-identical, main/supplement remain 30/10 pages, and all
-218 offline tests pass. See [`docs/source_package_audit.json`](docs/source_package_audit.json).
-
-The author selected **push only** for this packaging fix. No new release or Zenodo
-deposit is created; the immutable v1.1.0 archive does not include this later fix.
+Three results beyond the original threshold theorem are computed offline from the stored runs:
+`scripts/difficulty_mixture.py` (break-even judge accuracy under varying problem difficulty),
+`scripts/hybrid_rule.py` (vote-first, judge-on-ties rule: optimality check and stored-run audit) and
+`scripts/collision_model.py` (margin-gated judging when wrong answers collide, and the judge accuracy each collision level requires).

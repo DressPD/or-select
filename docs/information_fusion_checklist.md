@@ -1,0 +1,31 @@
+# Information Fusion: guide-for-authors check (2026-11-28)
+
+Checked against the aims and scope and the guide for authors supplied by the author (page shows CiteScore 26.7 and
+Impact Factor 17.4). Linked policies (Elsevier GenAI policies, research data policy, LaTeX template) were not read.
+Numbers marked generated come from `scripts/package_infofusion.py` (`submission/information_fusion/SUBMISSION_CHECKLIST.md`).
+
+| Requirement | Status |
+|---|---|
+| Research article, 10 to 35 pages including figures, tables, references; at most 50 references | Pass (generated): 29 pages in the `elsarticle` preprint layout, 47 references. Selector internals, ablations and the Kemeny reference moved to the supplement |
+| Single anonymized review: author block allowed in the manuscript | Pass: author, affiliation, corresponding email and ORCID in `main.tex` |
+| LaTeX source files required, PDF alone not accepted; template | Pass: `elsarticle` class; sources in `source/` and `informationfusion-latex-source.zip`, rebuilt in a clean directory with no undefined references. The official journal template was not downloaded; the class is the Elsevier one |
+| Abstract at most 250 words, stand-alone | Pass (about 231 words) |
+| 1 to 7 keywords, no multiword "and/of" keywords | Pass: 6 keywords |
+| Highlights: separate file with "highlights" in name, 3 to 5 bullets, at most 85 characters | Pass: `highlights.txt`, 5 bullets, longest 73 characters |
+| Numbered sections, abstract unnumbered | Pass |
+| Tables as editable text, captions, no vertical rules, used sparingly | Pass for form; 13 tables including generated ones, some overlap in numbers |
+| Figures as separate files with captions | Pass: `figures/` (vector PDF) |
+| Appendices lettered A, B | Not applicable as built: proofs and extra tables are an online supplement (S-numbering), cited in the text |
+| References numbered in order of appearance, in square brackets; LTWA journal abbreviations; DOIs | Pass: `elsarticle-num-names.bst` with numeric citations; journal names abbreviated; DOIs where available. Order of appearance depends on the style's sorting and was not hand-checked |
+| Research data, Option C: deposit and give the link, or explain | Ready: data availability section; enter the archive DOI in the form |
+| Funding statement standard wording | Pass |
+| Declaration of generative AI use, new section before references | Pass |
+| CRediT roles (corresponding author) | Pass: in the manuscript |
+| Competing interests; declarations tool always completed | Text ready in `declarations/`; **author action:** complete the Elsevier tool and upload the Word document |
+| Acknowledgements only in a separate section before references, not on the title page | Pass: none to declare |
+| Cover letter answering the seven required questions, concise, fit with scope, novelty | Pass: `Cover_Letter.pdf`. Answer 1 states plainly that universal self-consistency and trained verifiers were not compared |
+| Graphical abstract | Encouraged, not prepared |
+| Inclusive language; British or American English, not both | Pass after the earlier spelling check |
+
+Reviewer risks (not guide items): the audit uses one free-tier judge and exact ties are rare; no trained-verifier or
+universal self-consistency baseline; the new collision result is a model with measured inputs, not a stronger-judge run.

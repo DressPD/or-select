@@ -1,0 +1,7 @@
+Declaration of Competing Interest
+
+Manuscript title: Vote First, Judge on Ties: Cost-Aware Answer Selection for Language-Model Systems
+
+Author: Aris Dressino
+
+The author declares no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
