@@ -24,7 +24,8 @@ Numbers marked generated come from `scripts/package_infofusion.py` (`submission/
 | Competing interests; declarations tool always completed | Text ready in `declarations/`; **author action:** complete the Elsevier tool and upload the Word document |
 | Acknowledgements only in a separate section before references, not on the title page | Pass: none to declare |
 | Cover letter answering the seven required questions, concise, fit with scope, novelty | Pass: `Cover_Letter.pdf`. Answer 1 states plainly that universal self-consistency and trained verifiers were not compared |
-| Graphical abstract | Encouraged, not prepared |
+| Graphical abstract (encouraged): at least 1328 px wide, longest side horizontal, readable at 13 cm | Done: `Graphical_Abstract.pdf` (vector, about 20 cm wide, generated from the same data macros as the paper) |
+| References: real, existing sources; DOIs; preprints marked | Checked 2026-11-28: every DOI entry compared with Crossref (title, year, volume, pages, first author; no real mismatches), eight arXiv identifiers compared with arXiv, the Zenodo archive title corrected to its record. About 20 conference-paper entries have no DOI and were not checked against the proceedings |
 | Inclusive language; British or American English, not both | Pass after the earlier spelling check |
 
 Reviewer risks (not guide items): the audit uses one free-tier judge and exact ties are rare; no trained-verifier or

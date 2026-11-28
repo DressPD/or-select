@@ -23,7 +23,7 @@ MS = ROOT / "manuscript"
 DEST = ROOT / "submission" / "information_fusion"
 
 SOURCES = ["main.tex", "supplement.tex", "supplement_body.tex", "refs.bib", "elsarticle.cls",
-           "elsarticle-num-names.bst", "apalike-local.bst", "Cover_Letter.tex"]
+           "elsarticle-num-names.bst", "apalike-local.bst", "Cover_Letter.tex", "Graphical_Abstract.tex"]
 
 
 def run(cmd: list[str], cwd: Path) -> str:
@@ -46,6 +46,7 @@ def build(work: Path) -> dict:
     log = run(tex + ["main.tex"], work)
     run(tex + ["Cover_Letter.tex"], work)
     run(tex + ["Cover_Letter.tex"], work)
+    run(tex + ["Graphical_Abstract.tex"], work)
     problems = []
     for name in ("main", "supplement"):
         text = (work / f"{name}.log").read_text(errors="ignore")
@@ -70,12 +71,13 @@ def main() -> int:
         shutil.copy2(work / "main.pdf", DEST / "Manuscript.pdf")
         shutil.copy2(work / "supplement.pdf", DEST / "Supplement.pdf")
         shutil.copy2(work / "Cover_Letter.pdf", DEST / "Cover_Letter.pdf")
+        shutil.copy2(work / "Graphical_Abstract.pdf", DEST / "Graphical_Abstract.pdf")
         shutil.copy2(MS / "highlights.txt", DEST / "highlights.txt")
         for fig in sorted(MS.glob("Figure_*.pdf")):
             shutil.copy2(fig, DEST / "figures" / fig.name)
         for name in ("Credit_Author_Statement.txt", "Declaration_of_Competing_Interest.txt", "Declaration_of_Generative_AI.txt"):
             shutil.copy2(MS / name, DEST / "declarations" / name)
-        src = [n for n in info["files"] if n != "Cover_Letter.tex"] + ["main.bbl", "supplement.bbl", "supplement.aux"]
+        src = [n for n in info["files"] if n not in ("Cover_Letter.tex", "Graphical_Abstract.tex")] + ["main.bbl", "supplement.bbl", "supplement.aux"]
         for name in src:
             shutil.copy2(work / name, DEST / "source" / name)
         with zipfile.ZipFile(DEST / "informationfusion-latex-source.zip", "w", zipfile.ZIP_DEFLATED) as z:
@@ -98,7 +100,7 @@ def main() -> int:
               "- Complete the Elsevier declarations tool and upload the Word document it generates.",
               "- Enter the archive DOI (Option C research data) in the submission form.",
               "- Upload: Manuscript source (`source/` or the zip), Supplement.pdf as supplementary material, figures, highlights.txt, Cover_Letter.pdf.",
-              "- Optional: graphical abstract (not prepared)."]
+              "- Upload Graphical_Abstract.pdf as the graphical abstract (vector PDF, readable at 13 cm)."]
     (DEST / "SUBMISSION_CHECKLIST.md").write_text("\n".join(lines) + "\n")
     print("\n".join(lines))
     return 0 if all(ok for _, ok in checks) else 1

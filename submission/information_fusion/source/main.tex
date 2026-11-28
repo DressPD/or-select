@@ -159,6 +159,19 @@ need a separately justified grouping or evaluation rule. The distinction
 between these settings matters: exact textual disagreement is not itself
 evidence that responses differ in meaning or quality.
 
+\paragraph{Application setting}
+The setting is the costed evaluation and verification of language-model outputs, such as benchmark
+harnesses and quality-assurance pipelines that must decide, for each question, how many paid judge
+calls to buy. In operations research terms this is an inspection-allocation problem: a free first
+stage (the vote) screens, and a priced second stage (the judge) is applied only where the first stage
+cannot decide. The audit measures the operating cost directly. Per 1{,}000 problems, judging every
+problem needs about \HybHomCallsCPerK{} pairwise comparisons in homogeneous pools ($N=3$) and
+\HybHetCallsCPerK{} in heterogeneous pools ($N=6$), while vote-first selection needs
+\HybHomCallsHPerK{} and \HybHetCallsHPerK{}. With a price $c$ per comparison and a value $V$ of a
+correct answer, a wider gate is justified when its accuracy gain times $V$ exceeds $c$ times the extra
+comparisons, so the break-even accuracies derived below translate into a break-even price ratio. No
+price is assumed here, and no deployed system is evaluated.
+
 \section{Related Work}
 \label{sec:related}
 

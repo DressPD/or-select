@@ -1,0 +1,53 @@
+\documentclass[tikz,border=6pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta,positioning}
+
+\definecolor{orblue}{RGB}{76,120,168}
+\definecolor{ororange}{RGB}{209,143,0}
+\definecolor{orgreen}{RGB}{80,140,90}
+\definecolor{orred}{RGB}{190,60,60}
+\input{Hybrid_data.tex}
+\input{Collision_data.tex}
+
+\begin{document}
+\begin{tikzpicture}[
+  box/.style={draw=black!70,rounded corners=2pt,align=center,font=\normalsize,minimum height=1.0cm,inner sep=5pt,fill=white},
+  arr/.style={-{Stealth[length=2.2mm]},thick,black!70}
+]
+% ---- left: the decision rule
+\node[font=\bfseries\large,anchor=west] at (0,6.6) {Vote first, judge only on ties};
+\node[box,fill=orblue!12,minimum width=5.6cm] (cand) at (3.0,5.3) {$N$ sampled answers from the language model};
+\node[box,fill=orgreen!15,minimum width=5.6cm] (vote) at (3.0,3.4) {Vote on the extracted answers (free)};
+\node[box,fill=orgreen!15,minimum width=3.6cm] (ret) at (9.2,3.4) {Unique winner:\\return it, \textbf{no judge call}};
+\node[box,fill=ororange!20,minimum width=5.6cm] (judge) at (3.0,1.4) {Tie: pairwise judge \textbf{only among}\\\textbf{the tied answers} (priced)};
+\draw[arr] (cand) -- (vote);
+\draw[arr] (vote) -- node[above,font=\footnotesize,above=2pt]{no tie} (ret);
+\draw[arr] (vote) -- node[right,font=\footnotesize]{tie} (judge);
+\node[font=\normalsize,text width=9.0cm,align=left,anchor=north west] at (0,0.3)
+  {Bayes-optimal in the model. On stored runs it needs only \HybHetCallShare\% to \HybHomCallShare\% of the judge comparisons that judging every problem requires.};
+
+% ---- right: when judging beyond ties pays
+\begin{axis}[
+  at={(12.6cm,0.2cm)},anchor=south west,
+  width=9.4cm,height=6.4cm,
+  xmin=0,xmax=0.95,ymin=0.5,ymax=1.0,
+  xlabel={Collision share $s$ of wrong answers},
+  ylabel={Judge accuracy required},
+  title={\bfseries Judging beyond ties pays only above the curves},
+  title style={font=\normalsize},
+  label style={font=\normalsize},tick label style={font=\footnotesize},
+  legend style={font=\footnotesize,at={(0.98,0.97)},anchor=north east,draw=black!30,fill=white,fill opacity=0.9,text opacity=1},
+  grid=both,grid style={black!10},
+]
+\addplot[thick,orblue] coordinates {\CollCurveInf};
+\addlegendentry{judge every problem}
+\addplot[thick,ororange,dashed] coordinates {\CollCurveOne};
+\addlegendentry{judge when vote margin $\le 1$}
+\addplot[only marks,mark=*,mark size=2.8pt,orred] coordinates {(\CollHomS,\CollHomQ) (\CollHetS,\CollHetQ)};
+\addlegendentry{tested judge (measured)}
+\end{axis}
+\end{tikzpicture}
+\end{document}

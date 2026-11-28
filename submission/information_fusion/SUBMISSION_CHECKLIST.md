@@ -9,4 +9,4 @@ Author actions that cannot be automated:
 - Complete the Elsevier declarations tool and upload the Word document it generates.
 - Enter the archive DOI (Option C research data) in the submission form.
 - Upload: Manuscript source (`source/` or the zip), Supplement.pdf as supplementary material, figures, highlights.txt, Cover_Letter.pdf.
-- Optional: graphical abstract (not prepared).
+- Upload Graphical_Abstract.pdf as the graphical abstract (vector PDF, readable at 13 cm).
